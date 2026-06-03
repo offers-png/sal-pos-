@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products - Sal POS</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .products-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .products-table-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .products-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(var(--muted), 0.1);
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .search-input-wrapper svg {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1rem;
+      height: 1rem;
+      color: var(--muted-foreground);
+    }
+
+    .search-input-wrapper input {
+      padding-left: 2.25rem;
+    }
+
+    .products-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .products-table th {
+      text-align: left;
+      padding: 0.875rem 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted-foreground);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(var(--muted), 0.3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .products-table td {
+      padding: 1rem 1.25rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .products-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .products-table tr:hover td {
+      background: rgba(var(--muted), 0.1);
+    }
+
+    .product-name-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+
+    .product-name-cell .name {
+      font-weight: 500;
+      color: var(--foreground);
+    }
+
+    .product-name-cell .barcode {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+      font-family: monospace;
+    }
+
+    .products-table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+      background: rgba(var(--muted), 0.1);
+      font-size: 0.8125rem;
+      color: var(--muted-foreground);
+    }
+
+    .pagination-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .action-btn {
+      width: 2rem;
+      height: 2rem;
+      border-radius: var(--radius);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted-foreground);
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      background: var(--muted);
+      color: var(--foreground);
+    }
+
+    .action-btn.delete:hover {
+      background: var(--destructive-light);
+      color: var(--destructive);
+    }
+
+    .add-product-modal .modal-content {
+      max-width: 500px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-grid .full-width {
+      grid-column: span 2;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/>
+          <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/>
+          <path d="M12 3v6"/>
+        </svg>
+      </div>
+      <h1>Sal POS</h1>
+    </div>
+    <div class="sidebar-nav">
+      <a href="index.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="7" height="9" x="3" y="3" rx="1"/>
+          <rect width="7" height="5" x="14" y="3" rx="1"/>
+          <rect width="7" height="9" x="14" y="12" rx="1"/>
+          <rect width="7" height="5" x="3" y="16" rx="1"/>
+        </svg>
+        <span>POS Terminal</span>
+      </a>
+      <a href="products.html" class="sidebar-link active">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7.5 4.27 9 5.15"/>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          <path d="m3.3 7 8.7 5 8.7-5"/>
+          <path d="M12 22V12"/>
+        </svg>
+        <span>Products</span>
+      </a>
+      <a href="reports.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="m19 9-5 5-4-4-3 3"/>
+        </svg>
+        <span>Reports</span>
+      </a>
+      <a href="settings.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span>Settings</span>
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <a href="login.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" x2="9" y1="12" y2="12"/>
+        </svg>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="products-header">
+      <div>
+        <h1 class="page-title">Products</h1>
+        <p class="page-description">Manage your product inventory and pricing.</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="syncFromSheetsBtn" class="btn btn-outline" style="color: var(--text-primary); border-color: var(--border-color);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 21h5v-5"/>
+          </svg>
+          Sync from Sheets
+        </button>
+        <button id="addProductBtn" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 12h8"/>
+            <path d="M12 8v8"/>
+          </svg>
+          Add Product
+        </button>
+      </div>
+    </div>
+
+    <div class="products-table-container">
+      <div class="products-toolbar">
+        <div class="search-input-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input id="searchInput" type="text" class="input" placeholder="Search products...">
+        </div>
+        <select id="categoryFilter" class="input" style="width: auto;">
+          <option value="">All Categories</option>
+        </select>
+        <button id="refreshBtn" class="btn btn-outline btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 16h5v5"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+
+      <table class="products-table">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th style="width: 100px; text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="productsTableBody">
+        </tbody>
+      </table>
+
+      <div class="products-table-footer">
+        <span id="productCount">Showing 0 products</span>
+        <div class="pagination-buttons">
+          <button class="btn btn-outline btn-sm" disabled>Previous</button>
+          <button class="btn btn-outline btn-sm" disabled>Next</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="addProductModal" class="modal add-product-modal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeAddModal">&times;</button>
+      <h2 style="margin-bottom: 0.5rem;">Add New Product</h2>
+      <p style="color: var(--muted-foreground); margin-bottom: 1.5rem;">Enter the product details below.</p>
+      
+      <form id="addProductForm">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="label">Product Name</label>
+            <input id="productName" type="text" class="input" placeholder="Enter product name" required>
+          </div>
+          <div class="form-group">
+            <label class="label">Price ($)</label>
+            <input id="productPrice" type="number" step="0.01" class="input" placeholder="0.00" required>
+          </div>
+          <div class="form-group">
+            <label class="label">Barcode</label>
+            <input id="productBarcode" type="text" class="input" placeholder="Scan or enter barcode">
+          </div>
+          <div class="form-group full-width">
+            <label class="label">Category</label>
+            <select id="productCategory" class="input"></select>
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" id="cancelAddBtn" class="btn btn-outline" style="flex: 1;">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="editProductModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeEditModal">&times;</button>
+      <h2 style="margin-bottom: 0.5rem;">Edit Product</h2>
+      <p style="color: var(--muted-foreground); margin-bottom: 1.5rem;">Update the product details below.</p>
+      
+      <form id="editProductForm">
+        <input type="hidden" id="editProductBarcode">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="label">Product Name</label>
+            <input id="editProductName" type="text" class="input" required>
+          </div>
+          <div class="form-group">
+            <label class="label">Price ($)</label>
+            <input id="editProductPrice" type="number" step="0.01" class="input" required>
+          </div>
+          <div class="form-group">
+            <label class="label">Barcode</label>
+            <input id="editProductBarcodeDisplay" type="text" class="input" disabled style="background: var(--muted);">
+          </div>
+          <div class="form-group full-width">
+            <label class="label">Category</label>
+            <select id="editProductCategory" class="input"></select>
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" id="cancelEditBtn" class="btn btn-outline" style="flex: 1;">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Update Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const CATEGORIES = [
+      "Tobacco", "Beer", "Drinks", "Snacks",
+      "Food", "Household", "Lottery", "Hot Food",
+      "Grocery", "Medicine/Pharmacy", "Frozen / Ice", "Dairy",
+      "Cold Subs", "Pets", "Other / Misc"
+    ];
+
+    let products = [];
+
+    const productsTableBody = document.getElementById("productsTableBody");
+    const productCount = document.getElementById("productCount");
+    const searchInput = document.getElementById("searchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const refreshBtn = document.getElementById("refreshBtn");
+
+    const addProductBtn = document.getElementById("addProductBtn");
+    const addProductModal = document.getElementById("addProductModal");
+    const closeAddModal = document.getElementById("closeAddModal");
+    const cancelAddBtn = document.getElementById("cancelAddBtn");
+    const addProductForm = document.getElementById("addProductForm");
+    const productCategory = document.getElementById("productCategory");
+
+    const editProductModal = document.getElementById("editProductModal");
+    const closeEditModal = document.getElementById("closeEditModal");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const editProductForm = document.getElementById("editProductForm");
+    const editProductCategory = document.getElementById("editProductCategory");
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast' + (isError ? ' error' : ' success');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function showModal(modal) {
+      modal.style.display = "flex";
+    }
+
+    function hideModal(modal) {
+      modal.style.display = "none";
+    }
+
+    function populateCategorySelects() {
+      [productCategory, editProductCategory, categoryFilter].forEach(select => {
+        if (select === categoryFilter) {
+          select.innerHTML = '<option value="">All Categories</option>';
+        } else {
+          select.innerHTML = '';
+        }
+        CATEGORIES.forEach(cat => {
+          const opt = document.createElement("option");
+          opt.value = cat;
+          opt.textContent = cat;
+          select.appendChild(opt);
+        });
+      });
+    }
+
+    async function loadProducts() {
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.products)) {
+          products = data.products.map(p => ({
+            name: p.name,
+            price: Number(p.price) || 0,
+            barcode: p.barcode || "",
+            category: p.category || "Other / Misc"
+          }));
+          renderProducts();
+        }
+      } catch (err) {
+        console.error("Error loading products:", err);
+        showToast("Failed to load products", true);
+      }
+    }
+
+    function renderProducts() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const categoryTerm = categoryFilter.value;
+
+      const filtered = products.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
+                             p.barcode.toLowerCase().includes(searchTerm);
+        const matchesCategory = !categoryTerm || p.category === categoryTerm;
+        return matchesSearch && matchesCategory;
+      });
+
+      productsTableBody.innerHTML = "";
+      
+      filtered.forEach(product => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <div class="product-name-cell">
+              <span class="name">${product.name}</span>
+              <span class="barcode">#${product.barcode || "no-code"}</span>
+            </div>
+          </td>
+          <td><span class="badge badge-secondary">${product.category}</span></td>
+          <td><strong style="color: var(--primary);">$${product.price.toFixed(2)}</strong></td>
+          <td>
+            <div class="action-buttons" style="justify-content: flex-end;">
+              <button class="action-btn edit-btn" title="Edit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                </svg>
+              </button>
+              <button class="action-btn delete delete-btn" title="Delete">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                </svg>
+              </button>
+            </div>
+          </td>
+        `;
+        
+        tr.querySelector('.edit-btn').addEventListener('click', () => openEditModal(product));
+        tr.querySelector('.delete-btn').addEventListener('click', () => deleteProduct(product.barcode));
+        
+        productsTableBody.appendChild(tr);
+      });
+
+      productCount.textContent = `Showing ${filtered.length} of ${products.length} products`;
+    }
+
+    function openEditModal(product) {
+      console.log('Opening edit modal for:', product);
+      
+      const nameInput = document.getElementById("editProductName");
+      const priceInput = document.getElementById("editProductPrice");
+      const categorySelect = document.getElementById("editProductCategory");
+      
+      nameInput.disabled = false;
+      nameInput.readOnly = false;
+      priceInput.disabled = false;
+      priceInput.readOnly = false;
+      categorySelect.disabled = false;
+      
+      document.getElementById("editProductBarcode").value = product.barcode;
+      nameInput.value = product.name;
+      priceInput.value = product.price;
+      document.getElementById("editProductBarcodeDisplay").value = product.barcode;
+      
+      const productCategory = product.category || "Other / Misc";
+      
+      let found = false;
+      for (let i = 0; i < categorySelect.options.length; i++) {
+        if (categorySelect.options[i].value === productCategory) {
+          categorySelect.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        const opt = document.createElement("option");
+        opt.value = productCategory;
+        opt.textContent = productCategory;
+        categorySelect.appendChild(opt);
+        categorySelect.value = productCategory;
+      }
+      
+      showModal(editProductModal);
+      
+      setTimeout(() => {
+        nameInput.focus();
+      }, 100);
+    }
+
+    async function deleteProduct(barcode) {
+      if (!confirm("Are you sure you want to delete this product?")) return;
+      
+      try {
+        const res = await fetch("/api/products/" + encodeURIComponent(barcode), {
+          method: "DELETE"
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Product deleted!");
+          await loadProducts();
+        } else {
+          showToast("Failed to delete product", true);
+        }
+      } catch (err) {
+        console.error("Error deleting product:", err);
+        showToast("Error deleting product", true);
+      }
+    }
+
+    addProductBtn.addEventListener("click", () => {
+      addProductForm.reset();
+      showModal(addProductModal);
+    });
+
+    document.getElementById("syncFromSheetsBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("syncFromSheetsBtn");
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/></svg> Syncing...';
+      btn.disabled = true;
+      
+      try {
+        const res = await fetch("/api/products/sync-from-sheets", { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Synced ${data.synced} new, ${data.updated} updated products from Sheets`);
+          await loadProducts();
+        } else {
+          showToast("Sync failed: " + (data.error || "Unknown error"), true);
+        }
+      } catch (err) {
+        console.error("Error syncing from Sheets:", err);
+        showToast("Error syncing from Sheets", true);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    });
+
+    closeAddModal.addEventListener("click", () => hideModal(addProductModal));
+    cancelAddBtn.addEventListener("click", () => hideModal(addProductModal));
+    closeEditModal.addEventListener("click", () => hideModal(editProductModal));
+    cancelEditBtn.addEventListener("click", () => hideModal(editProductModal));
+
+    addProductForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("productName").value.trim();
+      const price = parseFloat(document.getElementById("productPrice").value);
+      const barcode = document.getElementById("productBarcode").value.trim() || Date.now().toString();
+      const category = document.getElementById("productCategory").value;
+
+      if (!name || isNaN(price) || price <= 0) {
+        showToast("Please enter valid product details", true);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, price, barcode, category })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Product added successfully!");
+          hideModal(addProductModal);
+          await loadProducts();
+        } else {
+          showToast("Failed to add product", true);
+        }
+      } catch (err) {
+        console.error("Error adding product:", err);
+        showToast("Error adding product", true);
+      }
+    });
+
+    editProductForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const barcode = document.getElementById("editProductBarcode").value;
+      const name = document.getElementById("editProductName").value.trim();
+      const price = parseFloat(document.getElementById("editProductPrice").value);
+      const category = document.getElementById("editProductCategory").value;
+
+      if (!name || isNaN(price) || price <= 0) {
+        showToast("Please enter valid product details", true);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/products/" + encodeURIComponent(barcode), {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, price, category })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Product updated successfully!");
+          hideModal(editProductModal);
+          await loadProducts();
+        } else {
+          showToast("Failed to update product", true);
+        }
+      } catch (err) {
+        console.error("Error updating product:", err);
+        showToast("Error updating product", true);
+      }
+    });
+
+    searchInput.addEventListener("input", renderProducts);
+    categoryFilter.addEventListener("change", renderProducts);
+    refreshBtn.addEventListener("click", loadProducts);
+
+    populateCategorySelects();
+    loadProducts();
+
+    const savedTheme = localStorage.getItem('sal-pos-theme') || 'light';
+    document.body.className = savedTheme;
+
+    // Listen for theme changes via IPC (Electron)
+    if (window.electronAPI && window.electronAPI.onThemeChanged) {
+      window.electronAPI.onThemeChanged((theme) => {
+        document.body.className = theme;
+        localStorage.setItem('sal-pos-theme', theme);
+        console.log('Theme changed via IPC to:', theme);
+      });
+    }
+  </script>
+</body>
+</html>

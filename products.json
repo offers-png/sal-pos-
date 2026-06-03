@@ -1,0 +1,3674 @@
+[
+  {
+    "barcode": "28400014236",
+    "name": "smartfood popcorn1oz",
+    "price": 0.69,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "40000004325",
+    "name": "mm peanut king size",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "40000474173",
+    "name": "m&m almond king size",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000013813",
+    "name": "nilla wafers",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "2289805",
+    "name": "Extra",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73141152334",
+    "name": "Pocky Chocolate",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "5000204884869",
+    "name": "glade candle i love you",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "10855553008501",
+    "name": "lighter",
+    "price": 1.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "852698006648",
+    "name": "port car charger",
+    "price": 6.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "857558007926",
+    "name": "type c cable 3ft",
+    "price": 6.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "857558007933",
+    "name": "type c cable 3ft",
+    "price": 6.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "857558007872",
+    "name": "port car charger type c",
+    "price": 6.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "609249904010",
+    "name": "zyn coffee 3mg",
+    "price": 6.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "609249900043",
+    "name": "zyn cool mint 3mg",
+    "price": 6.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "609249907028",
+    "name": "zyn citrus 6mg",
+    "price": 6.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "609249900036",
+    "name": "zyn cool mint 6mg",
+    "price": 6.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "609249902023",
+    "name": "zyn spearmint 6mg",
+    "price": 6.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "609249902016",
+    "name": "zyn spearmint 3mg",
+    "price": 6.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "811435002145",
+    "name": "chore boy",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "719410700010",
+    "name": "5 hour energy",
+    "price": 2.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "284652",
+    "name": "Marlboro light 100",
+    "price": 16.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "283842",
+    "name": "marlboro light",
+    "price": 16.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "283632",
+    "name": "marlboro red 100",
+    "price": 16.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "283572",
+    "name": "marlboro red",
+    "price": 16.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "47995855093",
+    "name": "american spirit yellow",
+    "price": 16.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "265751",
+    "name": "newport",
+    "price": 16.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "283762",
+    "name": "marlboro blue menthol",
+    "price": 16.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "265761",
+    "name": "newport light",
+    "price": 16.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "265731",
+    "name": "newport 100",
+    "price": 16.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "75720000715",
+    "name": "poland spring 1.5lt",
+    "price": 3.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "75720000616",
+    "name": "poland spring 1lt",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "75720431151",
+    "name": "poland spring sport",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "75720000814",
+    "name": "ploand spring",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "632565000029",
+    "name": "fiji 1lt",
+    "price": 3.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "657227001206",
+    "name": "essentia 20oz",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "613008751241",
+    "name": "arizona rx",
+    "price": 1.5,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "613008751364",
+    "name": "arizona iced tea lemon",
+    "price": 1.5,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "613008751333",
+    "name": "arizona mango",
+    "price": 1.5,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "613008751302",
+    "name": "arizona fruit punch",
+    "price": 1.5,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "12000286223",
+    "name": "pure leaf raspberry",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "52000324815",
+    "name": "gatrorade cool blue",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "52000328660",
+    "name": "Gatorade fruit punch",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "52000102475",
+    "name": "gatorade glacer cherry",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "52000328684",
+    "name": "gatorade lemon lime",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "52000328677",
+    "name": "gatorade orange",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "121310",
+    "name": "mtn dew 20oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "490440",
+    "name": "coca cola 20oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "74090501150",
+    "name": "kola champagne 20oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "78000156409",
+    "name": "canada dry cranberry",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "121290",
+    "name": "pepsi 20oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "78000152401",
+    "name": "canada dry 20oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "74090515157",
+    "name": "coco rico 20oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "497640",
+    "name": "sprite 20oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "12000171741",
+    "name": "pepsi diet 20oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "896650001524",
+    "name": "aloevine pineapple",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "896650001722",
+    "name": "aloevine pomegranate",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "896650001647",
+    "name": "aloevine aloe",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "896650001487",
+    "name": "aloevine mango",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "120850",
+    "name": "mtn dew can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "491320",
+    "name": "sprite can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "125680",
+    "name": "pepsi can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "781140",
+    "name": "canada dry can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "789920",
+    "name": "canada dry water can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "783460",
+    "name": "chwepperes can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "496340",
+    "name": "coca cola can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "90478410159",
+    "name": "jarritos mexican",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "90478410043",
+    "name": "jarritos pineapple",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "90478410081",
+    "name": "jarritos guava",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "90478410050",
+    "name": "jarritos lime",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "90478410012",
+    "name": "jarritos mandarin",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "41331039857",
+    "name": "malta",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "49000004632",
+    "name": "coca cola glass",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "49000047820",
+    "name": "sprite glass",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "49000047844",
+    "name": "fanta glass",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "16229901479",
+    "name": "coconut juice",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "412449",
+    "name": "MARTINELLI's apple",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "87684011638",
+    "name": "caprisun fruit punch",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "87684011645",
+    "name": "caprisun pacific cooler",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "786162010001",
+    "name": "vitamin water power-C",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "786162070005",
+    "name": "vitamin water kiwi strawberry",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "786162080004",
+    "name": "vitamin water energy",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "786162411860",
+    "name": "vitamin water elevate",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "784450",
+    "name": "canada dry fruit splash can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "38900009632",
+    "name": "dole pineaplle",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "121130",
+    "name": "pepsi 2lt",
+    "price": 3.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "78000152463",
+    "name": "canada dry 2lt",
+    "price": 3.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "674270",
+    "name": "coca cola 2lt",
+    "price": 3.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "78000039405",
+    "name": "canada dry fruit splash 2lt",
+    "price": 3.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "122330",
+    "name": "mnt  dew 2lt",
+    "price": 3.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "49000050158",
+    "name": "sprite 2lt",
+    "price": 3.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "738923",
+    "name": "faygo peach can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "738833",
+    "name": "faygo ginger can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "738303",
+    "name": "faygo diet cola can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "738763",
+    "name": "faygo orange can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "73800003625",
+    "name": "faygo puncch can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "738843",
+    "name": "faygo twist can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "738823",
+    "name": "faygo cola can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "860013270407",
+    "name": "kool-aid balck cherry",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "860013270483",
+    "name": "kool-aid grape",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "860013270438",
+    "name": "kool-aid orange",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "860013270414",
+    "name": "kool-aid blue raspberry",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "73800004585",
+    "name": "faygo orange 20oz",
+    "price": 1.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "73800010227",
+    "name": "faygo firework 20oz",
+    "price": 1.5,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "73800004707",
+    "name": "faygo peach 20oz",
+    "price": 1.5,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "73800004608",
+    "name": "faygo redpop 20oz",
+    "price": 1.5,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "73800004530",
+    "name": "faygo cola 20oz",
+    "price": 1.5,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "73800010517",
+    "name": "faygo fireworks can",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "14800646474",
+    "name": "hawaiian puvch berry blue",
+    "price": 4.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "14800646085",
+    "name": "hawaiian punch fruit punch",
+    "price": 4.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "14800646429",
+    "name": "hawaiian punch green berry rush",
+    "price": 4.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "78000046137",
+    "name": "hawaiian punch rainbow",
+    "price": 4.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "76064004087",
+    "name": "red velvet cake",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "76064003042",
+    "name": "banana cake",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "76064002045",
+    "name": "carrot cake",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "76064001048",
+    "name": "chocolate cake",
+    "price": 2.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "70524079332",
+    "name": "big mopper",
+    "price": 1.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "18026307522",
+    "name": "elegant paper towel",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "18026308529",
+    "name": "elegant paper towels",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "70524078229",
+    "name": "velvet bath tissue",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "18026041358",
+    "name": "elegant bath tissue",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "54000200427",
+    "name": "scott bath tissue",
+    "price": 1.49,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "18026965005",
+    "name": "elegant bath tissue",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "18026964008",
+    "name": "elegant bath tissue",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "61328051259",
+    "name": "white swan bath tissue",
+    "price": 1,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "5060166698874",
+    "name": "monster green",
+    "price": 3.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "889392001396",
+    "name": "celsius blue razz",
+    "price": 3.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "850052561208",
+    "name": "lucky tropical",
+    "price": 3,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "611269991000",
+    "name": "redbull 8oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "611269001280",
+    "name": "redbull strawberry apricot 8oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "611269331240",
+    "name": "redbull watermelon 8oz",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "611269546019",
+    "name": "redbull 16oz",
+    "price": 4.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "611269818994",
+    "name": "redbull 12oz",
+    "price": 3.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "889392001747",
+    "name": "celsius pina colada",
+    "price": 3,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "71610202658",
+    "name": "backwoods black russian",
+    "price": 6.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "858765004050",
+    "name": "z palma",
+    "price": 1.5,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "842426155069",
+    "name": "woods leaf russian cream",
+    "price": 1.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "819721012410",
+    "name": "blunt ville pink diva",
+    "price": 1.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "819721012359",
+    "name": "blunt ville triple vanilla",
+    "price": 1.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "716165179481",
+    "name": "raw tips pre-rolled",
+    "price": 1.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "850730000296",
+    "name": "bob marley",
+    "price": 1.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "887982094186",
+    "name": "bob marley",
+    "price": 1.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "716165177357",
+    "name": "raw classic",
+    "price": 1.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "716165280972",
+    "name": "raw black",
+    "price": 1.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "8660000187",
+    "name": "zigzag cones 6pack",
+    "price": 2.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "8660007698",
+    "name": "zigzag cones unbleached 6pk",
+    "price": 2.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "716165296867",
+    "name": "raw cones 3pk",
+    "price": 2.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "716165295716",
+    "name": "raw 6pk",
+    "price": 2.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "716165301356",
+    "name": "raw organic 3pk",
+    "price": 2.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "76314306466",
+    "name": "vitamin C",
+    "price": 1,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "9555755800043",
+    "name": "gold honey",
+    "price": 4.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "786468817779",
+    "name": "bull honey",
+    "price": 4.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "5285002251420",
+    "name": "candy power",
+    "price": 4.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "67981089127",
+    "name": "ky jelly",
+    "price": 6.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "381370047544",
+    "name": "band-aid",
+    "price": 2.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "8901571008186",
+    "name": "sensodyne whtening",
+    "price": 4.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "8901571008773",
+    "name": "sensodyne deep clean",
+    "price": 4.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "12044038840",
+    "name": "old spice",
+    "price": 3.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "79400265104",
+    "name": "degree",
+    "price": 3.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "305210221277",
+    "name": "Q-tips",
+    "price": 2.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "4005808801039",
+    "name": "nivea",
+    "price": 3.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "7506306245822",
+    "name": "axe epic fresh",
+    "price": 3.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "7791293028781",
+    "name": "axe black",
+    "price": 3.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "8717163964965",
+    "name": "dove spry cucumber",
+    "price": 3.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "8711600786226",
+    "name": "dove spry pomegranate",
+    "price": 3.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "37000124429",
+    "name": "secret powder fresh",
+    "price": 3.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "8999999719395",
+    "name": "vaseline lotion",
+    "price": 2.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "35000511119",
+    "name": "colgate 1oz",
+    "price": 1.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "8992725910400",
+    "name": "listerine cool mint",
+    "price": 2.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "8992725910417",
+    "name": "listerine freshburst",
+    "price": 2.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "300450449054",
+    "name": "tylenol extra strength 24 caplets",
+    "price": 6.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "300450123046",
+    "name": "tylenol children cherry",
+    "price": 9.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "305730170307",
+    "name": "advil childrens",
+    "price": 9.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "300450493040",
+    "name": "tylenol childrens strawberry",
+    "price": 9.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "305730150200",
+    "name": "advil 24 tablets",
+    "price": 6.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "300450481269",
+    "name": "motrin 24 tablets",
+    "price": 6.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "323900042384",
+    "name": "nyquil",
+    "price": 1.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "323900042391",
+    "name": "dayquil",
+    "price": 2,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "323900042407",
+    "name": "vaporub",
+    "price": 1.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "91037172136",
+    "name": "ziq gloves",
+    "price": 2.99,
+    "category": "Medicine/Pharmacy"
+  },
+  {
+    "barcode": "191554440098",
+    "name": "packaging tape",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "731946014201",
+    "name": "duct tape",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "787188487723",
+    "name": "black bull gummy",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "300410107932",
+    "name": "oral-b floss",
+    "price": 1.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "8376542260632",
+    "name": "electrical tape",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "22600960034",
+    "name": "trojan fire & ice",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "22600019879",
+    "name": "magnum",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "22600926207",
+    "name": "trojan ultra thin",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "787188874837",
+    "name": "rhino69 30000k",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "70158000054",
+    "name": "krazy glue",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "300810730884",
+    "name": "neosporin",
+    "price": 7.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "365197400126",
+    "name": "A+D",
+    "price": 6.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "191554642010",
+    "name": "pregnancy test",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "300871365421",
+    "name": "enfamil",
+    "price": 24.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "77312406226",
+    "name": "pro styl",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "816559018799",
+    "name": "vo5 conditioner",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "816559010991",
+    "name": "vo5 shampoo",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "30772062807",
+    "name": "head & shoulders 2in1",
+    "price": 6.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "30772063187",
+    "name": "head & shoulders smooth & silky",
+    "price": 6.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "853195000023",
+    "name": "butane 0.61oz",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "721405571178",
+    "name": "formula 710 4oz",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "721405571017",
+    "name": "formula 420 4oz",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "37900991442",
+    "name": "ronson butane 2oz",
+    "price": 5.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "41689300494",
+    "name": "zippo 4oz",
+    "price": 5.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "721405571161",
+    "name": "formula 710 16oz",
+    "price": 9.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "721405571024",
+    "name": "formula 420 12oz",
+    "price": 9.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "853195000887",
+    "name": "eagle torch",
+    "price": 9.99,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "635986341252",
+    "name": "x-pro xe08 head phones",
+    "price": 49.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "6971606600717",
+    "name": "x-pro xe6 head phones",
+    "price": 49.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "652351448569",
+    "name": "oudiobop op-510 speaker",
+    "price": 49.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "785496325447",
+    "name": "x-pro xs605 speaker",
+    "price": 39.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "145664151511",
+    "name": "x-pro xs610 speaker",
+    "price": 64.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "145664151559",
+    "name": "x-pro xs650 speaker",
+    "price": 64.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "9180990238155",
+    "name": "face mask colored",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "35000551146",
+    "name": "toothbrush",
+    "price": 1.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "843632019497",
+    "name": "rubber bands",
+    "price": 1.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "44000082864",
+    "name": "oreo cakesters 3in pk",
+    "price": 2.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000080594",
+    "name": "oreo cakesters 3in pk",
+    "price": 2.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000069919",
+    "name": "oreo cakesters 3in pk",
+    "price": 2.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000080556",
+    "name": "oreo cakesters 2in pk",
+    "price": 1.69,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000069957",
+    "name": "oreo cakesters 2in pk",
+    "price": 1.69,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000036584",
+    "name": "nutter butter king size",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "27800053357",
+    "name": "fudge strepes king size",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000029548",
+    "name": "chips ahoy chunky king size",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "27800073577",
+    "name": "sugar wafers king size strawberry",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "27800073560",
+    "name": "sugar wafers king size vanilla",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000056940",
+    "name": "chips ahoy original king size",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000047009",
+    "name": "oreo",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000043148",
+    "name": "chips ahoy",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "19320015441",
+    "name": "lorna doone",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000037451",
+    "name": "nutter butter",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000037444",
+    "name": "newtons",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "770981805320",
+    "name": "oreo muffins",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "770981536026",
+    "name": "chips ahoy muffin",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "41116005923",
+    "name": "juicy drop pop",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "29126150888",
+    "name": "sour power straws green aplle",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "29126150406",
+    "name": "sour power straws wild cherry",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000019882",
+    "name": "starburst all pink",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73390007997",
+    "name": "airheads original",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73390011000",
+    "name": "airheads paradise",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "40000000518",
+    "name": "starburst original",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "402660",
+    "name": "skittles sour",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "29126150659",
+    "name": "sour power straws blue raspberry",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73390013486",
+    "name": "airheads xtremes very berry",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "72799934057",
+    "name": "mamba berrytasty",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "72799055660",
+    "name": "mamba sour",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "40000001607",
+    "name": "skittles original",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "40000514251",
+    "name": "snickers",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70462098525",
+    "name": "sour patch watermelon",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70462098501",
+    "name": "sour patch kids",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000014641",
+    "name": "life savers gummies",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "342400",
+    "name": "hersheys",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73141110815",
+    "name": "pocky almond crush",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73141159357",
+    "name": "pocky cookies n cream",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000014634",
+    "name": "lifesavers gummies collisions",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000074072",
+    "name": "life savers gummies wild berries",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "10700807229",
+    "name": "payday",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "40000514480",
+    "name": "M&Ms chocolate",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "344400",
+    "name": "reeses 2 peanut butter cups",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "342460",
+    "name": "kitkat",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "342410",
+    "name": "hersheys milk chocolate whole almonds",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "99900100873",
+    "name": "butterfingers",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "340540",
+    "name": "kitkat white",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "342390",
+    "name": "hersheys cookies n cream",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "341210",
+    "name": "kisses",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "14200533107",
+    "name": "suger babies",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "40000004356",
+    "name": "twix",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "343200",
+    "name": "almond joys",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "99900908363",
+    "name": "crunch",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "341550",
+    "name": "5th avenue",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "34000458134",
+    "name": "reeses orea",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70462542509",
+    "name": "swedish fish",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "341520",
+    "name": "reeses sticks",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "401050",
+    "name": "snickers almond",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "40000422068",
+    "name": "milky way",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "859917004348",
+    "name": "creme savers",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "79200218447",
+    "name": "sweetarts chewy",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "10700519528",
+    "name": "jolly rancher chews",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000016690",
+    "name": "5 gum strawberry",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000292780",
+    "name": "extra pink lemonade",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "12546011112",
+    "name": "trident tropical",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000290090",
+    "name": "hubba bubba sour blue",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "64900000485",
+    "name": "hubba bubba tape",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "402630",
+    "name": "snickers king size",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000016935",
+    "name": "hubba bubba tape sour",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "344800",
+    "name": "reeses cup king size",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "9800123018",
+    "name": "ferrero rocher",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "40000000327",
+    "name": "m&m peanut",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73390055158",
+    "name": "triden spearmint",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "4026305",
+    "name": "snikersss",
+    "price": 3,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "41168006466",
+    "name": "chick o stick",
+    "price": 22,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "12546312554",
+    "name": "dentyne ice peppermint",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "80052760",
+    "name": "bueno",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "220670",
+    "name": "hubba bubba srawberry",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "41116005824",
+    "name": "juicy drop taffy",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73390055189",
+    "name": "trident watermalon",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "9800007615",
+    "name": "tictac freshmints",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "34000455225",
+    "name": "reeses pb&j",
+    "price": 3,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000004840",
+    "name": "orbit spearmint",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73390055165",
+    "name": "trident original",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "873983000059",
+    "name": "hi-chew mango",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "41116011184",
+    "name": "juicy drop gummies",
+    "price": 3,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "9800001002",
+    "name": "tictac fruit",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "14200532100",
+    "name": "sugar daddy",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73390015602",
+    "name": "airheads xtremes rainbow",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70970910241",
+    "name": "peanut chews",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "873983000028",
+    "name": "hi-chew strawberry",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "7896262304351",
+    "name": "mentos fruit",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "224340",
+    "name": "life savers",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000004864",
+    "name": "orbit peppermint",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "6924513906205",
+    "name": "halss honey",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "191030",
+    "name": "life savers mints",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "6924513905598",
+    "name": "halls black",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "73390055011",
+    "name": "dentyne ice arctic chill",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "7896262304306",
+    "name": "mentos mint",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "6924513906175",
+    "name": "halls blue",
+    "price": 2,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "860001800593",
+    "name": "sour strips appleberry",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "860001800548",
+    "name": "sour strips green apple",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "850060777554",
+    "name": "sour strips dreamberry",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "20709012319",
+    "name": "trolli sour octopus",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "72799936570",
+    "name": "mamba beach sticks",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "41420065682",
+    "name": "trolli sour bursting",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70462006605",
+    "name": "sour patch kids watermelon",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70462009217",
+    "name": "sour patch peach",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70462006629",
+    "name": "sour patch tropical",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "42238302211",
+    "name": "haribo goldbears gummys",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "42238312210",
+    "name": "haribo goldbears gummys sour",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000285942",
+    "name": "skittles gummies",
+    "price": 3.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000289735",
+    "name": "skittles gummies sour",
+    "price": 3.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000298416",
+    "name": "starburst gummies",
+    "price": 3.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000298379",
+    "name": "starburst gummies all pink",
+    "price": 3.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70462006636",
+    "name": "swedish fish",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "10700557100",
+    "name": "jolly rancher gummies sours",
+    "price": 3.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "10700859167",
+    "name": "jolly rancher sour gummies reds",
+    "price": 3.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70970472602",
+    "name": "mike and lke mega sour",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70462006650",
+    "name": "swedish fish tails",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "10700702685",
+    "name": "jolly rancher hard candy",
+    "price": 3.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70462011333",
+    "name": "Swedish fish blue",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "19000170491",
+    "name": "life savers gummies sours",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000019233",
+    "name": "life savers gummies neons",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "22000073815",
+    "name": "life savers gummies exotics",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "19000083449",
+    "name": "life savers gummies wild berries",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400356787",
+    "name": "doritos cool ranch 2oz",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400355605",
+    "name": "lays 2oz",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "757528048112",
+    "name": "takis blue",
+    "price": 3.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "757528048075",
+    "name": "takis fuego 3oz",
+    "price": 3.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400356169",
+    "name": "cheetos flamin hot 2oz",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400009973",
+    "name": "miss vickies sea salt",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400012546",
+    "name": "miss vickues sea salt & vinegar",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400012553",
+    "name": "miss vickies jalapeno",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "757528008680",
+    "name": "takis fuego 9oz",
+    "price": 4.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "720464110113",
+    "name": "cotton candy 1oz",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "27800063165",
+    "name": "fudge stripes 2oz",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400725743",
+    "name": "miss vickies spicy dill pickle",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "815196019350",
+    "name": "takis fuego popcorn",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400010436",
+    "name": "miss vickies smokehouse bbq",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "14100077602",
+    "name": "goldfish cheddar",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "27800072723",
+    "name": "chips deluxe m&m",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "31535595617",
+    "name": "knotts strawberry",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "76677100145",
+    "name": "famous amos",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "14100086079",
+    "name": "goldfish colors",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "14100096016",
+    "name": "goldfish blasted",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "31535591480",
+    "name": "knotts raspberry",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "686464528009",
+    "name": "laser pop",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "48014010806",
+    "name": "after shocks blue",
+    "price": 1.5,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "48014010813",
+    "name": "after shocks watermalon",
+    "price": 1,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "686464538008",
+    "name": "yoyo gum",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "41116232206",
+    "name": "juicy drop re-mix",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "632365122143",
+    "name": "slush puppie spray",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "850034597256",
+    "name": "slime licker",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "686464455008",
+    "name": "flash pop",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "632365555507",
+    "name": "snake spray",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000635304",
+    "name": "froot loops cup",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "38000635700",
+    "name": "frosted flakes cup",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "16000141599",
+    "name": "cheerios cup",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "16000141551",
+    "name": "honey nut cheerios cup",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "757528051945",
+    "name": "takis crisps blue",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "757528046682",
+    "name": "takis crisps fuego",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000183737",
+    "name": "pringles bbq 1oz",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000845536",
+    "name": "pringles chedder 1oz",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000845529",
+    "name": "pringles sour cream 1oz",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000845512",
+    "name": "pringles original 1oz",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "72320600017",
+    "name": "yan yan chocolate",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "72320600031",
+    "name": "yan yan srawberry",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "72320600024",
+    "name": "yan yan vanilklka",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "76150232486",
+    "name": "butter lovers popcorn",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "304120",
+    "name": "crunch treats",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000590993",
+    "name": "rice krispies treats original",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000765414",
+    "name": "rice krispies original 1oz",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000303166",
+    "name": "rice krispies treats peanut butter",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "16000506954",
+    "name": "cinnamon toast crunch",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "16000505346",
+    "name": "golden grahams smores",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "602652176517",
+    "name": "kind dark chocolate",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "602652170300",
+    "name": "kind caramel almond",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "602652170591",
+    "name": "kind dark chocolate monch",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "602652170560",
+    "name": "kind peanut butter dark",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "602652170119",
+    "name": "kind cranberry almod",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000318405",
+    "name": "pop tarts cherry",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000304293",
+    "name": "pop tarts strawberry",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000317316",
+    "name": "pop tarts strawberry",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000581717",
+    "name": "pop tarts smores",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000504716",
+    "name": "pop tatrs hot fudge sundae",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000019210",
+    "name": "pop tarts chocolate chip",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000183713",
+    "name": "pringles bbq 5oz",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400700016",
+    "name": "doritos minis 5oz",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400700108",
+    "name": "cheetos flamin hot minis 5oz",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "28400757614",
+    "name": "Cheetos mini (cheddar jalapeno)",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000138430",
+    "name": "Pringles (sour cream & onion)",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "38000279201",
+    "name": "Pringles (chili cheese fries)",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "41192100413",
+    "name": "Froot loops",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "16000151284",
+    "name": "Coco Puffs",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "30000573235",
+    "name": "Cap'n Crunch's (Oops! All Berries)",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "30000573211",
+    "name": "Cap'n Crunch (sweetened corn & oat)",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "16000123991",
+    "name": "Lucky Charms",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "41192100437",
+    "name": "Frosted Flakes",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "70412120603",
+    "name": "Terell's (Ripple)",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "70412130657",
+    "name": "Terell's (Original)",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "70412140656",
+    "name": "Terell's (Syracuse Style)",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "829274454186",
+    "name": "meow mix 1lb",
+    "price": 4.49,
+    "category": "Pets"
+  },
+  {
+    "barcode": "829274519137",
+    "name": "meow mix 3lb",
+    "price": 8.99,
+    "category": "Pets"
+  },
+  {
+    "barcode": "79100514175",
+    "name": "9 lives 3lb",
+    "price": 8.99,
+    "category": "Pets"
+  },
+  {
+    "barcode": "23100125541",
+    "name": "pedigree 3lb",
+    "price": 8.99,
+    "category": "Pets"
+  },
+  {
+    "barcode": "23100132754",
+    "name": "pedigree 3lb",
+    "price": 8.99,
+    "category": "Pets"
+  },
+  {
+    "barcode": "23100015088",
+    "name": "pedigree country stew",
+    "price": 3.49,
+    "category": "Pets"
+  },
+  {
+    "barcode": "23100013015",
+    "name": "pedigree puppy chicken & beef",
+    "price": 3.49,
+    "category": "Pets"
+  },
+  {
+    "barcode": "50000170166",
+    "name": "friskies tuna",
+    "price": 1.49,
+    "category": "Pets"
+  },
+  {
+    "barcode": "50000421848",
+    "name": "friskies turkey",
+    "price": 1.49,
+    "category": "Pets"
+  },
+  {
+    "barcode": "17082000231",
+    "name": "jack links beef",
+    "price": 2.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200006840",
+    "name": "david nacho cheese",
+    "price": 0.69,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200006147",
+    "name": "david original",
+    "price": 0.69,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200117003",
+    "name": "slim jim original",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200117409",
+    "name": "slim jim nacho",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200101439",
+    "name": "slim jim savage mild",
+    "price": 3.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200117300",
+    "name": "slim jim tabasco",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "90000744",
+    "name": "planters trail mix",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "34856028925",
+    "name": "welchs berries",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "34856028987",
+    "name": "welchs mixed fruit",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "34856028918",
+    "name": "welchs island fruit",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "20501110039",
+    "name": "trails best beef & cheese",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200002361",
+    "name": "david ranch",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200002354",
+    "name": "david bar-b-q",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "14113702164",
+    "name": "wonderful pistachios",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "20501796011",
+    "name": "trails best turkey",
+    "price": 1.49,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "29000022119",
+    "name": "planters peanuts",
+    "price": 0.5,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "29000075382",
+    "name": "planters cashews",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200002347",
+    "name": "david original",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "727968000100",
+    "name": "bulls snack stick",
+    "price": 0.5,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "26200101927",
+    "name": "slim jim",
+    "price": 0.5,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "91752001209",
+    "name": "otis spunkmeyer chocolate muffin",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "91752001001",
+    "name": "otis spunkmeyer blueberry",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "91752001056",
+    "name": "otis spunkmeyer banana muffin",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "894537000356",
+    "name": "pound cake marble",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "894537000288",
+    "name": "blueberry muffin",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "894537000301",
+    "name": "chocolate chip muffin",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "894537000325",
+    "name": "banana muffin",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "894537000318",
+    "name": "apple muffin",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "894537000349",
+    "name": "pound cake lemon",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "894537000011",
+    "name": "croissant",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "894537000332",
+    "name": "pound cake",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "1.99",
+    "name": "corn muffin",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "757244",
+    "name": "poland spring 1gal",
+    "price": 2.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "44000032234",
+    "name": "chips ahoy chewy",
+    "price": 4.99,
+    "category": "Drinks"
+  },
+  {
+    "barcode": "44000032197",
+    "name": "chips ahoy original",
+    "price": 4.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000060138",
+    "name": "oreo doublr stuf",
+    "price": 4.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000060114",
+    "name": "oreo",
+    "price": 4.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "44000060121",
+    "name": "oreo golden",
+    "price": 4.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "27800065701",
+    "name": "fudge stripes",
+    "price": 4.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "48001213388",
+    "name": "hellmanns mayonnaise",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "13000008525",
+    "name": "heinz vinegar",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "131240",
+    "name": "heinz ketchup",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "33200011101",
+    "name": "A&H baking soda",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "4099100002546",
+    "name": "lasagna",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "50000010110",
+    "name": "carnation milk",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "652729102451",
+    "name": "magnolia sweetned milk",
+    "price": 3.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "50700021843",
+    "name": "vegetable oil",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "51000012517",
+    "name": "campbells chicken noodle soup",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "41500805016",
+    "name": "redhot 5oz",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "50000300624",
+    "name": "coffee mate 6oz",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "51500255162",
+    "name": "jif peanut butter creamy",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "74471017102",
+    "name": "cafe bustelo",
+    "price": 5.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "4099100126112",
+    "name": "hot sauce",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "64144047093",
+    "name": "chef boyardee beef ravioli micro",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "64144047024",
+    "name": "chef boyardee beefaroni micro",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "64144047178",
+    "name": "chef boyardee spaghetti & meatballs micro",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "64144047567",
+    "name": "chef boyardee mini beef ravioli & meatballs micro",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "39000086639",
+    "name": "vienna sausage pork",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "37600115445",
+    "name": "spam",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "39000086691",
+    "name": "chicken vienna sausage",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "20100000465",
+    "name": "beach cliff sardines",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "17400102456",
+    "name": "carolina rice",
+    "price": 3.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "50700028217",
+    "name": "sugar",
+    "price": 4.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "50700031057",
+    "name": "salt",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "33844004484",
+    "name": "black pepper",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "33844000059",
+    "name": "garlic",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "33844000110",
+    "name": "paprika",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "24000163022",
+    "name": "fresh cut corn",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "50700086477",
+    "name": "mixed vegetables",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "27000390146",
+    "name": "hunts tomato sauce",
+    "price": 2.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "64144043026",
+    "name": "chef boyardee beefaroni",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "64144043224",
+    "name": "chef boyardee spaghetti & meatballs",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "37600241939",
+    "name": "hormel chili no beans",
+    "price": 3.49,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "39000085687",
+    "name": "corned beef hash",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "64144043156",
+    "name": "chef boyardee beef ravioli",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "37600223188",
+    "name": "hormel chili with beans",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "37600246095",
+    "name": "dinty moore beef stew",
+    "price": 3.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "70662130018",
+    "name": "cup noodles beef",
+    "price": 1,
+    "category": "Tobacco"
+  },
+  {
+    "barcode": "41789001253",
+    "name": "maruchan shrimp",
+    "price": 1,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "70662030035",
+    "name": "cup noodles chicken",
+    "price": 1,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "8801073210363",
+    "name": "buldak cup original",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "41789001222",
+    "name": "maruchan beef",
+    "price": 1,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "41789001154",
+    "name": "maruchan chili shrimp[",
+    "price": 1,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "31146262441",
+    "name": "nongshim spicy",
+    "price": 2.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "8801073215863",
+    "name": "buldak cup habanero lime",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "31146262571",
+    "name": "nongshim chicken",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "31146250103",
+    "name": "nongshim hot & spicy",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "8801073211506",
+    "name": "buldak cup carbonara",
+    "price": 4.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "41789001437",
+    "name": "maruchan hot & spicy chicken",
+    "price": 1,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "70662130025",
+    "name": "cup noodles shrimp",
+    "price": 1,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "31146262748",
+    "name": "nomngshim spicyshrimp",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "41789002588",
+    "name": "maruchan bag beef",
+    "price": 0.5,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "70662010037",
+    "name": "top romen bag chicken",
+    "price": 0.5,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "41789002175",
+    "name": "maruchan bag shrimp",
+    "price": 0.5,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "8801073141780",
+    "name": "buldak cheese 5pk",
+    "price": 9.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "8801073113312",
+    "name": "buldak cheese",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "8801073110502",
+    "name": "buldak original",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "8801073140578",
+    "name": "buldak original 5pk",
+    "price": 9.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "8801073113893",
+    "name": "buldak carbonara",
+    "price": 1.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "8801073142312",
+    "name": "buldak carbonara 5pk",
+    "price": 9.99,
+    "category": "Grocery"
+  },
+  {
+    "barcode": "700786110008",
+    "name": "bliunteffects spry",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "87860720002",
+    "name": "blunteffects  incense",
+    "price": 1.49,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "734366014912",
+    "name": "smoke odor spray bamboo breeze",
+    "price": 9.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "734366043950",
+    "name": "smoke odor spray sugar skull",
+    "price": 9.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "734366043943",
+    "name": "smoke odor spray happy daze",
+    "price": 9.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "734366044452",
+    "name": "smoke odor spray island rain",
+    "price": 9.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "734366036938",
+    "name": "smoke odor spray orange lemon",
+    "price": 9.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "734366021095",
+    "name": "smoke odor candle dragon blood",
+    "price": 9.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "734366020036",
+    "name": "smoke odor candle lavender",
+    "price": 9.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "734366021118",
+    "name": "smoke odor candle hippie love",
+    "price": 9.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "5000204957655",
+    "name": "glade candle vanilla",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "5000204560435",
+    "name": "glade candle honey & chocolate",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "5000204540307",
+    "name": "glade candle relaxing zen",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "191554190030",
+    "name": "foot warmers",
+    "price": 1.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "9800800056",
+    "name": "nutella breadsticks",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "98523",
+    "name": "kinder eggs",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "83933272126",
+    "name": "kool-aid rock candy",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "83933272157",
+    "name": "warheads rock candy",
+    "price": 1.99,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "14100043706",
+    "name": "milano",
+    "price": 75,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "41116005190",
+    "name": "ring pop",
+    "price": 75,
+    "category": "Snacks"
+  },
+  {
+    "barcode": "30772088586",
+    "name": "febreze fabric",
+    "price": 5.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "30772058633",
+    "name": "febreze air calm",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "37000962564",
+    "name": "febreze air mist",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "41119000345",
+    "name": "clean pine",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "41119004008",
+    "name": "clean fresh lemon",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "46500052910",
+    "name": "glade spray soft mist",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "827854012085",
+    "name": "dermassage dishwashing",
+    "price": 1.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "67238891190",
+    "name": "dove bar original",
+    "price": 2.49,
+    "category": "Household"
+  },
+  {
+    "barcode": "8717163616468",
+    "name": "dove bar pink",
+    "price": 2.49,
+    "category": "Household"
+  },
+  {
+    "barcode": "46500052897",
+    "name": "glade spray tropical",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "37000958611",
+    "name": "gain original dryer sheets",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "808829103656",
+    "name": "hand soap kiwi",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "808829030051",
+    "name": "hand soap rose",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "308694706100",
+    "name": "hydrogen peroxide",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "308691156106",
+    "name": "rubbing alcohol",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "73010314092",
+    "name": "tampax super",
+    "price": 3.49,
+    "category": "Household"
+  },
+  {
+    "barcode": "73010479050",
+    "name": "tampax super plus",
+    "price": 7.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "73010004542",
+    "name": "tampax regular",
+    "price": 7.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "827854009504",
+    "name": "ajax breach",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "35000464132",
+    "name": "palmolive dishwasher",
+    "price": 1.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "35000531056",
+    "name": "fabuloso lavender",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "72785143883",
+    "name": "magnesium citrate",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "50700007984",
+    "name": "r&w bleach 1lt",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "50700563404",
+    "name": "r&w trash bags 30 gal 2ft",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "50700563350",
+    "name": "R&W trash bags 30gal 20 bags",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "50700008370",
+    "name": "R&W trash bags 8gal 20 bags",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "50700017341",
+    "name": "R&W trash bags 13gal 20bags",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "50700563305",
+    "name": "R&W tsrash bags 13gal 15bags",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "50700563381",
+    "name": "R&W trash bags 30gal 10bags",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "37000106135",
+    "name": "downy april fresh",
+    "price": 4.49,
+    "category": "Household"
+  },
+  {
+    "barcode": "50700000206",
+    "name": "aluminum foil 25ft",
+    "price": 2.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "13700481000",
+    "name": "baggies 150",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "70881233187",
+    "name": "brillo",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "412947",
+    "name": "s.o.s sponge",
+    "price": 2.49,
+    "category": "Household"
+  },
+  {
+    "barcode": "94514000960",
+    "name": "xtra sparklin freh",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "94514020043",
+    "name": "xtra tropical",
+    "price": 4.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "50700007991",
+    "name": "R&W bleach 2lt",
+    "price": 5.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "54200480797",
+    "name": "elite bleach 1 gal",
+    "price": 5.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "99905210188",
+    "name": "diapers #3",
+    "price": 5.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "99905108140",
+    "name": "diapers #5",
+    "price": 5.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "99905111164",
+    "name": "diapers #4",
+    "price": 5.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "5029053567822",
+    "name": "huggies baby wipes all over clean",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "5029053550152",
+    "name": "huggies wipes natural care",
+    "price": 3.99,
+    "category": "Household"
+  },
+  {
+    "barcode": "846351018307",
+    "name": "power steering fluid",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "12903655010",
+    "name": "10w-30",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "80565410032",
+    "name": "super hd brake fluid",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "636227240822",
+    "name": "Toenail Clipper",
+    "price": 2.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "39800014009",
+    "name": "AAA Batteries",
+    "price": 2.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "39800015464",
+    "name": "AA Batteries",
+    "price": 2.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071052",
+    "name": "t-short l white",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071051",
+    "name": "t-short m white",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071054",
+    "name": "t-short 2xl white",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071053",
+    "name": "t-short xl white",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071064",
+    "name": "t-short  3xl whate",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071056",
+    "name": "t-short white 4xl",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071058",
+    "name": "t-short 6xl white",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071075",
+    "name": "t-short black 5xl",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071073",
+    "name": "t-short black 3xl",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071072",
+    "name": "t-short black 2xl",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071069",
+    "name": "t-short black m",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071070",
+    "name": "t-short black l",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "879501071071",
+    "name": "t-short black xl",
+    "price": 4.99,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "87169816802",
+    "name": "tank top black xl",
+    "price": 3.49,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "689076655149",
+    "name": "tank top black 2xl",
+    "price": 3.49,
+    "category": "Other / Misc"
+  },
+  {
+    "barcode": "87169816796",
+    "name": "tank top white 2xl",
+    "price": 3.49,
+    "category": "Other / Misc"
+  }
+]

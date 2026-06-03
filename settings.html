@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Sal POS</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .settings-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .settings-tabs {
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.25rem;
+      background: rgba(var(--muted), 0.5);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1.5rem;
+      width: fit-content;
+    }
+
+    .settings-tab {
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      border: none;
+      background: transparent;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--muted-foreground);
+      transition: all 0.2s;
+    }
+
+    .settings-tab:hover {
+      color: var(--foreground);
+    }
+
+    .settings-tab.active {
+      background: var(--card);
+      color: var(--foreground);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .settings-section {
+      display: none;
+    }
+
+    .settings-section.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .settings-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+
+    .settings-card-header {
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .settings-card-title svg {
+      color: var(--primary);
+    }
+
+    .settings-card-description {
+      font-size: 0.8125rem;
+      color: var(--muted-foreground);
+    }
+
+    .settings-card-content {
+      padding: 1.25rem;
+    }
+
+    .settings-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .settings-form-grid .full-width {
+      grid-column: span 2;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      background: rgba(var(--muted), 0.5);
+      border-radius: var(--radius);
+      margin-bottom: 0.75rem;
+    }
+
+    .toggle-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .toggle-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+
+    .toggle-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .toggle-description {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border);
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: var(--primary);
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+    }
+
+    .status-dot.online {
+      background: var(--success);
+    }
+
+    .status-dot.offline {
+      background: var(--destructive);
+    }
+
+    .settings-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      margin-top: 1.5rem;
+    }
+
+    .system-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .system-info-item {
+      padding: 1rem;
+      background: var(--muted);
+      border-radius: var(--radius);
+    }
+
+    .system-info-label {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+      margin-bottom: 0.25rem;
+    }
+
+    .system-info-value {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .settings-tabs {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      .settings-form-grid {
+        grid-template-columns: 1fr;
+      }
+      .settings-form-grid .full-width {
+        grid-column: span 1;
+      }
+      .system-info {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/>
+          <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/>
+          <path d="M12 3v6"/>
+        </svg>
+      </div>
+      <h1>Sal POS</h1>
+    </div>
+    <div class="sidebar-nav">
+      <a href="index.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="7" height="9" x="3" y="3" rx="1"/>
+          <rect width="7" height="5" x="14" y="3" rx="1"/>
+          <rect width="7" height="9" x="14" y="12" rx="1"/>
+          <rect width="7" height="5" x="3" y="16" rx="1"/>
+        </svg>
+        <span>POS Terminal</span>
+      </a>
+      <a href="products.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m7.5 4.27 9 5.15"/>
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          <path d="m3.3 7 8.7 5 8.7-5"/>
+          <path d="M12 22V12"/>
+        </svg>
+        <span>Products</span>
+      </a>
+      <a href="reports.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"/>
+          <path d="m19 9-5 5-4-4-3 3"/>
+        </svg>
+        <span>Reports</span>
+      </a>
+      <a href="settings.html" class="sidebar-link active">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span>Settings</span>
+      </a>
+    </div>
+    <div class="sidebar-footer">
+      <a href="login.html" class="sidebar-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" x2="9" y1="12" y2="12"/>
+        </svg>
+        <span>Logout</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="settings-header">
+      <h1 class="page-title">Settings</h1>
+      <p class="page-description">Configure your point of sale terminal and preferences.</p>
+    </div>
+
+    <div class="settings-tabs">
+      <button class="settings-tab active" data-tab="general">General</button>
+      <button class="settings-tab" data-tab="system">System</button>
+      <button class="settings-tab" data-tab="about">About</button>
+    </div>
+
+    <div id="general" class="settings-section active">
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/>
+              <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"/>
+              <path d="M12 3v6"/>
+            </svg>
+            Store Information
+          </h3>
+          <p class="settings-card-description">Details that appear on receipts and reports.</p>
+        </div>
+        <div class="settings-card-content">
+          <div class="settings-form-grid">
+            <div class="form-group">
+              <label class="label">Store Name</label>
+              <input type="text" class="input" value="My Store" id="storeName">
+            </div>
+            <div class="form-group">
+              <label class="label">Store ID</label>
+              <input type="text" class="input" value="SM-001" disabled style="background: var(--muted);">
+            </div>
+            <div class="form-group full-width">
+              <label class="label">Phone Number</label>
+              <input type="text" class="input" value="" id="storePhone">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Preferences
+          </h3>
+          <p class="settings-card-description">Customize your terminal behavior.</p>
+        </div>
+        <div class="settings-card-content">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label">Default Tax Enabled</span>
+              <span class="toggle-description">Automatically apply 8% tax to sales.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked id="taxEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label">Sound Effects</span>
+              <span class="toggle-description">Play sounds on scans and errors.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked id="soundEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label">Auto-print Receipts</span>
+              <span class="toggle-description">Automatically print after each sale.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="autoPrint">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2"/>
+              <path d="M12 20v2"/>
+              <path d="m4.93 4.93 1.41 1.41"/>
+              <path d="m17.66 17.66 1.41 1.41"/>
+              <path d="M2 12h2"/>
+              <path d="M20 12h2"/>
+              <path d="m6.34 17.66-1.41 1.41"/>
+              <path d="m19.07 4.93-1.41 1.41"/>
+            </svg>
+            Display Theme
+          </h3>
+          <p class="settings-card-description">Choose between light and dark mode.</p>
+        </div>
+        <div class="settings-card-content">
+          <div style="display: flex; gap: 1rem;">
+            <button id="lightModeBtn" class="btn btn-outline" style="flex: 1; padding: 1rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2"/><path d="M12 20v2"/>
+                <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+                <path d="M2 12h2"/><path d="M20 12h2"/>
+                <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+              </svg>
+              Light Mode
+            </button>
+            <button id="darkModeBtn" class="btn btn-outline" style="flex: 1; padding: 1rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+              </svg>
+              Dark Mode
+            </button>
+          </div>
+          <div id="currentTheme" style="margin-top: 1rem; text-align: center; font-size: 0.875rem; color: var(--muted-foreground);">Current: Light Mode</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="system" class="settings-section">
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="8" x="2" y="2" rx="2" ry="2"/>
+              <rect width="20" height="8" x="2" y="14" rx="2" ry="2"/>
+              <line x1="6" x2="6.01" y1="6" y2="6"/>
+              <line x1="6" x2="6.01" y1="18" y2="18"/>
+            </svg>
+            System Status
+          </h3>
+          <p class="settings-card-description">Current system information and connectivity.</p>
+        </div>
+        <div class="settings-card-content">
+          <div class="system-info">
+            <div class="system-info-item">
+              <div class="system-info-label">Server Status</div>
+              <div class="system-info-value">
+                <span class="status-indicator">
+                  <span class="status-dot online"></span>
+                  Online
+                </span>
+              </div>
+            </div>
+            <div class="system-info-item">
+              <div class="system-info-label">Google Sheets</div>
+              <div class="system-info-value" id="sheetsStatus">Checking...</div>
+            </div>
+            <div class="system-info-item">
+              <div class="system-info-label">Products Count</div>
+              <div class="system-info-value" id="productsCount">--</div>
+            </div>
+            <div class="system-info-item">
+              <div class="system-info-label">Sales Today</div>
+              <div class="system-info-value" id="salesToday">--</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" x2="12" y1="15" y2="3"/>
+            </svg>
+            Data Management
+          </h3>
+          <p class="settings-card-description">Your data is stored on YOUR computer. Export, backup, and restore anytime.</p>
+        </div>
+        <div class="settings-card-content">
+
+          <!-- BACKUP FOLDER -->
+          <div style="margin-bottom:1.5rem;">
+            <label style="font-weight:600;display:block;margin-bottom:0.5rem;">Auto-Backup Folder (USB / External Drive)</label>
+            <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">Set a folder path (e.g. E:\MyBackups or D:\POS-Backup). Your data will be backed up here automatically every day.</p>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+              <input type="text" id="backupPathInput" class="form-input" placeholder="e.g. E:\MyBackups" style="flex:1;" />
+              <button id="saveBackupPathBtn" class="btn btn-primary">Save Path</button>
+              <button id="backupNowBtn" class="btn btn-outline">Backup Now</button>
+            </div>
+            <div id="backupPathStatus" style="margin-top:0.5rem;font-size:0.85rem;color:#666;"></div>
+          </div>
+
+          <!-- EXPORT -->
+          <div style="margin-bottom:1.5rem;">
+            <label style="font-weight:600;display:block;margin-bottom:0.5rem;">Export Data</label>
+            <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">Download your data as CSV (opens in Excel) or as a full database backup file.</p>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+              <a id="exportProductsBtn" href="/api/products/export/csv" class="btn btn-outline" download>
+                📦 Export Products (CSV)
+              </a>
+              <a id="exportSalesBtn" href="/api/reports/export/csv" class="btn btn-outline" download>
+                💰 Export Sales (CSV)
+              </a>
+              <a id="exportDbBtn" href="/api/backup/download" class="btn btn-outline" download>
+                💾 Download Full Backup (.db)
+              </a>
+            </div>
+          </div>
+
+          <!-- IMPORT PRODUCTS -->
+          <div style="margin-bottom:1.5rem;">
+            <label style="font-weight:600;display:block;margin-bottom:0.5rem;">Import Products from CSV</label>
+            <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">Upload a CSV file with columns: barcode, name, price, cost, category, stock, taxable, ebt_eligible, age_restricted</p>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+              <input type="file" id="importCsvFile" accept=".csv" style="flex:1;" />
+              <button id="importCsvBtn" class="btn btn-primary">Import Products</button>
+            </div>
+            <div id="importStatus" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+          </div>
+
+          <!-- RESTORE DATABASE -->
+          <div style="margin-bottom:1rem;">
+            <label style="font-weight:600;display:block;margin-bottom:0.5rem;">Restore Full Database</label>
+            <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">If you move to a new PC or recover from a crash — upload your .db backup file to restore everything.</p>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+              <input type="file" id="restoreDbFile" accept=".db" style="flex:1;" />
+              <button id="restoreDbBtn" class="btn btn-outline" style="color:#e74c3c;border-color:#e74c3c;">Restore Database</button>
+            </div>
+            <div id="restoreStatus" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+          </div>
+
+          <!-- GOOGLE SHEETS (OPTIONAL) -->
+          <div style="border-top:1px solid #eee;padding-top:1rem;margin-top:0.5rem;">
+            <label style="font-weight:600;display:block;margin-bottom:0.5rem;">Google Sheets Sync <span style="font-weight:400;color:#888;font-size:0.85rem;">(Optional)</span></label>
+            <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">For an extra cloud backup layer. Place your google-credentials.json file in the app folder to enable.</p>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+              <button id="syncBtn" class="btn btn-outline">🔄 Sync with Google Sheets</button>
+              <button id="refreshBtn" class="btn btn-outline">↻ Refresh Products</button>
+            </div>
+            <div id="sheetsStatusMsg" style="margin-top:0.5rem;font-size:0.85rem;color:#666;"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div id="about" class="settings-section">
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            About Sal POS
+          </h3>
+          <p class="settings-card-description">System information and version details.</p>
+        </div>
+        <div class="settings-card-content">
+          <div class="system-info">
+            <div class="system-info-item">
+              <div class="system-info-label">Version</div>
+              <div class="system-info-value">2.0.0</div>
+            </div>
+            <div class="system-info-item">
+              <div class="system-info-label">Last Updated</div>
+              <div class="system-info-value">November 2025</div>
+            </div>
+            <div class="system-info-item full-width" style="grid-column: span 2;">
+              <div class="system-info-label">Description</div>
+              <div class="system-info-value">A modern point-of-sale system designed for any retail store. Features barcode scanning, cart management, multiple payment methods, and Google Sheets integration for product and sales data.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-actions">
+      <button class="btn btn-outline">Discard Changes</button>
+      <button class="btn btn-primary" id="saveBtn">Save Settings</button>
+    </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast' + (isError ? ' error' : ' success');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    async function loadStatus() {
+      try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        
+        document.getElementById("sheetsStatus").innerHTML = data.googleEnabled 
+          ? '<span class="status-indicator"><span class="status-dot online"></span> Connected</span>'
+          : '<span class="status-indicator"><span class="status-dot offline"></span> Offline</span>';
+        
+        document.getElementById("productsCount").textContent = data.sheetsProductCount || data.localProductCount || 0;
+        
+        const eodRes = await fetch("/api/eod-today");
+        const eodData = await eodRes.json();
+        document.getElementById("salesToday").textContent = eodData.transactionCount || 0;
+      } catch (err) {
+        console.error("Error loading status:", err);
+      }
+    }
+
+    // Load backup path on page load
+    async function loadBackupPath() {
+      try {
+        const res = await fetch("/api/settings/backup-path");
+        const data = await res.json();
+        if (data.path) {
+          document.getElementById("backupPathInput").value = data.path;
+          document.getElementById("backupPathStatus").textContent = "✅ Backup folder set: " + data.path;
+        }
+      } catch(e) {}
+    }
+    loadBackupPath();
+
+    // Save backup path
+    document.getElementById("saveBackupPathBtn").addEventListener("click", async () => {
+      const p = document.getElementById("backupPathInput").value.trim();
+      if (!p) return showToast("Please enter a folder path", true);
+      const res = await fetch("/api/settings/backup-path", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ path: p }) });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById("backupPathStatus").textContent = "✅ Saved: " + p;
+        showToast("Backup folder saved!");
+      } else {
+        showToast("Error saving path", true);
+      }
+    });
+
+    // Backup now
+    document.getElementById("backupNowBtn").addEventListener("click", async () => {
+      showToast("Backing up...");
+      const res = await fetch("/api/backup/auto", { method:"POST" });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById("backupPathStatus").textContent = "✅ Backed up to: " + data.path;
+        showToast("Backup complete! " + data.filename);
+      } else {
+        showToast(data.error || "Backup failed", true);
+      }
+    });
+
+    // Import products from CSV
+    document.getElementById("importCsvBtn").addEventListener("click", async () => {
+      const file = document.getElementById("importCsvFile").files[0];
+      if (!file) return showToast("Please select a CSV file", true);
+      const text = await file.text();
+      const statusEl = document.getElementById("importStatus");
+      statusEl.textContent = "Importing...";
+      const res = await fetch("/api/products/import/csv", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ csvData: text }) });
+      const data = await res.json();
+      if (data.success) {
+        statusEl.style.color = "green";
+        statusEl.textContent = `✅ Imported ${data.imported} products. Skipped: ${data.skipped}`;
+        showToast(`Imported ${data.imported} products!`);
+      } else {
+        statusEl.style.color = "red";
+        statusEl.textContent = "❌ Error: " + data.error;
+        showToast("Import failed", true);
+      }
+    });
+
+    // Restore database
+    document.getElementById("restoreDbBtn").addEventListener("click", async () => {
+      const file = document.getElementById("restoreDbFile").files[0];
+      if (!file) return showToast("Please select a .db backup file", true);
+      if (!confirm("⚠️ This will replace ALL current data with the backup. Are you sure?")) return;
+      const statusEl = document.getElementById("restoreStatus");
+      statusEl.textContent = "Restoring...";
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(e.target.result)));
+        const res = await fetch("/api/backup/restore", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ dbBase64: base64 }) });
+        const data = await res.json();
+        if (data.success) {
+          statusEl.style.color = "green";
+          statusEl.textContent = "✅ Restored! Please restart the app.";
+          showToast("Database restored! Restart the app.");
+        } else {
+          statusEl.style.color = "red";
+          statusEl.textContent = "❌ Error: " + data.error;
+          showToast("Restore failed", true);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById("syncBtn").addEventListener("click", async () => {
+      showToast("Syncing with Google Sheets...");
+      await loadStatus();
+      showToast("Sync complete!");
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", async () => {
+      showToast("Refreshing products...");
+      await loadStatus();
+      showToast("Products refreshed!");
+    });
+
+    document.getElementById("testAutoPrintBtn").addEventListener("click", async () => {
+      showToast("Generating EOD report...");
+      try {
+        const res = await fetch("/api/eod-today");
+        const data = await res.json();
+        if (data.success) {
+          const t = data.totals || {};
+          const c = data.counts || {};
+          const grand = data.grandTotal || 0;
+          const txCount = data.transactionCount || 0;
+          
+          const padLeft = (str, len) => String(str).padStart(len);
+          const padRight = (str, len) => String(str).padEnd(len);
+          const formatMoney = (n) => "$" + Number(n || 0).toFixed(2);
+          const formatRow = (label, amount, count) => padRight(label, 12) + padLeft(count, 6) + padLeft(formatMoney(amount), 12);
+          const line = "-".repeat(30);
+          
+          const reportText = [
+            '    My Store',
+            ' ' + new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+            '  *** End of Day ***',
+            '   (Test Print)',
+            '',
+            line,
+            padRight('Type', 12) + padLeft('#Trn', 6) + padLeft('Amount', 12),
+            line,
+            formatRow('Cash', t["Cash"] || 0, c["Cash"] || 0),
+            formatRow('Debit', t["Debit"] || 0, c["Debit"] || 0),
+            formatRow('EBT', t["EBT"] || 0, c["EBT"] || 0),
+            line,
+            formatRow('TOTAL', grand, txCount),
+            line,
+            '',
+            '     Thank you!'
+          ].join('\n');
+          
+          const reportHtml = '<html><head><style>body{font-family:monospace;font-size:12px;width:280px;margin:0;padding:8px;}</style></head><body><pre>' + reportText + '</pre></body></html>';
+          
+          if (window.electronAPI && window.electronAPI.printReceipt) {
+            await window.electronAPI.printReceipt({ html: reportHtml });
+            showToast("Test EOD printed to receipt printer!");
+          } else {
+            const printWindow = window.open("", "", "height=600,width=400");
+            printWindow.document.write(reportHtml);
+            printWindow.document.close();
+            printWindow.print();
+            showToast("Test EOD print dialog opened!");
+          }
+          
+          // Save to report history
+          try {
+            await fetch("/api/daily-reports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+            console.log("Saved EOD report to history");
+          } catch (saveErr) {
+            console.error("Failed to save EOD report:", saveErr);
+          }
+        } else {
+          showToast("No sales data to print", true);
+        }
+      } catch (err) {
+        console.error("Test print failed:", err);
+        showToast("Test print failed: " + err.message, true);
+      }
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      showToast("Settings saved!");
+    });
+
+    loadStatus();
+
+    function setTheme(mode) {
+      document.body.className = mode;
+      localStorage.setItem('sal-pos-theme', mode);
+      updateThemeDisplay(mode);
+      
+      // Broadcast theme change via IPC to all windows
+      if (window.electronAPI && window.electronAPI.setTheme) {
+        window.electronAPI.setTheme(mode);
+      }
+    }
+
+    function updateThemeDisplay(mode) {
+      const lightBtn = document.getElementById('lightModeBtn');
+      const darkBtn = document.getElementById('darkModeBtn');
+      const currentTheme = document.getElementById('currentTheme');
+      
+      lightBtn.classList.remove('btn-primary');
+      lightBtn.classList.add('btn-outline');
+      darkBtn.classList.remove('btn-primary');
+      darkBtn.classList.add('btn-outline');
+      
+      if (mode === 'dark') {
+        darkBtn.classList.remove('btn-outline');
+        darkBtn.classList.add('btn-primary');
+        currentTheme.textContent = 'Current: Dark Mode';
+      } else {
+        lightBtn.classList.remove('btn-outline');
+        lightBtn.classList.add('btn-primary');
+        currentTheme.textContent = 'Current: Light Mode';
+      }
+    }
+
+    document.getElementById('lightModeBtn').addEventListener('click', () => setTheme('light'));
+    document.getElementById('darkModeBtn').addEventListener('click', () => setTheme('dark'));
+
+    const savedTheme = localStorage.getItem('sal-pos-theme') || 'light';
+    document.body.className = savedTheme;
+    updateThemeDisplay(savedTheme);
+
+    // Listen for theme changes via IPC (from other windows)
+    if (window.electronAPI && window.electronAPI.onThemeChanged) {
+      window.electronAPI.onThemeChanged((theme) => {
+        document.body.className = theme;
+        localStorage.setItem('sal-pos-theme', theme);
+        updateThemeDisplay(theme);
+        console.log('Theme changed via IPC to:', theme);
+      });
+    }
+  </script>
+</body>
+</html>

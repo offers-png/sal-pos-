@@ -1,0 +1,16 @@
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+dist/
+build/
+*.mp4
+attached_assets/*.mp4
+shamrock-pos-credentials.json

@@ -1,0 +1,199 @@
+[
+  {
+    "timestamp": "2025-11-28T20:01:29.971Z",
+    "saleId": "1764360089971",
+    "paymentType": "cash",
+    "subtotal": 11.98,
+    "discount": 0,
+    "tax": 0.96,
+    "total": 12.94,
+    "itemCount": 2,
+    "items": [
+      {
+        "name": "Test Item",
+        "price": 5.99,
+        "qty": 2
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-11-28T22:40:13.445Z",
+    "saleId": "1764369613445",
+    "paymentType": "Cash",
+    "subtotal": 12.97,
+    "discount": 0,
+    "tax": 1.0376,
+    "total": 14.0076,
+    "itemCount": 3,
+    "items": [
+      {
+        "name": "glade candle",
+        "price": 4.99,
+        "barcode": "5000204884869",
+        "category": "Household",
+        "qty": 2
+      },
+      {
+        "name": "Pocky Chocolate",
+        "price": 2.99,
+        "barcode": "73141152334",
+        "category": "Snacks",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-11-28T22:43:52.385Z",
+    "saleId": "1764369832385",
+    "paymentType": "Cash",
+    "subtotal": 5.97,
+    "discount": 0,
+    "tax": 0.47759999999999997,
+    "total": 6.4475999999999996,
+    "itemCount": 3,
+    "items": [
+      {
+        "name": "lighter",
+        "price": 1.99,
+        "barcode": "10855553008501",
+        "category": "Other / Misc",
+        "qty": 3
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-11-28T22:52:03.962Z",
+    "saleId": "1764370323962",
+    "paymentType": "Cash",
+    "subtotal": 9.97,
+    "discount": 0,
+    "tax": 0.7976000000000001,
+    "total": 10.767600000000002,
+    "itemCount": 3,
+    "items": [
+      {
+        "name": "lighter",
+        "price": 1.99,
+        "barcode": "10855553008501",
+        "category": "Other / Misc",
+        "qty": 1
+      },
+      {
+        "name": "glade candle",
+        "price": 4.99,
+        "barcode": "5000204884869",
+        "category": "Household",
+        "qty": 1
+      },
+      {
+        "name": "Pocky Chocolate",
+        "price": 2.99,
+        "barcode": "73141152334",
+        "category": "Snacks",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-03T23:00:21.457Z",
+    "saleId": "1764802821457",
+    "paymentType": "Cash",
+    "subtotal": 16.99,
+    "discount": 0,
+    "tax": 0,
+    "total": 16.99,
+    "itemCount": 1,
+    "items": [
+      {
+        "name": "newport",
+        "price": 16.99,
+        "barcode": "02657512",
+        "category": "Tobacco",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-03T23:11:14.264Z",
+    "saleId": "1764803474264",
+    "paymentType": "Cash",
+    "subtotal": 16.99,
+    "discount": 0,
+    "tax": 0,
+    "total": 16.99,
+    "itemCount": 1,
+    "items": [
+      {
+        "name": "newport",
+        "price": 16.99,
+        "barcode": "02657512",
+        "category": "Tobacco",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-03T23:22:20.668Z",
+    "saleId": "1764804140668",
+    "paymentType": "Cash",
+    "subtotal": 16.99,
+    "discount": 0,
+    "tax": 0,
+    "total": 16.99,
+    "itemCount": 1,
+    "items": [
+      {
+        "name": "newport",
+        "price": 16.99,
+        "barcode": "02657512",
+        "category": "Tobacco",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-03T23:26:32.620Z",
+    "saleId": "1764804392620",
+    "paymentType": "Cash",
+    "subtotal": 16.99,
+    "discount": 0,
+    "tax": 0,
+    "total": 16.99,
+    "itemCount": 1,
+    "items": [
+      {
+        "name": "newport",
+        "price": 16.99,
+        "barcode": "02657512",
+        "category": "Tobacco",
+        "qty": 1
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-12-04T02:31:02.203Z",
+    "saleId": "1764815462220",
+    "paymentType": "Cash",
+    "subtotal": 8.98,
+    "discount": 0,
+    "tax": 0,
+    "total": 8.98,
+    "itemCount": 2,
+    "items": [
+      {
+        "name": "zyn coffee 3mg",
+        "price": 6.99,
+        "barcode": "609249904010",
+        "category": "Tobacco",
+        "qty": 1
+      },
+      {
+        "name": "Extra",
+        "price": 1.99,
+        "barcode": "2289805",
+        "category": "Snacks",
+        "qty": 1
+      }
+    ]
+  }
+]

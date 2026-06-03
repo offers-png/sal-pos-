@@ -1,0 +1,4312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sal POS</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --pos-bg: #ffffff;
+      --pos-panel: #f8f9fa;
+      --pos-card: #ffffff;
+      --pos-border: #e2e8f0;
+      --pos-text: #1a202c;
+      --pos-text-muted: #64748b;
+      --pos-accent: #00a896;
+      --pos-accent-light: rgba(0, 168, 150, 0.1);
+      --pos-hover: #f1f5f9;
+      --pos-cart-bg: #f8fafc;
+    }
+
+    body.dark {
+      --pos-bg: #1a1a2e;
+      --pos-panel: #16213e;
+      --pos-card: #1e2746;
+      --pos-border: #2a3550;
+      --pos-text: #ffffff;
+      --pos-text-muted: #a0a5b8;
+      --pos-accent: #00d9a5;
+      --pos-accent-light: rgba(0, 217, 165, 0.1);
+      --pos-hover: #253256;
+      --pos-cart-bg: #1e2746;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--pos-bg);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow: hidden;
+    }
+
+    .pos-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .left-panel {
+      width: 420px;
+      background: var(--pos-panel);
+      display: flex;
+      flex-direction: column;
+      border-right: 2px solid var(--pos-border);
+    }
+
+    .store-header {
+      background: linear-gradient(135deg, #00a896 0%, #028090 100%);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .store-logo {
+      width: 48px;
+      height: 48px;
+      background: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .store-info h1 {
+      color: white;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .store-info p {
+      color: rgba(255,255,255,0.8);
+      font-size: 0.75rem;
+      margin: 0;
+    }
+
+    .cart-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .cart-header-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      padding: 0.75rem 1rem;
+      background: var(--pos-bg);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--pos-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--pos-cart-bg);
+    }
+
+    .cart-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--pos-border);
+      align-items: center;
+      color: var(--pos-text);
+      cursor: pointer;
+    }
+
+    .cart-row:hover {
+      background: var(--pos-hover);
+    }
+
+    .cart-item-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .cart-item-qty {
+      text-align: center;
+      font-size: 0.875rem;
+    }
+
+    .cart-item-price {
+      text-align: right;
+      font-weight: 600;
+      color: var(--pos-accent);
+    }
+
+    .empty-cart {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--pos-text-muted);
+      font-size: 0.875rem;
+    }
+
+    .empty-cart svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .totals-section {
+      background: var(--pos-bg);
+      padding: 1rem;
+      border-top: 2px solid var(--pos-border);
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.375rem 0;
+      font-size: 0.875rem;
+      color: var(--pos-text-muted);
+    }
+
+    .total-row.grand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--pos-text);
+      padding: 0.75rem 0;
+      border-top: 1px solid var(--pos-border);
+      margin-top: 0.5rem;
+    }
+
+    .total-row.grand span:last-child {
+      color: var(--pos-accent);
+    }
+
+    .tax-toggle-btn {
+      padding: 0.2rem 0.5rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+    }
+
+    .tax-toggle-btn.off {
+      background: #dc3545;
+      color: white;
+    }
+
+    .tax-toggle-btn.on {
+      background: #28a745;
+      color: white;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--pos-panel);
+    }
+
+    .action-btn {
+      padding: 0.875rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-checkout {
+      grid-column: span 1;
+      background: linear-gradient(135deg, #00a896 0%, #028090 100%);
+      color: white;
+      padding: 1rem;
+      font-size: 1rem;
+    }
+
+    .btn-checkout:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 168, 150, 0.4);
+    }
+
+    .btn-discount {
+      background: var(--pos-border);
+      color: var(--pos-text);
+    }
+
+    .btn-discount:hover {
+      background: var(--pos-hover);
+    }
+
+    .btn-void {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-void:hover {
+      background: #c82333;
+    }
+
+    .keypad-section {
+      background: var(--pos-panel);
+      padding: 0.75rem;
+      border-top: 2px solid var(--pos-border);
+    }
+
+    .keypad-display {
+      background: var(--pos-bg);
+      padding: 0.75rem 1rem;
+      text-align: right;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--pos-accent);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      font-family: 'DM Sans', monospace;
+      border: 1px solid var(--pos-border);
+    }
+
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+
+    .key-btn {
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.1s;
+      background: var(--pos-card);
+      color: var(--pos-text);
+      border: 1px solid var(--pos-border);
+    }
+
+    .key-btn:hover {
+      background: var(--pos-hover);
+      transform: scale(1.02);
+    }
+
+    .key-btn:active {
+      transform: scale(0.98);
+    }
+
+    .key-btn.key-qty {
+      background: var(--pos-accent-light);
+      color: var(--pos-accent);
+      border-color: var(--pos-accent);
+    }
+
+    .key-btn.key-clear {
+      background: #dc3545;
+      color: white;
+    }
+
+    .key-btn.key-enter {
+      background: #00a896;
+      color: white;
+    }
+
+    .key-btn.key-add {
+      background: #28a745;
+      color: white;
+      grid-row: span 2;
+    }
+
+    .payment-section {
+      background: var(--pos-bg);
+      padding: 0.75rem;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      border-top: 2px solid var(--pos-border);
+    }
+
+    .pay-btn {
+      padding: 1rem 0.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .pay-btn.no-sale {
+      background: #6c757d;
+      color: white;
+    }
+
+    .pay-btn.cash {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+    }
+
+    .pay-btn.debit {
+      background: linear-gradient(135deg, #007bff 0%, #17a2b8 100%);
+      color: white;
+    }
+
+    .pay-btn.ebt {
+      background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+      color: white;
+    }
+
+    .pay-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--pos-cart-bg);
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: var(--pos-panel);
+      border-bottom: 2px solid var(--pos-border);
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--pos-bg);
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      flex: 1;
+      max-width: 400px;
+      border: 1px solid var(--pos-border);
+    }
+
+    .search-box svg {
+      color: var(--pos-text-muted);
+      width: 20px;
+      height: 20px;
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      color: var(--pos-text);
+      font-size: 0.9375rem;
+      flex: 1;
+      outline: none;
+    }
+
+    .search-box input::placeholder {
+      color: var(--pos-text-muted);
+    }
+
+    .menu-container {
+      position: relative;
+    }
+
+    .menu-btn {
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: var(--pos-card);
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--pos-text);
+      transition: all 0.15s;
+      border: 1px solid var(--pos-border);
+    }
+
+    .menu-btn:hover {
+      background: var(--pos-hover);
+    }
+
+    .menu-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--pos-panel);
+      border: 1px solid var(--pos-border);
+      border-radius: 12px;
+      min-width: 200px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      z-index: 1000;
+      display: none;
+      overflow: hidden;
+    }
+
+    .menu-dropdown.show {
+      display: block;
+      animation: fadeIn 0.15s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      color: var(--pos-text);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .menu-item:hover {
+      background: var(--pos-hover);
+    }
+
+    .menu-item svg {
+      width: 18px;
+      height: 18px;
+      color: var(--pos-text-muted);
+    }
+
+    .menu-divider {
+      height: 1px;
+      background: var(--pos-border);
+      margin: 0.25rem 0;
+    }
+
+    .panel-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      padding: 1.5rem;
+      flex: 1;
+      align-content: start;
+      overflow-y: auto;
+      max-height: calc(100vh - 80px);
+    }
+
+    .category-tile {
+      aspect-ratio: 1;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: white;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .category-tile:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .category-tile:active {
+      transform: scale(0.98);
+    }
+
+    .category-tile.active {
+      box-shadow: 0 0 0 4px white, 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .category-tile svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    .cat-tobacco { background: linear-gradient(135deg, #d63031 0%, #e17055 100%); }
+    .cat-beer { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+    .cat-drinks { background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%); }
+    .cat-snacks { background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); }
+    .cat-food { background: linear-gradient(135deg, #00b894 0%, #55efc4 100%); }
+    .cat-household { background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%); }
+    .cat-lottery { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); }
+    .cat-hotfood { background: linear-gradient(135deg, #e84393 0%, #fd79a8 100%); }
+    .cat-grocery { background: linear-gradient(135deg, #00b894 0%, #55efc4 100%); }
+    .cat-medicine { background: linear-gradient(135deg, #00cec9 0%, #81ecec 100%); }
+    .cat-frozen { background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); }
+    .cat-dairy { background: linear-gradient(135deg, #b19cd9 0%, #9b59b6 100%); }
+    .cat-coldsubs { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
+    .cat-pets { background: linear-gradient(135deg, #636e72 0%, #b2bec3 100%); }
+    .cat-misc { background: linear-gradient(135deg, #00cec9 0%, #81ecec 100%); }
+
+    .products-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      padding: 1rem;
+    }
+
+    .products-view.show {
+      display: flex;
+    }
+
+    .products-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .products-header h2 {
+      color: var(--pos-text);
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1rem;
+      background: var(--pos-card);
+      color: var(--pos-text);
+      border: 1px solid var(--pos-border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .back-btn:hover {
+      background: var(--pos-hover);
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .product-btn {
+      background: var(--pos-card);
+      border: 2px solid var(--pos-border);
+      border-radius: 12px;
+      padding: 1rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .product-btn:hover {
+      background: var(--pos-hover);
+      border-color: var(--pos-accent);
+      transform: translateY(-2px);
+    }
+
+    .product-btn:active {
+      transform: scale(0.98);
+    }
+
+    .product-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--pos-text);
+      line-height: 1.3;
+    }
+
+    .product-price {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--pos-accent);
+    }
+
+    .product-barcode {
+      font-size: 0.7rem;
+      color: var(--pos-text-muted);
+      font-family: monospace;
+    }
+
+    .inline-panel {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .inline-panel.show {
+      display: flex;
+    }
+
+    .panel-content {
+      background: var(--pos-panel);
+      border-radius: 16px;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      border: 1px solid var(--pos-border);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--pos-border);
+      position: sticky;
+      top: 0;
+      background: var(--pos-panel);
+      z-index: 10;
+      border-radius: 16px 16px 0 0;
+    }
+
+    .panel-header h2 {
+      color: var(--pos-text);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .panel-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--pos-card);
+      border-radius: 8px;
+      color: var(--pos-text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      border: 1px solid var(--pos-border);
+    }
+
+    .panel-close:hover {
+      background: #dc3545;
+      color: white;
+    }
+
+    .panel-body {
+      padding: 1.5rem;
+    }
+
+    .panel-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--pos-border);
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    .receipt-content {
+      background: white;
+      color: #1a1a2e;
+      padding: 1.5rem;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+
+    .receipt-content h3 {
+      text-align: center;
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .receipt-item-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.25rem;
+    }
+
+    .receipt-line {
+      border-top: 1px dashed #ccc;
+      margin: 0.75rem 0;
+    }
+
+    .receipt-footer {
+      text-align: center;
+      margin-top: 1rem;
+      color: #666;
+    }
+
+    .receipt-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00a896 0%, #028090 100%);
+      color: white;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #2a3550;
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      color: white;
+    }
+
+    .receipt-print-btn {
+      grid-column: 1 / -1;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      color: #8b8fa3;
+      font-size: 0.8125rem;
+      margin-bottom: 0.375rem;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      background: #1a1a2e;
+      border: 2px solid #2a3550;
+      border-radius: 8px;
+      color: white;
+      font-size: 0.9375rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #00a896;
+      outline: none;
+    }
+
+    .form-group select option {
+      background: #16213e;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 1rem 2rem;
+      background: #16213e;
+      color: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      z-index: 3000;
+      display: none;
+      font-weight: 500;
+    }
+
+    .toast.show {
+      display: block;
+      animation: toastIn 0.3s ease;
+    }
+
+    .toast.error {
+      background: #dc3545;
+    }
+
+    .toast.success {
+      background: #28a745;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    .id-check-modal, .input-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .id-check-modal.show, .input-modal.show {
+      display: flex;
+    }
+
+    .input-modal-content {
+      background: #16213e;
+      border-radius: 16px;
+      padding: 1.5rem;
+      min-width: 300px;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .input-modal-header {
+      color: white;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .input-modal-label {
+      color: #a0a5b8;
+      font-size: 0.875rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .input-modal-field {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: #1a1a2e;
+      border: 2px solid #2a3550;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .input-modal-field:focus {
+      outline: none;
+      border-color: #00a896;
+    }
+
+    .input-modal-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .input-modal-btn {
+      flex: 1;
+      padding: 0.875rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .input-modal-btn.cancel {
+      background: #2a3550;
+      color: white;
+    }
+
+    .input-modal-btn.confirm {
+      background: linear-gradient(135deg, #00a896 0%, #028090 100%);
+      color: white;
+    }
+
+    .input-modal-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .id-check-content {
+      background: #16213e;
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .id-check-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #fd7e14 0%, #dc3545 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+
+    .id-check-icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    .id-check-title {
+      color: #fd7e14;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .id-check-subtitle {
+      color: #a0a5b8;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .id-check-product {
+      background: #1a1a2e;
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .id-check-product-name {
+      color: white;
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .id-check-product-category {
+      color: #fd7e14;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .id-check-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .id-check-btn {
+      padding: 1rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .id-check-btn.approve {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+    }
+
+    .id-check-btn.deny {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+    }
+
+    .id-check-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .settings-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .settings-tab {
+      padding: 0.625rem 1rem;
+      background: #2a3550;
+      border: none;
+      border-radius: 8px;
+      color: #8b8fa3;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .settings-tab.active {
+      background: #00a896;
+      color: white;
+    }
+
+    .settings-section {
+      display: none;
+    }
+
+    .settings-section.show {
+      display: block;
+    }
+
+    .category-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: #1a1a2e;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      color: white;
+    }
+
+    .category-item-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .category-item-count {
+      color: #8b8fa3;
+      font-size: 0.75rem;
+    }
+
+    .category-delete-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: #dc3545;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .category-delete-btn:hover {
+      background: #c82333;
+    }
+
+    .add-category-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .add-category-row input {
+      flex: 1;
+    }
+
+    .eod-summary {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 1.5rem;
+      color: #ffffff;
+    }
+
+    .eod-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #2a3550;
+      color: white;
+    }
+
+    .eod-row:last-child {
+      border-bottom: none;
+    }
+
+    .eod-row.total {
+      font-size: 1.25rem;
+      font-weight: 700;
+      border-top: 2px solid #2a3550;
+      margin-top: 0.5rem;
+      padding-top: 1rem;
+    }
+
+    .eod-row.total span:last-child {
+      color: #00d9a5;
+    }
+
+    /* Light theme overrides for EOD Reports */
+    body.light .eod-summary {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+    }
+
+    body.light .eod-row {
+      color: #0f172a;
+      border-bottom: 1px solid #cbd5e1;
+    }
+
+    body.light .eod-row.total {
+      border-top: 2px solid #94a3b8;
+    }
+
+    body.light .eod-row.total span:last-child {
+      color: #059669;
+    }
+
+    /* EOD Panel buttons - theme aware */
+    #eodPanel .btn-outline {
+      background: transparent;
+      border: 2px solid #00a896;
+      color: #ffffff;
+    }
+
+    #eodPanel .btn-outline:hover {
+      background: rgba(0, 168, 150, 0.1);
+    }
+
+    body.light #eodPanel .btn-outline {
+      color: #0f172a;
+      border-color: #00a896;
+    }
+
+    body.light #eodPanel .btn-outline:hover {
+      background: rgba(0, 168, 150, 0.1);
+    }
+  </style>
+  <script src="services/eodReportsService.js"></script>
+  <script src="services/receiptService.js"></script>
+</head>
+<body>
+  <div class="pos-container">
+    <div class="left-panel">
+      <div class="store-header">
+        <div class="store-logo">☘️</div>
+        <div class="store-info">
+          <h1>Sal POS</h1>
+          <p></p>
+        </div>
+      </div>
+
+      <div class="cart-section">
+        <div class="cart-header-row">
+          <div>Item</div>
+          <div style="text-align: center;">Qty</div>
+          <div style="text-align: right;">Price</div>
+        </div>
+        <div class="cart-items" id="cartItems">
+          <div class="empty-cart">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+            </svg>
+            <span>Cart is empty</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="totals-section">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span>$<span id="subtotal">0.00</span></span>
+        </div>
+        <div class="total-row">
+          <span>Discount</span>
+          <span>-$<span id="discountAmount">0.00</span></span>
+        </div>
+        <div class="total-row tax-row">
+          <span style="display: flex; align-items: center; gap: 0.5rem;">
+            Tax (<span id="taxRateLabel">0</span>%)
+            <button id="taxToggleBtn" class="tax-toggle-btn off" title="Click to toggle tax">OFF</button>
+          </span>
+          <span>$<span id="tax">0.00</span></span>
+        </div>
+        <div id="ebtSplitSection" style="display: none; border-top: 1px dashed var(--border-color); padding-top: 0.5rem; margin-top: 0.5rem;">
+          <div class="total-row" style="color: #22c55e;">
+            <span>EBT Eligible (Food)</span>
+            <span>$<span id="ebtTotal">0.00</span></span>
+          </div>
+          <div class="total-row" style="color: #f97316;">
+            <span>Non-EBT (Cash/Card)</span>
+            <span>$<span id="nonEbtTotal">0.00</span></span>
+          </div>
+        </div>
+        <div class="total-row grand">
+          <span>Total</span>
+          <span>$<span id="total">0.00</span></span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button id="applyDiscountBtn" class="action-btn btn-discount">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/>
+          </svg>
+          Discount
+        </button>
+        <button id="clearCartBtn" class="action-btn btn-void">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          </svg>
+          Void
+        </button>
+        <button id="checkoutBtn" class="action-btn btn-checkout">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Checkout
+        </button>
+      </div>
+
+      <div class="keypad-section">
+        <div class="keypad-display" id="keypadDisplay">0.00</div>
+        <div class="keypad-grid">
+          <button class="key-btn" data-key="7">7</button>
+          <button class="key-btn" data-key="8">8</button>
+          <button class="key-btn" data-key="9">9</button>
+          <button class="key-btn key-qty" id="qtyBtn">QTY</button>
+          <button class="key-btn" data-key="4">4</button>
+          <button class="key-btn" data-key="5">5</button>
+          <button class="key-btn" data-key="6">6</button>
+          <button class="key-btn key-add" id="addKeypadBtn">ADD</button>
+          <button class="key-btn" data-key="1">1</button>
+          <button class="key-btn" data-key="2">2</button>
+          <button class="key-btn" data-key="3">3</button>
+          <button class="key-btn" data-key="0">0</button>
+          <button class="key-btn" data-key=".">.</button>
+          <button class="key-btn key-clear" id="clearKeypadBtn">C</button>
+          <button class="key-btn key-enter" id="enterKeypadBtn">ENT</button>
+        </div>
+      </div>
+
+      <div class="payment-section">
+        <button id="noSaleBtn" class="pay-btn no-sale">No Sale</button>
+        <button id="payCashBtn" class="pay-btn cash">Cash</button>
+        <button id="payDebitBtn" class="pay-btn debit">Debit</button>
+        <button id="payEBTBtn" class="pay-btn ebt">EBT</button>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="panel-container">
+        <div class="top-bar">
+          <div class="search-box">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input id="barcodeInput" type="text" placeholder="Scan barcode or search products..." autofocus>
+          </div>
+          <div class="menu-container">
+            <button class="menu-btn" id="menuBtn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+              </svg>
+            </button>
+            <div class="menu-dropdown" id="menuDropdown">
+              <button class="menu-item" id="menuVoid">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>
+                </svg>
+                Void Sale
+              </button>
+              <button class="menu-item" id="menuReports">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+                </svg>
+                Reports
+              </button>
+              <button class="menu-item" id="menuDrawerLog" onclick="showDrawerLog()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><circle cx="12" cy="15" r="1"/>
+                </svg>
+                Drawer Log
+              </button>
+              <button class="menu-item" id="menuReprintReceipt">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                </svg>
+                Reprint Last Receipt
+              </button>
+              <div class="menu-divider"></div>
+              <button class="menu-item" id="menuAddProduct">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>
+                </svg>
+                Add Product
+              </button>
+              <button class="menu-item" id="menuEditProduct">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit Product
+              </button>
+              <button class="menu-item" id="menuShift">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span id="menuShiftText">Open Shift</span>
+              </button>
+              <button class="menu-item" id="menuSettings">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Settings
+              </button>
+              <div class="menu-divider"></div>
+              <button class="menu-item" id="menuLogout" style="color: #ff6b6b;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="categories-grid" id="categoriesGrid"></div>
+
+        <div class="products-view" id="productsView">
+          <div class="products-header">
+            <h2 id="categoryTitle">Products</h2>
+            <button class="back-btn" id="backToCategories">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m15 18-6-6 6-6"/>
+              </svg>
+              Back
+            </button>
+          </div>
+          <div class="products-grid" id="productsGrid"></div>
+        </div>
+
+        <div class="inline-panel" id="receiptPanel">
+          <div class="panel-content">
+            <div class="panel-header">
+              <h2>Receipt</h2>
+              <button class="panel-close" id="closeReceiptPanel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="panel-body">
+              <div class="receipt-content" id="receiptContent"></div>
+              <div class="receipt-actions">
+                <button class="btn btn-success receipt-print-btn" id="printReceiptBtn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:middle;">
+                    <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                  </svg>
+                  Print Receipt
+                </button>
+                <button class="btn btn-primary" id="newSaleBtn">New Sale</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="inline-panel" id="addProductPanel">
+          <div class="panel-content">
+            <div class="panel-header">
+              <h2>Add Product</h2>
+              <button class="panel-close" id="closeAddProductPanel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" id="addName" placeholder="Enter product name">
+              </div>
+              <div class="form-group">
+                <label>Price</label>
+                <input type="number" id="addPrice" placeholder="0.00" step="0.01">
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="addCategory"></select>
+              </div>
+              <div class="form-group">
+                <label>Barcode (Optional)</label>
+                <input type="text" id="addBarcode" placeholder="Enter barcode">
+              </div>
+            </div>
+            <div class="panel-footer">
+              <button class="btn btn-secondary" id="cancelAddProduct">Cancel</button>
+              <button class="btn btn-primary" id="addProductBtn">Add Product</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="inline-panel" id="editProductPanel">
+          <div class="panel-content">
+            <div class="panel-header">
+              <h2>Edit Product</h2>
+              <button class="panel-close" id="closeEditProductPanel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" id="editName" placeholder="Enter product name">
+              </div>
+              <div class="form-group">
+                <label>Price</label>
+                <input type="number" id="editPrice" placeholder="0.00" step="0.01">
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="editCategory"></select>
+              </div>
+              <div class="form-group">
+                <label>Barcode</label>
+                <input type="text" id="editBarcode" placeholder="Enter barcode" readonly>
+              </div>
+            </div>
+            <div class="panel-footer">
+              <button class="btn btn-danger" id="deleteProductBtn">Delete</button>
+              <button class="btn btn-secondary" id="cancelEditProduct">Cancel</button>
+              <button class="btn btn-primary" id="saveEditProductBtn">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="inline-panel" id="settingsPanel">
+          <div class="panel-content">
+            <div class="panel-header">
+              <h2>Settings</h2>
+              <button class="panel-close" id="closeSettingsPanel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="panel-body">
+              <div class="settings-tabs">
+                <button class="settings-tab active" data-tab="store">Store</button>
+                <button class="settings-tab" data-tab="tax">Tax</button>
+                <button class="settings-tab" data-tab="categories">Categories</button>
+                <button class="settings-tab" data-tab="printer">Printer</button>
+                <button class="settings-tab" data-tab="display">Display</button>
+              </div>
+              <div class="settings-section show" id="storeSettings">
+                <div class="form-group">
+                  <label>Store Name</label>
+                  <input type="text" id="settingsStoreName" value="My Store">
+                </div>
+                <div class="form-group">
+                  <label>Phone Number</label>
+                  <input type="text" id="settingsPhone" value="">
+                </div>
+                <div class="form-group">
+                  <label>Store Logo Emoji</label>
+                  <input type="text" id="settingsLogoEmoji" value="☘️" style="width: 80px; text-align: center; font-size: 1.5rem;">
+                </div>
+              </div>
+              <div class="settings-section" id="taxSettings">
+                <div class="form-group">
+                  <label>Tax Rate (%)</label>
+                  <input type="number" id="settingsTaxRate" value="8" step="0.1">
+                </div>
+              </div>
+              <div class="settings-section" id="categoriesSettings">
+                <div id="categoryList"></div>
+                <div class="add-category-row">
+                  <input type="text" id="newCategoryName" placeholder="New category name">
+                  <button class="btn btn-primary" id="addCategoryBtn">Add</button>
+                </div>
+              </div>
+              <div class="settings-section" id="printerSettings">
+                <div class="form-group">
+                  <label>Printer Status</label>
+                  <p style="color: #8b8fa3; font-size: 0.875rem;">ESC/POS thermal printer support enabled. Connect a USB receipt printer to print receipts automatically.</p>
+                </div>
+                <button class="btn btn-secondary" id="testPrintBtn" style="width: 100%;">Test Print</button>
+              </div>
+              <div class="settings-section" id="displaySettings">
+                <div class="form-group">
+                  <label>Theme</label>
+                  <div style="display: flex; gap: 12px; margin-top: 8px;">
+                    <button class="btn btn-secondary theme-btn" id="themeLightBtn" style="flex: 1;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                      </svg>
+                      Light
+                    </button>
+                    <button class="btn btn-secondary theme-btn" id="themeDarkBtn" style="flex: 1;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                      </svg>
+                      Dark
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel-footer">
+              <button class="btn btn-primary" id="saveSettings">Save Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="inline-panel" id="eodPanel">
+          <div class="panel-content" style="display: flex; flex-direction: column; max-height: 80vh;">
+            <div class="panel-header">
+              <h2 id="eodPanelTitle">End of Day Report</h2>
+              <button class="panel-close" id="closeEodPanel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="panel-body" style="flex: 1; overflow-y: auto;">
+              <div class="eod-summary" id="eodSummary"></div>
+              <div id="eodHistoryView" style="display: none;">
+                <div style="margin-bottom: 1rem; font-weight: 600; color: var(--text-secondary);">Last 7 Days</div>
+                <div id="eodHistoryList" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+              </div>
+            </div>
+            <div class="panel-footer" style="display: flex; gap: 0.5rem; padding: 1rem; border-top: 1px solid var(--border-color); flex-shrink: 0;">
+              <button class="btn btn-outline" id="viewHistoryBtn" style="flex: 1;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                View History
+              </button>
+              <button class="btn btn-outline" id="printEodBtn" style="flex: 1;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9"/>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                  <rect width="12" height="8" x="6" y="14"/>
+                </svg>
+                Print Report
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="id-check-modal" id="idCheckModal">
+    <div class="id-check-content" style="max-width: 420px;">
+      <div class="id-check-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      <div class="id-check-title">CHECK ID - 21+</div>
+      <div class="id-check-subtitle">Age-restricted item requires ID verification</div>
+      <div class="id-check-cutoff" id="idCheckCutoff" style="font-size: 1.1rem; font-weight: 600; color: #dc2626; margin: 0.75rem 0; padding: 0.5rem; background: rgba(220, 38, 38, 0.1); border-radius: 8px;"></div>
+      <div class="id-check-product">
+        <div class="id-check-product-name" id="idCheckProductName"></div>
+        <div class="id-check-product-category" id="idCheckProductCategory"></div>
+      </div>
+      
+      <div style="margin: 1.5rem 0; display: flex; flex-direction: column; gap: 1rem;">
+        <button class="id-check-btn approve" id="idCheckConfirmAge" style="padding: 1.25rem; font-size: 1.25rem; font-weight: 700;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 0.5rem; vertical-align: middle;">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Confirm Age 21+
+        </button>
+        
+        <div style="text-align: center; color: var(--pos-text-muted); font-size: 0.85rem; margin: 0.25rem 0;">— OR —</div>
+        
+        <div style="font-weight: 600; color: var(--pos-text); font-size: 0.95rem;">Enter Date of Birth (optional)</div>
+        <div id="dobDisplayContainer" style="display: flex; gap: 0.5rem; align-items: center;">
+          <div id="dobDisplay" style="flex: 1; padding: 1rem; border: 2px solid var(--pos-border); border-radius: 8px; font-size: 1.25rem; font-weight: 600; text-align: center; background: var(--pos-panel); color: var(--pos-text); cursor: pointer; min-height: 52px;" onclick="showDobKeypad()">
+            <span style="color: var(--pos-text-muted);">Tap to enter DOB</span>
+          </div>
+        </div>
+        <input type="hidden" id="idDobInput">
+        
+        <button class="id-check-btn approve" id="idCheckVerifyDob" style="margin-top: 0.25rem;">
+          Verify Age from DOB
+        </button>
+      </div>
+      
+      <div id="idCheckResult" style="display: none; padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; font-weight: 600; text-align: center;"></div>
+      
+      <div class="id-check-buttons" style="margin-top: 0.5rem;">
+        <button class="id-check-btn deny" id="idCheckDeny">Cancel Sale</button>
+        <button class="id-check-btn approve" id="idCheckApprove" style="display: none;">Proceed with Sale</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="id-check-modal" id="dobKeypadModal">
+    <div class="id-check-content" style="max-width: 340px; padding: 1.25rem;">
+      <div style="font-weight: 700; font-size: 1.25rem; color: var(--pos-text); margin-bottom: 0.5rem; text-align: center;">Enter Date of Birth</div>
+      <div style="font-size: 0.85rem; color: var(--pos-text-muted); text-align: center; margin-bottom: 1rem;">MM / DD / YYYY</div>
+      
+      <div id="keypadDobDisplay" style="background: var(--pos-panel); border: 2px solid var(--pos-accent); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; text-align: center; font-size: 1.75rem; font-weight: 700; letter-spacing: 2px; color: var(--pos-text); min-height: 60px;">
+        __ / __ / ____
+      </div>
+      
+      <div id="dobKeypadGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
+        <button class="keypad-btn" data-digit="1">1</button>
+        <button class="keypad-btn" data-digit="2">2</button>
+        <button class="keypad-btn" data-digit="3">3</button>
+        <button class="keypad-btn" data-digit="4">4</button>
+        <button class="keypad-btn" data-digit="5">5</button>
+        <button class="keypad-btn" data-digit="6">6</button>
+        <button class="keypad-btn" data-digit="7">7</button>
+        <button class="keypad-btn" data-digit="8">8</button>
+        <button class="keypad-btn" data-digit="9">9</button>
+        <button class="keypad-btn keypad-clear" data-action="clear">CLR</button>
+        <button class="keypad-btn" data-digit="0">0</button>
+        <button class="keypad-btn keypad-back" data-action="backspace">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+            <line x1="18" y1="9" x2="12" y2="15"/>
+            <line x1="12" y1="9" x2="18" y2="15"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="id-check-btn deny" id="dobKeypadCancel" style="flex: 1;">Cancel</button>
+        <button class="id-check-btn approve" id="dobKeypadConfirm" style="flex: 1;">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .keypad-btn {
+      padding: 1rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      background: var(--pos-panel);
+      color: var(--pos-text);
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--pos-border);
+    }
+    .keypad-btn:hover {
+      background: var(--pos-accent);
+      color: white;
+      border-color: var(--pos-accent);
+    }
+    .keypad-btn:active {
+      transform: scale(0.95);
+    }
+    .keypad-clear {
+      background: #dc2626 !important;
+      color: white !important;
+      border-color: #dc2626 !important;
+    }
+    .keypad-clear:hover {
+      background: #b91c1c !important;
+    }
+    .keypad-back {
+      background: #f59e0b !important;
+      color: white !important;
+      border-color: #f59e0b !important;
+    }
+    .keypad-back:hover {
+      background: #d97706 !important;
+    }
+  </style>
+
+  <div class="input-modal" id="discountModal">
+    <div class="input-modal-content">
+      <div class="input-modal-header">Apply Discount</div>
+      <input type="number" id="discountInput" class="input-modal-field" placeholder="Enter percentage (0-100)" min="0" max="100">
+      <div class="input-modal-buttons">
+        <button class="input-modal-btn cancel" id="discountCancel">Cancel</button>
+        <button class="input-modal-btn confirm" id="discountConfirm">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-modal" id="barcodeSearchModal">
+    <div class="input-modal-content">
+      <div class="input-modal-header">Find Product by Barcode</div>
+      <input type="text" id="barcodeSearchInput" class="input-modal-field" placeholder="Enter barcode">
+      <div class="input-modal-buttons">
+        <button class="input-modal-btn cancel" id="barcodeSearchCancel">Cancel</button>
+        <button class="input-modal-btn confirm" id="barcodeSearchConfirm">Find</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-modal" id="openShiftModal">
+    <div class="input-modal-content">
+      <div class="input-modal-header">Open Shift</div>
+      <label class="input-modal-label">Starting Cash Amount ($)</label>
+      <input type="number" id="openShiftCash" class="input-modal-field" placeholder="100.00" value="100" step="0.01" min="0">
+      <div class="input-modal-buttons">
+        <button class="input-modal-btn cancel" id="openShiftCancel">Cancel</button>
+        <button class="input-modal-btn confirm" id="openShiftConfirm">Open Shift</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-modal" id="closeShiftModal">
+    <div class="input-modal-content">
+      <div class="input-modal-header">Close Shift</div>
+      <label class="input-modal-label">Ending Cash Amount ($)</label>
+      <input type="number" id="closeShiftCash" class="input-modal-field" placeholder="Enter amount" step="0.01" min="0">
+      <label class="input-modal-label">Notes (optional)</label>
+      <input type="text" id="closeShiftNotes" class="input-modal-field" placeholder="Any notes for this shift?">
+      <div class="input-modal-buttons">
+        <button class="input-modal-btn cancel" id="closeShiftCancel">Cancel</button>
+        <button class="input-modal-btn confirm" id="closeShiftConfirm">Close Shift</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-modal" id="shiftSummaryModal">
+    <div class="input-modal-content" style="min-width: 350px;">
+      <div class="input-modal-header">Shift Summary</div>
+      <div id="shiftSummaryContent" style="padding: 1rem; color: white; font-family: monospace; background: #1a1a2e; border-radius: 8px; margin-bottom: 1rem;"></div>
+      <div class="input-modal-buttons">
+        <button class="input-modal-btn confirm" id="shiftSummaryClose" style="width: 100%;">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-modal" id="drawerLogPinModal">
+    <div class="input-modal-content" style="min-width: 320px;">
+      <div class="input-modal-header" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 1rem; margin: -1rem -1rem 1rem -1rem; border-radius: 12px 12px 0 0;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Owner/Manager PIN Required
+        </div>
+      </div>
+      <div style="text-align: center; padding: 0.5rem 0 1rem;">
+        <div id="drawerLogPinDisplay" style="font-size: 2rem; letter-spacing: 0.5rem; min-height: 2.5rem; color: var(--text-primary);"></div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; padding: 0 0.5rem;">
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('1')" style="padding: 1rem; font-size: 1.5rem;">1</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('2')" style="padding: 1rem; font-size: 1.5rem;">2</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('3')" style="padding: 1rem; font-size: 1.5rem;">3</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('4')" style="padding: 1rem; font-size: 1.5rem;">4</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('5')" style="padding: 1rem; font-size: 1.5rem;">5</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('6')" style="padding: 1rem; font-size: 1.5rem;">6</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('7')" style="padding: 1rem; font-size: 1.5rem;">7</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('8')" style="padding: 1rem; font-size: 1.5rem;">8</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('9')" style="padding: 1rem; font-size: 1.5rem;">9</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('clear')" style="padding: 1rem; font-size: 1rem; color: #f97316;">Clear</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('0')" style="padding: 1rem; font-size: 1.5rem;">0</button>
+        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('back')" style="padding: 1rem; font-size: 1rem;">&#9003;</button>
+      </div>
+      <div class="input-modal-buttons" style="margin-top: 1rem;">
+        <button class="input-modal-btn cancel" id="drawerLogPinCancel">Cancel</button>
+        <button class="input-modal-btn confirm" onclick="verifyDrawerLogPin()">Verify</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-modal" id="drawerLogModal">
+    <div class="input-modal-content" style="min-width: 450px; max-width: 550px;">
+      <div class="input-modal-header" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 1rem; margin: -1rem -1rem 1rem -1rem; border-radius: 12px 12px 0 0;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><circle cx="12" cy="15" r="1"/>
+          </svg>
+          Drawer Activity Log
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 100px 70px 1fr 80px; gap: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); border-bottom: 2px solid var(--border-color);">
+        <span>Date</span>
+        <span>Time</span>
+        <span>Cashier</span>
+        <span style="text-align: right;">Reason</span>
+      </div>
+      <div id="drawerLogContent" style="max-height: 400px; overflow-y: auto;"></div>
+      <div class="input-modal-buttons" style="margin-top: 1rem;">
+        <button class="input-modal-btn confirm" id="closeDrawerLogBtn" style="width: 100%;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div class="input-modal" id="splitPaymentModal">
+    <div class="input-modal-content" style="min-width: 380px;">
+      <div class="input-modal-header" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; padding: 1rem; margin: -1rem -1rem 1rem -1rem; border-radius: 12px 12px 0 0;">
+        Split Payment Required
+      </div>
+      <div style="padding: 0.5rem 0; color: var(--text-primary);">
+        <p style="margin-bottom: 1rem; color: var(--text-secondary);">This order contains both EBT-eligible and non-eligible items.</p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(34, 197, 94, 0.15); border-radius: 8px; border-left: 4px solid #22c55e;">
+            <span style="font-weight: 600; color: #22c55e;">EBT Eligible (Food)</span>
+            <span style="font-weight: 700; color: #22c55e;">$<span id="splitEbtAmount">0.00</span></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem; background: rgba(249, 115, 22, 0.15); border-radius: 8px; border-left: 4px solid #f97316;">
+            <span style="font-weight: 600; color: #f97316;">Non-EBT (Alcohol, etc.)</span>
+            <span style="font-weight: 700; color: #f97316;">$<span id="splitNonEbtAmount">0.00</span></span>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Pay EBT portion first, then select payment for remaining balance:</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+        <button class="input-modal-btn confirm" id="splitPayCash" style="flex: 1; background: #3b82f6;">
+          Remainder: Cash
+        </button>
+        <button class="input-modal-btn confirm" id="splitPayCard" style="flex: 1; background: #8b5cf6;">
+          Remainder: Card
+        </button>
+      </div>
+      <div class="input-modal-buttons">
+        <button class="input-modal-btn cancel" id="splitPayCancel" style="width: 100%;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Apply saved theme
+    const savedTheme = localStorage.getItem('sal-pos-theme') || 'light';
+    document.body.className = savedTheme;
+
+    // Sync theme to main process (without broadcasting) so customer display can request it
+    if (window.electronAPI && window.electronAPI.syncTheme) {
+      window.electronAPI.syncTheme(savedTheme);
+    }
+
+    // Listen for theme changes via IPC (Electron)
+    if (window.electronAPI && window.electronAPI.onThemeChanged) {
+      window.electronAPI.onThemeChanged((theme) => {
+        document.body.className = theme;
+        localStorage.setItem('sal-pos-theme', theme);
+        console.log('Theme changed via IPC to:', theme);
+      });
+    }
+
+    // Fallback: Listen for theme changes from localStorage (for non-Electron)
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'sal-pos-theme') {
+        document.body.className = event.newValue || 'light';
+        console.log('Theme changed to:', event.newValue);
+      }
+    });
+
+    let CATEGORIES = ["Tobacco", "Beer", "Drinks", "Snacks", "Food", "Household", "Lottery", "Hot Food", "Grocery", "Medicine/Pharmacy", "Frozen / Ice", "Dairy", "Cold Subs", "Pets", "Other / Misc"];
+    const AGE_RESTRICTED_CATEGORIES = ["Tobacco", "Beer"];
+    const EBT_ELIGIBLE_CATEGORIES = ["Drinks", "Snacks", "Food", "Grocery", "Frozen / Ice", "Dairy", "Cold Subs"];
+    const NON_EBT_CATEGORIES = ["Tobacco", "Beer", "Hot Food", "Lottery", "Medicine/Pharmacy", "Household", "Pets", "Other / Misc"];
+    let PRODUCTS = [];
+    let barcodeIndex = {};
+    let cart = [];
+    let discountPercentage = 0;
+    let taxEnabled = false;
+    let BASE_TAX_RATE = 0.08;
+    let keypadBuffer = "";
+    let pendingQty = 1;
+    let qtyMode = false;
+    let activeCategory = null;
+    let pendingAgeRestrictedProduct = null;
+    let viewingHistoricalReport = null;
+
+    const cartItemsContainer = document.getElementById("cartItems");
+    const subtotalSpan = document.getElementById("subtotal");
+    const discountAmountSpan = document.getElementById("discountAmount");
+    const taxSpan = document.getElementById("tax");
+    const totalSpan = document.getElementById("total");
+    const taxRateLabel = document.getElementById("taxRateLabel");
+    const taxToggleBtn = document.getElementById("taxToggleBtn");
+    const keypadDisplay = document.getElementById("keypadDisplay");
+    const barcodeInput = document.getElementById("barcodeInput");
+    const categoriesGrid = document.getElementById("categoriesGrid");
+    const productsView = document.getElementById("productsView");
+    const productsGrid = document.getElementById("productsGrid");
+    const categoryTitle = document.getElementById("categoryTitle");
+    const receiptPanel = document.getElementById("receiptPanel");
+    const receiptContentDiv = document.getElementById("receiptContent");
+    const addProductPanel = document.getElementById("addProductPanel");
+    const settingsPanel = document.getElementById("settingsPanel");
+    const eodPanel = document.getElementById("eodPanel");
+    const eodSummary = document.getElementById("eodSummary");
+    const menuBtn = document.getElementById("menuBtn");
+    const menuDropdown = document.getElementById("menuDropdown");
+    const addNameInput = document.getElementById("addName");
+    const addPriceInput = document.getElementById("addPrice");
+    const addCategorySelect = document.getElementById("addCategory");
+    const addBarcodeInput = document.getElementById("addBarcode");
+    const idCheckModal = document.getElementById("idCheckModal");
+    const editProductPanel = document.getElementById("editProductPanel");
+    const editNameInput = document.getElementById("editName");
+    const editPriceInput = document.getElementById("editPrice");
+    const editCategorySelect = document.getElementById("editCategory");
+    const editBarcodeInput = document.getElementById("editBarcode");
+    let editingProduct = null;
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.className = "toast" + (isError ? " error" : " success") + " show";
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    async function loadProducts(retryCount = 0) {
+      try {
+        const res = await fetch("/api/products");
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.products)) {
+          PRODUCTS = data.products.map(p => ({
+            name: p.name || "",
+            price: Number(p.price) || 0,
+            barcode: p.barcode || "",
+            category: p.category || "Misc",
+            ebt_eligible: p.ebt_eligible || false
+          }));
+          rebuildBarcodeIndex();
+        }
+      } catch (e) {
+        console.error("Failed to load products (attempt " + (retryCount + 1) + "):", e);
+        if (retryCount < 4) {
+          // Retry with exponential backoff — server may still be waking up
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
+          console.log("Retrying loadProducts in " + delay + "ms...");
+          setTimeout(() => loadProducts(retryCount + 1), delay);
+        } else {
+          // After 4 retries, force a full page reload — clears all bad state
+          console.error("loadProducts failed after 4 retries, reloading page...");
+          setTimeout(() => window.location.reload(), 2000);
+        }
+      }
+    }
+
+    function normalizeBarcode(code) {
+      return code.replace(/^0+/, "");
+    }
+
+    function rebuildBarcodeIndex() {
+      barcodeIndex = {};
+      PRODUCTS.forEach(p => {
+        if (p.barcode) {
+          barcodeIndex[p.barcode] = p;
+          barcodeIndex[normalizeBarcode(p.barcode)] = p;
+        }
+      });
+    }
+
+    function findProductByCodeOrName(code) {
+      // First try exact barcode match
+      const normalizedCode = normalizeBarcode(code);
+      let product = barcodeIndex[code] || barcodeIndex[normalizedCode];
+      if (product) return { product, matchType: 'barcode' };
+      
+      // If not found, search by name (case-insensitive partial match)
+      const searchTerm = code.toLowerCase().trim();
+      const matches = PRODUCTS.filter(p => 
+        p.name.toLowerCase().includes(searchTerm)
+      );
+      
+      if (matches.length === 1) {
+        // Exact single match - add it directly
+        return { product: matches[0], matchType: 'name' };
+      } else if (matches.length > 1) {
+        // Multiple matches - show them in a popup
+        return { product: null, matchType: 'multiple', matches };
+      }
+      
+      return { product: null, matchType: 'none' };
+    }
+
+    function showProductSearchResults(matches, searchTerm) {
+      // Create modal to show search results
+      let modal = document.getElementById('searchResultsModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'searchResultsModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+          <div class="modal-content" style="max-width: 500px; max-height: 80vh; overflow-y: auto;">
+            <h3 style="margin-bottom: 15px;">Search Results</h3>
+            <div id="searchResultsList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            <button id="closeSearchResults" class="btn btn-secondary" style="margin-top: 15px; width: 100%;">Close</button>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('closeSearchResults').addEventListener('click', () => {
+          modal.classList.remove('show');
+          barcodeInput.focus();
+        });
+      }
+      
+      const list = document.getElementById('searchResultsList');
+      list.innerHTML = matches.slice(0, 10).map(p => `
+        <button class="btn" style="text-align: left; padding: 12px; display: flex; justify-content: space-between;" 
+                onclick="document.getElementById('searchResultsModal').classList.remove('show'); handleProductClick(PRODUCTS.find(x => x.barcode === '${p.barcode}')); barcodeInput.focus();">
+          <span>${p.name}</span>
+          <span style="font-weight: bold;">$${p.price.toFixed(2)}</span>
+        </button>
+      `).join('');
+      
+      if (matches.length > 10) {
+        list.innerHTML += `<p style="text-align: center; color: var(--text-muted);">Showing 10 of ${matches.length} results</p>`;
+      }
+      
+      modal.classList.add('show');
+    }
+
+    function populateCategorySelect() {
+      addCategorySelect.innerHTML = "";
+      CATEGORIES.forEach(cat => {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        addCategorySelect.appendChild(opt);
+      });
+    }
+
+    function populateEditCategorySelect() {
+      editCategorySelect.innerHTML = "";
+      CATEGORIES.forEach(cat => {
+        const opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        editCategorySelect.appendChild(opt);
+      });
+    }
+
+    function openEditProductPanel(product) {
+      editingProduct = product;
+      populateEditCategorySelect();
+      editNameInput.value = product.name;
+      editPriceInput.value = product.price;
+      editCategorySelect.value = product.category || "Misc";
+      editBarcodeInput.value = product.barcode || "";
+      showPanel(editProductPanel);
+    }
+
+    function getCategoryClass(cat) {
+      const map = {
+        "Tobacco": "cat-tobacco",
+        "Beer": "cat-beer",
+        "Drinks": "cat-drinks",
+        "Snacks": "cat-snacks",
+        "Food": "cat-food",
+        "Household": "cat-household",
+        "Lottery": "cat-lottery",
+        "Hot Food": "cat-hotfood",
+        "Grocery": "cat-grocery",
+        "Medicine/Pharmacy": "cat-medicine",
+        "Frozen / Ice": "cat-frozen",
+        "Dairy": "cat-dairy",
+        "Cold Subs": "cat-coldsubs",
+        "Pets": "cat-pets",
+        "Other / Misc": "cat-misc"
+      };
+      return map[cat] || "cat-misc";
+    }
+
+    function getCategoryIcon(cat) {
+      const icons = {
+        "Tobacco": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/></svg>',
+        "Beer": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5S9.44 2.5 11 2.5s2 .5 3 .5 1.72-.5 2.5-.5a2.5 2.5 0 0 1 0 5c-.78 0-1.5-.5-2.5-.5z"/><path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8"/></svg>',
+        "Drinks": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2h8l-1 18H9L8 2z"/><path d="M12 6v6"/></svg>',
+        "Snacks": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9h12l-1 12H7L6 9z"/><path d="M4 9s2-6 8-6 8 6 8 6"/></svg>',
+        "Food": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>',
+        "Household": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+        "Lottery": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><circle cx="15.5" cy="15.5" r="1.5"/><circle cx="12" cy="12" r="1"/></svg>',
+        "Hot Food": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 3v3m-4-2v2m8-2v2"/></svg>',
+        "Grocery": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+        "Medicine/Pharmacy": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 20.5L3.5 13.5a4.95 4.95 0 1 1 7-7l7 7a4.95 4.95 0 0 1-7 7z"/></svg>',
+        "Frozen / Ice": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="2" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/><line x1="2" y1="12" x2="22" y2="12"/></svg>',
+        "Dairy": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2h8v4l2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8l2-2V2z"/></svg>',
+        "Cold Subs": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="12" rx="10" ry="5"/><path d="M2 12v0c0 2.76 4.48 5 10 5s10-2.24 10-5"/></svg>',
+        "Pets": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></svg>',
+        "Other / Misc": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9 9h6v6H9z"/></svg>'
+      };
+      return icons[cat] || icons["Other / Misc"];
+    }
+
+    function renderCategories() {
+      categoriesGrid.innerHTML = "";
+      CATEGORIES.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.className = `category-tile ${getCategoryClass(cat)}`;
+        btn.dataset.category = cat;
+        btn.innerHTML = `${getCategoryIcon(cat)}<span>${cat}</span>`;
+        btn.addEventListener("click", () => showCategoryProducts(cat));
+        categoriesGrid.appendChild(btn);
+      });
+    }
+
+    function showCategoryProducts(cat) {
+      activeCategory = cat;
+      categoryTitle.textContent = cat;
+      const filtered = PRODUCTS.filter(p => (p.category || "Misc") === cat);
+      productsGrid.innerHTML = "";
+      if (filtered.length === 0) {
+        productsGrid.innerHTML = '<p style="color: #8b8fa3; text-align: center; grid-column: span 4;">No products in this category</p>';
+      } else {
+        filtered.forEach(product => {
+          const btn = document.createElement("button");
+          btn.className = "product-btn";
+          btn.innerHTML = `
+            <div class="product-name">${product.name}</div>
+            <div class="product-price">$${product.price.toFixed(2)}</div>
+            ${product.barcode ? `<div class="product-barcode">#${product.barcode}</div>` : ""}
+          `;
+          btn.addEventListener("click", () => handleProductClick(product));
+          productsGrid.appendChild(btn);
+        });
+      }
+      categoriesGrid.style.display = "none";
+      productsView.classList.add("show");
+    }
+
+    document.getElementById("backToCategories").addEventListener("click", () => {
+      activeCategory = null;
+      productsView.classList.remove("show");
+      categoriesGrid.style.display = "grid";
+    });
+
+    function handleProductClick(product) {
+      if (AGE_RESTRICTED_CATEGORIES.includes(product.category)) {
+        showIdCheck(product);
+      } else {
+        addToCart(product, pendingQty);
+        showToast(`Added: ${product.name}`);
+      }
+    }
+
+    function getAge21Cutoff() {
+      const today = new Date();
+      const cutoff = new Date(today.getFullYear() - 21, today.getMonth(), today.getDate());
+      return cutoff.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function calculateAge(dob) {
+      const today = new Date();
+      const birthDate = new Date(dob);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    }
+
+    let idCheckVerified = false;
+    let idCheckDob = null;
+    let idCheckAge = null;
+
+    function resetIdCheckModal() {
+      idCheckVerified = false;
+      idCheckDob = null;
+      idCheckAge = null;
+      document.getElementById("idDobInput").value = "";
+      document.getElementById("idCheckResult").style.display = "none";
+      document.getElementById("idCheckApprove").style.display = "none";
+      document.getElementById("dobDisplay").innerHTML = '<span style="color: var(--pos-text-muted);">Tap to enter DOB</span>';
+      keypadDobValue = "";
+    }
+
+    let keypadDobValue = "";
+    const dobKeypadModal = document.getElementById("dobKeypadModal");
+
+    function showDobKeypad() {
+      keypadDobValue = "";
+      updateKeypadDobDisplay();
+      dobKeypadModal.classList.add("show");
+    }
+
+    function closeDobKeypad() {
+      dobKeypadModal.classList.remove("show");
+    }
+
+    function keypadPress(digit) {
+      if (keypadDobValue.length < 8) {
+        keypadDobValue += digit;
+        updateKeypadDobDisplay();
+      }
+    }
+
+    function keypadBackspace() {
+      if (keypadDobValue.length > 0) {
+        keypadDobValue = keypadDobValue.slice(0, -1);
+        updateKeypadDobDisplay();
+      }
+    }
+
+    function keypadClear() {
+      keypadDobValue = "";
+      updateKeypadDobDisplay();
+    }
+
+    // Delegated event handling for DOB keypad - works on both touch and mouse
+    document.getElementById("dobKeypadGrid").addEventListener("pointerdown", (e) => {
+      const btn = e.target.closest(".keypad-btn");
+      if (!btn) return;
+      e.preventDefault();
+      
+      if (btn.dataset.digit) {
+        keypadPress(btn.dataset.digit);
+      } else if (btn.dataset.action === "clear") {
+        keypadClear();
+      } else if (btn.dataset.action === "backspace") {
+        keypadBackspace();
+      }
+    });
+
+    document.getElementById("dobKeypadCancel").addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      closeDobKeypad();
+    });
+
+    document.getElementById("dobKeypadConfirm").addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      confirmDobKeypad();
+    });
+
+    function updateKeypadDobDisplay() {
+      const display = document.getElementById("keypadDobDisplay");
+      let mm = keypadDobValue.substring(0, 2) || "__";
+      let dd = keypadDobValue.substring(2, 4) || "__";
+      let yyyy = keypadDobValue.substring(4, 8) || "____";
+      
+      if (mm.length === 1) mm = mm + "_";
+      if (dd.length === 1) dd = dd + "_";
+      if (yyyy.length < 4) yyyy = yyyy + "_".repeat(4 - yyyy.length);
+      
+      display.textContent = `${mm} / ${dd} / ${yyyy}`;
+    }
+
+    function confirmDobKeypad() {
+      if (keypadDobValue.length !== 8) {
+        showToast("Please enter complete date (MMDDYYYY)", true);
+        return;
+      }
+      
+      const mm = keypadDobValue.substring(0, 2);
+      const dd = keypadDobValue.substring(2, 4);
+      const yyyy = keypadDobValue.substring(4, 8);
+      
+      const month = parseInt(mm, 10);
+      const day = parseInt(dd, 10);
+      const year = parseInt(yyyy, 10);
+      
+      if (month < 1 || month > 12) {
+        showToast("Invalid month (01-12)", true);
+        return;
+      }
+      if (day < 1 || day > 31) {
+        showToast("Invalid day (01-31)", true);
+        return;
+      }
+      if (year < 1900 || year > new Date().getFullYear()) {
+        showToast("Invalid year", true);
+        return;
+      }
+      
+      const dobString = `${yyyy}-${mm}-${dd}`;
+      document.getElementById("idDobInput").value = dobString;
+      document.getElementById("dobDisplay").innerHTML = `<span style="color: var(--pos-text);">${mm}/${dd}/${yyyy}</span>`;
+      closeDobKeypad();
+      
+      // Auto-trigger verification after keypad entry
+      setTimeout(() => {
+        document.getElementById("idCheckVerifyDob").click();
+      }, 100);
+    }
+
+    function showIdCheck(product) {
+      pendingAgeRestrictedProduct = product;
+      resetIdCheckModal();
+      document.getElementById("idCheckProductName").textContent = product.name;
+      document.getElementById("idCheckProductCategory").textContent = product.category + " - Age 21+ Required";
+      document.getElementById("idCheckCutoff").textContent = "Must be born on or before: " + getAge21Cutoff();
+      idCheckModal.classList.add("show");
+    }
+
+    function verifyAge(dob, checkType) {
+      const age = calculateAge(dob);
+      idCheckAge = age;
+      idCheckDob = dob;
+      const resultDiv = document.getElementById("idCheckResult");
+      const approveBtn = document.getElementById("idCheckApprove");
+
+      if (age >= 21) {
+        idCheckVerified = true;
+        resultDiv.style.display = "block";
+        resultDiv.style.background = "rgba(34, 197, 94, 0.15)";
+        resultDiv.style.color = "#22c55e";
+        resultDiv.textContent = `APPROVED - Age ${age} (DOB: ${new Date(dob).toLocaleDateString()})`;
+        approveBtn.style.display = "block";
+        logIdCheck(checkType, dob, age, true);
+      } else {
+        idCheckVerified = false;
+        resultDiv.style.display = "block";
+        resultDiv.style.background = "rgba(239, 68, 68, 0.15)";
+        resultDiv.style.color = "#ef4444";
+        resultDiv.textContent = `DENIED - Age ${age} (Must be 21+)`;
+        approveBtn.style.display = "none";
+        logIdCheck(checkType, dob, age, false);
+      }
+    }
+
+    async function logIdCheck(checkType, dob, age, verified) {
+      try {
+        await fetch("/api/id-checks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            check_type: checkType,
+            dob: dob,
+            age: age,
+            verified: verified,
+            min_age_required: 21,
+            notes: pendingAgeRestrictedProduct ? pendingAgeRestrictedProduct.name : null
+          })
+        });
+      } catch (e) {
+        console.error("Failed to log ID check:", e);
+      }
+    }
+
+    // Confirm Age 21+ button - cashier visually verified ID, immediately adds to cart
+    document.getElementById("idCheckConfirmAge").addEventListener("click", () => {
+      idCheckVerified = true;
+      logIdCheck("visual_confirm", null, null, true);
+      
+      // Immediately add to cart and close modal
+      if (pendingAgeRestrictedProduct) {
+        addToCart(pendingAgeRestrictedProduct, pendingQty);
+        showToast(`Added: ${pendingAgeRestrictedProduct.name}`);
+        pendingAgeRestrictedProduct = null;
+      }
+      idCheckModal.classList.remove("show");
+    });
+
+    document.getElementById("idCheckVerifyDob").addEventListener("click", () => {
+      const dobInput = document.getElementById("idDobInput").value;
+      if (!dobInput) {
+        showToast("Please enter a date of birth", true);
+        return;
+      }
+      verifyAge(dobInput, "manual");
+    });
+
+    document.getElementById("idDobInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("idCheckVerifyDob").click();
+      }
+    });
+
+    document.getElementById("idCheckApprove").addEventListener("click", () => {
+      if (pendingAgeRestrictedProduct && idCheckVerified) {
+        addToCart(pendingAgeRestrictedProduct, pendingQty);
+        showToast(`Added: ${pendingAgeRestrictedProduct.name}`);
+        pendingAgeRestrictedProduct = null;
+      }
+      idCheckModal.classList.remove("show");
+    });
+
+    document.getElementById("idCheckDeny").addEventListener("click", () => {
+      pendingAgeRestrictedProduct = null;
+      idCheckModal.classList.remove("show");
+      showToast("Sale cancelled - ID not verified", true);
+    });
+
+    taxToggleBtn.addEventListener("click", () => {
+      taxEnabled = !taxEnabled;
+      taxToggleBtn.textContent = taxEnabled ? "ON" : "OFF";
+      taxToggleBtn.className = "tax-toggle-btn " + (taxEnabled ? "on" : "off");
+      updateTotals();
+    });
+
+    function addToCart(product, qty = 1) {
+      const existing = cart.find(i => i.barcode === product.barcode && i.name === product.name);
+      if (existing) {
+        existing.qty += qty;
+      } else {
+        cart.push({ ...product, qty: qty });
+      }
+      renderCart();
+      pendingQty = 1;
+      qtyMode = false;
+    }
+
+    function removeItem(barcode, name) {
+      cart = cart.filter(i => !(i.barcode === barcode && i.name === name));
+      renderCart();
+    }
+
+    function renderCart() {
+      if (cart.length === 0) {
+        cartItemsContainer.innerHTML = `
+          <div class="empty-cart">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+            </svg>
+            <span>Cart is empty</span>
+          </div>
+        `;
+      } else {
+        cartItemsContainer.innerHTML = "";
+        cart.forEach(item => {
+          const row = document.createElement("div");
+          row.className = "cart-row";
+          row.innerHTML = `
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-qty">${item.qty}</div>
+            <div class="cart-item-price">$${(item.price * item.qty).toFixed(2)}</div>
+          `;
+          row.addEventListener("click", () => {
+            if (confirm(`Remove ${item.name} from cart?`)) {
+              removeItem(item.barcode, item.name);
+            }
+          });
+          cartItemsContainer.appendChild(row);
+        });
+      }
+      updateTotals();
+    }
+
+    function isEbtEligible(item) {
+      return EBT_ELIGIBLE_CATEGORIES.includes(item.category);
+    }
+
+    function getEbtSplit() {
+      let ebtSubtotal = 0;
+      let nonEbtSubtotal = 0;
+      let totalSubtotal = 0;
+      
+      cart.forEach(item => {
+        const itemTotal = item.price * item.qty;
+        totalSubtotal += itemTotal;
+        if (isEbtEligible(item)) {
+          ebtSubtotal += itemTotal;
+        } else {
+          nonEbtSubtotal += itemTotal;
+        }
+      });
+      
+      const discountRatio = discountPercentage / 100;
+      const ebtAfterDiscount = ebtSubtotal * (1 - discountRatio);
+      const nonEbtAfterDiscount = nonEbtSubtotal * (1 - discountRatio);
+      
+      const taxRate = taxEnabled ? BASE_TAX_RATE : 0;
+      const nonEbtWithTax = nonEbtAfterDiscount * (1 + taxRate);
+      
+      return { 
+        ebtSubtotal, 
+        nonEbtSubtotal,
+        ebtAmount: ebtAfterDiscount,
+        nonEbtAmount: nonEbtWithTax,
+        ebtDiscount: ebtSubtotal * discountRatio,
+        nonEbtDiscount: nonEbtSubtotal * discountRatio,
+        nonEbtTax: nonEbtAfterDiscount * taxRate
+      };
+    }
+
+    function updateTotals() {
+      const split = getEbtSplit();
+      let subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      let discountAmount = subtotal * (discountPercentage / 100);
+      let afterDiscount = subtotal - discountAmount;
+      
+      let tax = taxEnabled ? split.nonEbtTax : 0;
+      let total = split.ebtAmount + split.nonEbtAmount;
+      
+      if (subtotal === 0) {
+        tax = 0;
+        total = 0;
+      }
+
+      subtotalSpan.textContent = subtotal.toFixed(2);
+      discountAmountSpan.textContent = discountAmount.toFixed(2);
+      taxSpan.textContent = tax.toFixed(2);
+      totalSpan.textContent = total.toFixed(2);
+      taxRateLabel.textContent = taxEnabled ? "8" : "0";
+
+      const ebtSplitSection = document.getElementById("ebtSplitSection");
+      const hasEbt = split.ebtSubtotal > 0;
+      const hasNonEbt = split.nonEbtSubtotal > 0;
+      
+      if (hasEbt && hasNonEbt) {
+        ebtSplitSection.style.display = "block";
+        document.getElementById("ebtTotal").textContent = split.ebtAmount.toFixed(2);
+        document.getElementById("nonEbtTotal").textContent = split.nonEbtAmount.toFixed(2);
+      } else {
+        ebtSplitSection.style.display = "none";
+      }
+      
+      syncCustomerDisplay(subtotal, tax, total);
+    }
+    
+    function syncCustomerDisplay(subtotal, tax, total) {
+      if (window.electronAPI && window.electronAPI.updateCustomerCart) {
+        window.electronAPI.updateCustomerCart({
+          items: cart.map(item => ({
+            name: item.name,
+            qty: item.qty,
+            price: item.price
+          })),
+          subtotal: subtotal,
+          tax: tax,
+          total: total
+        });
+      }
+    }
+
+    function clearCart() {
+      cart = [];
+      discountPercentage = 0;
+      renderCart();
+    }
+
+    document.getElementById("clearCartBtn").addEventListener("click", () => {
+      if (cart.length === 0) return;
+      if (confirm("Void all items from cart?")) clearCart();
+    });
+
+    document.getElementById("applyDiscountBtn").addEventListener("click", () => {
+      const modal = document.getElementById("discountModal");
+      const input = document.getElementById("discountInput");
+      input.value = discountPercentage || "";
+      modal.classList.add("show");
+      input.focus();
+    });
+
+    document.getElementById("discountConfirm").addEventListener("click", () => {
+      const input = document.getElementById("discountInput");
+      const val = parseFloat(input.value);
+      if (isNaN(val) || val < 0 || val > 100) {
+        showToast("Invalid percentage.", true);
+        return;
+      }
+      discountPercentage = val;
+      updateTotals();
+      showToast(`${val}% discount applied!`);
+      document.getElementById("discountModal").classList.remove("show");
+    });
+
+    document.getElementById("discountCancel").addEventListener("click", () => {
+      document.getElementById("discountModal").classList.remove("show");
+    });
+
+    document.getElementById("discountInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("discountConfirm").click();
+    });
+
+    barcodeInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        const code = barcodeInput.value.trim();
+        if (!code) return;
+        const result = findProductByCodeOrName(code);
+        if (result.product) {
+          handleProductClick(result.product);
+        } else if (result.matchType === 'multiple') {
+          showProductSearchResults(result.matches, code);
+        } else {
+          showToast("Product not found: " + code, true);
+        }
+        barcodeInput.value = "";
+      }
+    });
+
+    let scannerBuffer = "";
+    let scannerTimer = null;
+    document.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.key.length === 1) {
+        scannerBuffer += e.key;
+        clearTimeout(scannerTimer);
+        scannerTimer = setTimeout(() => {
+          if (scannerBuffer.length >= 3) {
+            const code = scannerBuffer.trim();
+            const normalizedCode = normalizeBarcode(code);
+            const product = barcodeIndex[code] || barcodeIndex[normalizedCode];
+            if (product) {
+              handleProductClick(product);
+            } else if (code.length >= 6) {
+              showToast("Product not found: " + code, true);
+            }
+          }
+          scannerBuffer = "";
+        }, 50);
+      } else if (e.key === "Enter" && scannerBuffer.length >= 3) {
+        e.preventDefault(); // Prevent Enter from triggering focused buttons (e.g. Print)
+        clearTimeout(scannerTimer);
+        const code = scannerBuffer.trim();
+        const normalizedCode = normalizeBarcode(code);
+        const product = barcodeIndex[code] || barcodeIndex[normalizedCode];
+        if (product) {
+          handleProductClick(product);
+        } else {
+          showToast("Product not found: " + code, true);
+        }
+        scannerBuffer = "";
+      }
+    });
+
+    function updateKeypadDisplay() {
+      const value = keypadBuffer || "0";
+      const num = parseFloat(value);
+      keypadDisplay.textContent = isNaN(num) ? "0.00" : num.toFixed(2);
+    }
+
+    document.querySelectorAll(".key-btn[data-key]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.dataset.key;
+        if (key === ".") {
+          if (!keypadBuffer.includes(".")) {
+            keypadBuffer = keypadBuffer ? keypadBuffer + "." : "0.";
+          }
+        } else {
+          keypadBuffer += key;
+        }
+        updateKeypadDisplay();
+      });
+    });
+
+    document.getElementById("clearKeypadBtn").addEventListener("click", () => {
+      keypadBuffer = "";
+      qtyMode = false;
+      pendingQty = 1;
+      updateKeypadDisplay();
+    });
+
+    document.getElementById("qtyBtn").addEventListener("click", () => {
+      const qty = parseInt(keypadBuffer) || 1;
+      pendingQty = qty;
+      qtyMode = true;
+      keypadBuffer = "";
+      updateKeypadDisplay();
+      showToast(`Quantity set to ${qty}`);
+    });
+
+    document.getElementById("addKeypadBtn").addEventListener("click", () => {
+      const amount = parseFloat(keypadDisplay.textContent);
+      if (isNaN(amount) || amount <= 0) return;
+      const miscItem = {
+        name: "Misc Item",
+        price: amount,
+        barcode: "MISC-" + Date.now(),
+        category: "Misc"
+      };
+      addToCart(miscItem, 1);
+      keypadBuffer = "";
+      updateKeypadDisplay();
+      showToast(`Added $${amount.toFixed(2)} misc item`);
+    });
+
+    document.getElementById("enterKeypadBtn").addEventListener("click", () => {
+      const code = keypadBuffer;
+      if (!code) return;
+      const result = findProductByCodeOrName(code);
+      if (result.product) {
+        handleProductClick(result.product);
+      } else if (result.matchType === 'multiple') {
+        showProductSearchResults(result.matches, code);
+      } else {
+        showToast("Product not found: " + code, true);
+      }
+      keypadBuffer = "";
+      updateKeypadDisplay();
+    });
+
+    function showPanel(panel) {
+      hideAllPanels();
+      categoriesGrid.style.display = "none";
+      productsView.classList.remove("show");
+      panel.classList.add("show");
+    }
+
+    function hidePanel(panel) {
+      panel.classList.remove("show");
+      if (!activeCategory) {
+        categoriesGrid.style.display = "grid";
+      } else {
+        productsView.classList.add("show");
+      }
+    }
+
+    function hideAllPanels() {
+      document.querySelectorAll(".inline-panel").forEach(p => p.classList.remove("show"));
+    }
+
+    function completeSaleInstantly(paymentType) {
+      if (cart.length === 0) {
+        showToast("Cart is empty!", true);
+        return;
+      }
+
+      const split = getEbtSplit();
+      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      const discountAmount = subtotal * (discountPercentage / 100);
+      const afterDiscount = subtotal - discountAmount;
+      const tax = taxEnabled ? split.nonEbtTax : 0;
+      const total = split.ebtAmount + split.nonEbtAmount;
+
+      const cartCopy = cart.map(item => ({ ...item }));
+
+      // For EBT-only, tax is always 0 regardless of taxEnabled setting
+      const actualTaxRate = (paymentType === 'EBT' || tax === 0) ? 0 : (taxEnabled ? 8 : 0);
+
+      ReceiptService.setLastReceipt({
+        store: { name: "My Store", phone: "" },
+        items: cartCopy,
+        subtotal,
+        discount: discountAmount,
+        taxRate: actualTaxRate,
+        taxAmount: tax,
+        total,
+        paymentType
+      });
+
+      (async () => {
+        // 1. Save sale to database
+        try {
+          await fetch("/api/sales", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              items: cartCopy,
+              paymentType,
+              subtotal,
+              discount: discountAmount,
+              tax,
+              total,
+              clientTimestamp: new Date().toISOString(),
+            }),
+          });
+        } catch (err) {
+          console.error("Failed to log sale:", err);
+        }
+
+        // 2. Open drawer for cash sales only
+        if (window.electronAPI) {
+          if (paymentType === "Cash" && window.electronAPI.completeSale) {
+            try {
+              const result = await window.electronAPI.completeSale({ openDrawer: true });
+              if (result && result.warning) {
+                showToast("Drawer: " + result.warning, true);
+              }
+              // Log drawer open
+              fetch("/api/drawer-log", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  reason: "Sale",
+                  sale_amount: total,
+                  user_id: currentUser?.id || 0,
+                  user_name: currentUser?.displayName || currentUser?.username || "Unknown"
+                })
+              }).catch(() => {});
+            } catch (e) {
+              showToast("Drawer error: " + e.message, true);
+            }
+          }
+        }
+      })();
+
+      generateReceipt(cartCopy, subtotal, discountAmount, tax, total, paymentType, null, 0);
+      showPanel(receiptPanel);
+      
+      clearCart();
+      keypadBuffer = "";
+      updateKeypadDisplay();
+      
+      showToast(`${paymentType} payment complete!`);
+    }
+
+    document.getElementById("payCashBtn").addEventListener("click", () => completeSaleInstantly("Cash"));
+    document.getElementById("payDebitBtn").addEventListener("click", () => completeSaleInstantly("Debit Card"));
+    
+    document.getElementById("payEBTBtn").addEventListener("click", () => {
+      if (cart.length === 0) {
+        showToast("Cart is empty!", true);
+        return;
+      }
+      
+      const split = getEbtSplit();
+      
+      if (split.ebtSubtotal === 0) {
+        showToast("No EBT-eligible items in cart!", true);
+        return;
+      }
+      
+      if (split.nonEbtSubtotal > 0) {
+        document.getElementById("splitEbtAmount").textContent = split.ebtAmount.toFixed(2);
+        document.getElementById("splitNonEbtAmount").textContent = split.nonEbtAmount.toFixed(2);
+        document.getElementById("splitPaymentModal").classList.add("show");
+      } else {
+        completeSaleInstantly("EBT");
+      }
+    });
+
+    document.getElementById("splitPayCancel").addEventListener("click", () => {
+      document.getElementById("splitPaymentModal").classList.remove("show");
+    });
+
+    document.getElementById("splitPayCash").addEventListener("click", () => {
+      document.getElementById("splitPaymentModal").classList.remove("show");
+      completeSplitSale("Cash");
+    });
+
+    document.getElementById("splitPayCard").addEventListener("click", () => {
+      document.getElementById("splitPaymentModal").classList.remove("show");
+      completeSplitSale("Debit Card");
+    });
+
+    function completeSplitSale(secondPaymentType) {
+      if (cart.length === 0) {
+        showToast("Cart is empty!", true);
+        return;
+      }
+
+      const split = getEbtSplit();
+      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      const discountAmount = subtotal * (discountPercentage / 100);
+      const afterDiscount = subtotal - discountAmount;
+      const taxRate = taxEnabled ? BASE_TAX_RATE : 0;
+      const tax = afterDiscount * taxRate;
+      const total = split.ebtAmount + split.nonEbtAmount;
+
+      const cartCopy = cart.map(item => ({ ...item, ebt_eligible: isEbtEligible(item) }));
+      const paymentType = `EBT + ${secondPaymentType}`;
+
+      ReceiptService.setLastReceipt({
+        store: { name: "My Store", phone: "" },
+        items: cartCopy,
+        subtotal,
+        discount: discountAmount,
+        taxRate: taxEnabled ? 8 : 0,
+        taxAmount: split.nonEbtTax,
+        total,
+        paymentType,
+        ebtAmount: split.ebtAmount,
+        nonEbtAmount: split.nonEbtAmount,
+        ebtDiscount: split.ebtDiscount,
+        nonEbtDiscount: split.nonEbtDiscount,
+        nonEbtTax: split.nonEbtTax,
+        secondPaymentType
+      });
+
+      (async () => {
+        try {
+          await fetch("/api/sales", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              items: cartCopy,
+              paymentType,
+              subtotal,
+              discount: discountAmount,
+              tax: split.nonEbtTax,
+              total,
+              ebtAmount: split.ebtAmount,
+              nonEbtAmount: split.nonEbtAmount,
+              clientTimestamp: new Date().toISOString(),
+            }),
+          });
+        } catch (err) {
+          console.error("Failed to log sale:", err);
+        }
+
+        if (window.electronAPI) {
+          // Open drawer for cash second payment
+          if (secondPaymentType === "Cash" && window.electronAPI.completeSale) {
+            try {
+              const result = await window.electronAPI.completeSale({ openDrawer: true });
+              if (result && result.warning) {
+                showToast("Drawer: " + result.warning, true);
+              }
+              // Log drawer open (was missing for split sales)
+              fetch("/api/drawer-log", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  reason: "Sale",
+                  sale_amount: total,
+                  user_id: currentUser?.id || 0,
+                  user_name: currentUser?.displayName || currentUser?.username || "Unknown"
+                })
+              }).catch(() => {});
+            } catch (e) {
+              showToast("Drawer error: " + e.message, true);
+            }
+          }
+        }
+      })();
+
+      generateSplitReceipt(cartCopy, subtotal, discountAmount, split.nonEbtTax, total, split.ebtAmount, split.nonEbtAmount, secondPaymentType, split.ebtDiscount, split.nonEbtDiscount);
+      showPanel(receiptPanel);
+      
+      clearCart();
+      keypadBuffer = "";
+      updateKeypadDisplay();
+      
+      showToast(`Split payment complete! EBT: $${split.ebtAmount.toFixed(2)}, ${secondPaymentType}: $${split.nonEbtAmount.toFixed(2)}`);
+    }
+
+    function generateSplitReceipt(items, subtotal, discount, tax, total, ebtAmount, nonEbtAmount, secondPaymentType, ebtDiscount = 0, nonEbtDiscount = 0) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString();
+      const timeStr = now.toLocaleTimeString();
+      
+      let html = `
+        <div style="text-align: center; font-weight: bold; font-size: 1.2rem;">SHAMROCK MARKET</div>
+        <div style="text-align: center; font-size: 0.85rem; color: #888;"></div>
+        <div style="text-align: center; font-size: 0.85rem; color: #888; margin-bottom: 1rem;">${dateStr} ${timeStr}</div>
+        <div style="border-top: 1px dashed #444; padding-top: 0.5rem;">
+      `;
+      
+      const ebtItems = items.filter(i => i.ebt_eligible);
+      const nonEbtItems = items.filter(i => !i.ebt_eligible);
+      
+      if (ebtItems.length > 0) {
+        html += `<div style="font-weight: 600; color: #22c55e; margin: 0.5rem 0;">-- EBT ELIGIBLE (Tax Exempt) --</div>`;
+        ebtItems.forEach(item => {
+          html += `<div style="display: flex; justify-content: space-between;">
+            <span>${item.qty}x ${item.name}</span>
+            <span>$${(item.price * item.qty).toFixed(2)}</span>
+          </div>`;
+        });
+      }
+      
+      if (nonEbtItems.length > 0) {
+        html += `<div style="font-weight: 600; color: #f97316; margin: 0.5rem 0;">-- NON-EBT (Taxable) --</div>`;
+        nonEbtItems.forEach(item => {
+          html += `<div style="display: flex; justify-content: space-between;">
+            <span>${item.qty}x ${item.name}</span>
+            <span>$${(item.price * item.qty).toFixed(2)}</span>
+          </div>`;
+        });
+      }
+      
+      html += `
+        </div>
+        <div style="border-top: 1px dashed #444; margin-top: 0.5rem; padding-top: 0.5rem;">
+          <div style="display: flex; justify-content: space-between;"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+          ${discount > 0 ? `<div style="display: flex; justify-content: space-between;"><span>Discount</span><span>-$${discount.toFixed(2)}</span></div>` : ''}
+          <div style="display: flex; justify-content: space-between;"><span>Tax (non-EBT only)</span><span>$${tax.toFixed(2)}</span></div>
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; margin-top: 0.5rem;">
+            <span>TOTAL</span><span>$${total.toFixed(2)}</span>
+          </div>
+        </div>
+        <div style="border-top: 1px dashed #444; margin-top: 0.5rem; padding-top: 0.5rem;">
+          <div style="font-weight: 600; margin-bottom: 0.25rem;">SPLIT PAYMENT:</div>
+          <div style="display: flex; justify-content: space-between; color: #22c55e;">
+            <span>EBT (Food${ebtDiscount > 0 ? ' after disc.' : ''})</span><span>$${ebtAmount.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; color: #f97316;">
+            <span>${secondPaymentType} (incl. tax)</span><span>$${nonEbtAmount.toFixed(2)}</span>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 1rem; font-size: 0.85rem; color: #888;">Thank you for shopping!</div>
+      `;
+      
+      receiptContentDiv.innerHTML = html;
+    }
+
+    document.getElementById("checkoutBtn").addEventListener("click", () => completeSaleInstantly("Cash"));
+
+    document.getElementById("closeEditProductPanel").addEventListener("click", () => hidePanel(editProductPanel));
+    document.getElementById("cancelEditProduct").addEventListener("click", () => hidePanel(editProductPanel));
+
+    document.getElementById("saveEditProductBtn").addEventListener("click", async () => {
+      if (!editingProduct) return;
+      
+      const newName = editNameInput.value.trim();
+      const newPrice = parseFloat(editPriceInput.value);
+      const newCategory = editCategorySelect.value;
+      
+      if (!newName || isNaN(newPrice) || newPrice <= 0) {
+        showToast("Enter a valid name and price", true);
+        return;
+      }
+      
+      editingProduct.name = newName;
+      editingProduct.price = newPrice;
+      editingProduct.category = newCategory;
+      rebuildBarcodeIndex();
+      
+      try {
+        const res = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editingProduct)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Product updated in Google Sheets!");
+        } else {
+          showToast("Updated locally only", true);
+        }
+      } catch (e) {
+        showToast("Updated locally only", true);
+      }
+      
+      if (activeCategory) {
+        showCategoryProducts(activeCategory);
+      }
+      renderCategories();
+      hidePanel(editProductPanel);
+    });
+
+    document.getElementById("deleteProductBtn").addEventListener("click", async () => {
+      if (!editingProduct) return;
+      
+      if (confirm(`Delete "${editingProduct.name}"?`)) {
+        const idx = PRODUCTS.indexOf(editingProduct);
+        if (idx > -1) {
+          PRODUCTS.splice(idx, 1);
+          rebuildBarcodeIndex();
+        }
+        
+        showToast("Product deleted");
+        if (activeCategory) {
+          showCategoryProducts(activeCategory);
+        }
+        renderCategories();
+        hidePanel(editProductPanel);
+      }
+    });
+
+    document.getElementById("noSaleBtn").addEventListener("click", async () => {
+      if (window.electronAPI && window.electronAPI.openDrawer) {
+        const result = await window.electronAPI.openDrawer();
+        if (result && result.ok) {
+          showToast("No Sale - Drawer Opened");
+        } else {
+          showToast("Drawer error: " + (result?.error || "Could not open drawer"), true);
+        }
+      } else {
+        showToast("No Sale - Drawer Opened");
+      }
+      // Log drawer open
+      fetch("/api/drawer-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reason: "No Sale",
+          sale_amount: 0,
+          user_id: currentUser?.id || 0,
+          user_name: currentUser?.displayName || currentUser?.username || "Unknown"
+        })
+      }).catch(() => {});
+    });
+
+    document.getElementById("closeReceiptPanel").addEventListener("click", () => hidePanel(receiptPanel));
+
+    let isPrintingReceipt = false;
+    const printReceiptBtn = document.getElementById("printReceiptBtn");
+
+    printReceiptBtn.addEventListener("click", async () => {
+      if (isPrintingReceipt) return; // block double-tap
+      if (!ReceiptService.hasLastReceipt()) {
+        showToast("No receipt to print", true);
+        return;
+      }
+
+      isPrintingReceipt = true;
+      printReceiptBtn.disabled = true;
+      printReceiptBtn.textContent = "Printing…";
+      printReceiptBtn.blur(); // remove focus so scanner Enter can't retrigger it
+
+      try {
+        if (window.electronAPI && window.electronAPI.printReceipt) {
+          await window.electronAPI.printReceipt(ReceiptService.getLastReceipt());
+          showToast("Receipt printed!");
+        } else {
+          const printContent = receiptContentDiv.innerHTML;
+          const printWindow = window.open("", "", "height=600,width=800");
+          printWindow.document.write("<html><head><title>Receipt</title>");
+          printWindow.document.write("<style>");
+          printWindow.document.write("body { font-family: monospace; font-size: 12px; margin: 0; padding: 10px; }");
+          printWindow.document.write("h3 { text-align: center; margin-bottom: 10px; }");
+          printWindow.document.write(".receipt-item-row { display: flex; justify-content: space-between; margin-bottom: 2px; }");
+          printWindow.document.write(".receipt-footer { text-align: center; margin-top: 15px; }");
+          printWindow.document.write(".receipt-line { border-top: 1px dashed #ccc; margin: 8px 0; }");
+          printWindow.document.write("</style>");
+          printWindow.document.write("</head><body>");
+          printWindow.document.write(printContent);
+          printWindow.document.write("</body></html>");
+          printWindow.document.close();
+          printWindow.print();
+        }
+      } catch (e) {
+        showToast("Printer error: " + e.message, true);
+      } finally {
+        isPrintingReceipt = false;
+        printReceiptBtn.disabled = false;
+        printReceiptBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:middle;">
+            <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          Print Receipt`;
+      }
+    });
+
+    document.getElementById("newSaleBtn").addEventListener("click", () => {
+      hidePanel(receiptPanel);
+      barcodeInput.focus();
+    });
+
+    function generateReceipt(finalCart, subtotal, discountAmount, tax, total, paymentType, tenderedAmount, change) {
+      let receiptHtml = `
+        <h3>My Store</h3>
+        <p style="text-align: center;">Phone: </p>
+        <p style="text-align: center;">Transaction: #${Date.now().toString().slice(-6)}</p>
+        <p style="text-align: center;">Date: ${new Date().toLocaleString()}</p>
+        <div class="receipt-line"></div>
+      `;
+
+      receiptHtml += `
+        <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
+          <span>Item</span><span>Qty</span><span>Price</span>
+        </div>
+      `;
+
+      finalCart.forEach(item => {
+        receiptHtml += `
+          <div class="receipt-item-row">
+            <span>${item.name}</span>
+            <span>${item.qty}</span>
+            <span>$${(item.price * item.qty).toFixed(2)}</span>
+          </div>
+        `;
+      });
+
+      receiptHtml += `<div class="receipt-line"></div>`;
+      receiptHtml += `<div class="receipt-item-row"><span>Subtotal:</span><span></span><span>$${subtotal.toFixed(2)}</span></div>`;
+      if (discountAmount > 0) {
+        receiptHtml += `<div class="receipt-item-row"><span>Discount:</span><span></span><span>-$${discountAmount.toFixed(2)}</span></div>`;
+      }
+      receiptHtml += `
+        <div class="receipt-item-row"><span>Tax (${taxEnabled ? "8" : "0"}%):</span><span></span><span>$${tax.toFixed(2)}</span></div>
+        <div class="receipt-item-row"><strong><span>TOTAL:</span><span></span><span>$${total.toFixed(2)}</span></strong></div>
+        <div class="receipt-line"></div>
+      `;
+
+      receiptHtml += `<div class="receipt-item-row"><span>Payment:</span><span></span><span>${paymentType}</span></div>`;
+
+      receiptHtml += `
+        <div class="receipt-line"></div>
+        <div class="receipt-footer">Thank you for shopping with us!</div>
+      `;
+
+      receiptContentDiv.innerHTML = receiptHtml;
+    }
+
+    menuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menuDropdown.classList.toggle("show");
+    });
+
+    document.addEventListener("click", () => {
+      menuDropdown.classList.remove("show");
+    });
+
+    document.getElementById("menuVoid").addEventListener("click", () => {
+      if (cart.length === 0) {
+        showToast("Cart is empty", true);
+      } else if (confirm("Void all items from cart?")) {
+        clearCart();
+        showToast("Cart voided");
+      }
+      menuDropdown.classList.remove("show");
+    });
+
+    document.getElementById("menuReports").addEventListener("click", async () => {
+      menuDropdown.classList.remove("show");
+      try {
+        const data = await EodReportsService.fetchTodayReport();
+        if (data.success) {
+          eodSummary.innerHTML = EodReportsService.formatReportTableHtml(data);
+        } else {
+          eodSummary.innerHTML = '<p style="color: #dc3545;">Failed to load report</p>';
+        }
+      } catch (err) {
+        eodSummary.innerHTML = '<p style="color: #dc3545;">Error loading report</p>';
+      }
+      showPanel(eodPanel);
+    });
+
+    document.getElementById("menuReprintReceipt").addEventListener("click", async () => {
+      menuDropdown.classList.remove("show");
+      if (isPrintingReceipt) {
+        showToast("Already printing, please wait", true);
+        return;
+      }
+      if (!ReceiptService.hasLastReceipt()) {
+        showToast("No recent receipt to print", true);
+        return;
+      }
+      isPrintingReceipt = true;
+      try {
+        if (window.electronAPI && window.electronAPI.printReceipt) {
+          await window.electronAPI.printReceipt(ReceiptService.getLastReceipt());
+          showToast("Receipt reprinted");
+        } else {
+          showToast("Printing not available", true);
+        }
+      } catch (err) {
+        console.error("Reprint error:", err);
+        showToast("Failed to reprint receipt", true);
+      } finally {
+        isPrintingReceipt = false;
+      }
+    });
+
+    document.getElementById("menuAddProduct").addEventListener("click", () => {
+      showPanel(addProductPanel);
+      menuDropdown.classList.remove("show");
+    });
+
+    document.getElementById("menuEditProduct").addEventListener("click", () => {
+      menuDropdown.classList.remove("show");
+      const modal = document.getElementById("barcodeSearchModal");
+      const input = document.getElementById("barcodeSearchInput");
+      input.value = "";
+      modal.classList.add("show");
+      input.focus();
+    });
+
+    document.getElementById("barcodeSearchConfirm").addEventListener("click", () => {
+      const input = document.getElementById("barcodeSearchInput");
+      const barcode = input.value.trim();
+      if (!barcode) return;
+      
+      const normalizedCode = normalizeBarcode(barcode);
+      const product = barcodeIndex[barcode] || barcodeIndex[normalizedCode];
+      
+      document.getElementById("barcodeSearchModal").classList.remove("show");
+      
+      if (product) {
+        openEditProductPanel(product);
+      } else {
+        showToast("Product not found: " + barcode, true);
+      }
+    });
+
+    document.getElementById("barcodeSearchCancel").addEventListener("click", () => {
+      document.getElementById("barcodeSearchModal").classList.remove("show");
+    });
+
+    document.getElementById("barcodeSearchInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("barcodeSearchConfirm").click();
+    });
+
+    document.getElementById("closeAddProductPanel").addEventListener("click", () => hidePanel(addProductPanel));
+    document.getElementById("cancelAddProduct").addEventListener("click", () => hidePanel(addProductPanel));
+
+    document.getElementById("addProductBtn").addEventListener("click", async () => {
+      const name = addNameInput.value.trim();
+      const priceVal = parseFloat(addPriceInput.value);
+      const category = addCategorySelect.value;
+      const barcode = addBarcodeInput.value.trim() || Date.now().toString();
+
+      if (!name || isNaN(priceVal) || priceVal <= 0) {
+        showToast("Enter a valid name and price.", true);
+        return;
+      }
+
+      const product = { name, price: priceVal, barcode, category };
+      PRODUCTS.push(product);
+      rebuildBarcodeIndex();
+
+      try {
+        const res = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(product),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Saved to Google Sheets (local backup kept).");
+        } else {
+          showToast("Google Sheets failed – saved locally only.", true);
+        }
+      } catch (e) {
+        showToast("Google Sheets failed – saved locally only.", true);
+      }
+
+      addNameInput.value = "";
+      addPriceInput.value = "";
+      addBarcodeInput.value = "";
+      
+      if (activeCategory) {
+        showCategoryProducts(activeCategory);
+      }
+      renderCategories();
+      hidePanel(addProductPanel);
+    });
+
+    document.getElementById("menuSettings").addEventListener("click", () => {
+      renderCategoryList();
+      showPanel(settingsPanel);
+      menuDropdown.classList.remove("show");
+    });
+
+    document.getElementById("menuLogout").addEventListener("click", () => {
+      menuDropdown.classList.remove("show");
+      logout();
+    });
+
+    document.getElementById("menuShift").addEventListener("click", () => {
+      menuDropdown.classList.remove("show");
+      if (currentShift) {
+        showCloseShiftDialog();
+      } else {
+        showOpenShiftDialog();
+      }
+    });
+
+    document.getElementById("closeSettingsPanel").addEventListener("click", () => hidePanel(settingsPanel));
+
+    document.querySelectorAll(".settings-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".settings-tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".settings-section").forEach(s => s.classList.remove("show"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab + "Settings").classList.add("show");
+      });
+    });
+
+    document.getElementById("saveSettings").addEventListener("click", () => {
+      const newName = document.getElementById("settingsStoreName").value;
+      const newPhone = document.getElementById("settingsPhone").value;
+      const newLogo = document.getElementById("settingsLogoEmoji").value;
+      const newTaxRate = parseFloat(document.getElementById("settingsTaxRate").value) || 8;
+      
+      document.querySelector(".store-info h1").textContent = newName;
+      document.querySelector(".store-info p").textContent = newPhone;
+      document.querySelector(".store-logo").textContent = newLogo;
+      BASE_TAX_RATE = newTaxRate / 100;
+      
+      showToast("Settings saved!");
+      hidePanel(settingsPanel);
+    });
+
+    function setTheme(theme) {
+      document.body.className = theme;
+      localStorage.setItem('sal-pos-theme', theme);
+      updateThemeButtons(theme);
+      // Broadcast theme change to other windows via IPC
+      if (window.electronAPI && window.electronAPI.setTheme) {
+        window.electronAPI.setTheme(theme);
+      }
+    }
+
+    function updateThemeButtons(theme) {
+      const lightBtn = document.getElementById('themeLightBtn');
+      const darkBtn = document.getElementById('themeDarkBtn');
+      if (lightBtn && darkBtn) {
+        lightBtn.classList.toggle('btn-primary', theme === 'light');
+        lightBtn.classList.toggle('btn-secondary', theme !== 'light');
+        darkBtn.classList.toggle('btn-primary', theme === 'dark');
+        darkBtn.classList.toggle('btn-secondary', theme !== 'dark');
+      }
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem('sal-pos-theme') || 'light';
+      setTheme(saved);
+    }
+
+    document.getElementById('themeLightBtn').addEventListener('click', () => setTheme('light'));
+    document.getElementById('themeDarkBtn').addEventListener('click', () => setTheme('dark'));
+    initTheme();
+
+    function renderCategoryList() {
+      const list = document.getElementById("categoryList");
+      list.innerHTML = "";
+      CATEGORIES.forEach((cat, idx) => {
+        const item = document.createElement("div");
+        item.className = "category-item";
+        item.innerHTML = `
+          <div class="category-item-info">
+            <span>${cat}</span>
+            <span class="category-item-count">${PRODUCTS.filter(p => (p.category || "Misc") === cat).length} items</span>
+          </div>
+          <button class="category-delete-btn" data-cat="${cat}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+            </svg>
+          </button>
+        `;
+        list.appendChild(item);
+      });
+
+      document.querySelectorAll(".category-delete-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const cat = btn.dataset.cat;
+          if (confirm(`Delete category "${cat}"? Products in this category will be moved to "Misc".`)) {
+            PRODUCTS.forEach(p => {
+              if (p.category === cat) p.category = "Misc";
+            });
+            CATEGORIES = CATEGORIES.filter(c => c !== cat);
+            renderCategoryList();
+            renderCategories();
+            populateCategorySelect();
+            showToast(`Category "${cat}" deleted`);
+          }
+        });
+      });
+    }
+
+    document.getElementById("addCategoryBtn").addEventListener("click", () => {
+      const newCat = document.getElementById("newCategoryName").value.trim();
+      if (!newCat) {
+        showToast("Enter a category name", true);
+        return;
+      }
+      if (CATEGORIES.includes(newCat)) {
+        showToast("Category already exists", true);
+        return;
+      }
+      CATEGORIES.push(newCat);
+      populateCategorySelect();
+      renderCategoryList();
+      renderCategories();
+      document.getElementById("newCategoryName").value = "";
+      showToast(`Category "${newCat}" added!`);
+    });
+
+    document.getElementById("testPrintBtn").addEventListener("click", () => {
+      if (window.electronAPI && window.electronAPI.printReceipt) {
+        window.electronAPI.printReceipt({
+          store: { name: "My Store", phone: "" },
+          items: [{ name: "Test Item", qty: 1, price: 1.00 }],
+          subtotal: 1.00,
+          discount: 0,
+          taxRate: 0,
+          taxAmount: 0,
+          total: 1.00,
+          paymentType: "Test"
+        }).then(() => {
+          showToast("Test print sent to thermal printer!");
+        }).catch(() => {
+          showToast("Printer not connected", true);
+        });
+      } else {
+        const testReceipt = `
+          <h3>My Store</h3>
+          <p style="text-align: center;">*** TEST PRINT ***</p>
+          <p style="text-align: center;">${new Date().toLocaleString()}</p>
+          <div class="receipt-line"></div>
+          <p style="text-align: center;">Printer is working correctly!</p>
+        `;
+        const printWindow = window.open("", "", "height=400,width=300");
+        printWindow.document.write("<html><head><title>Test Print</title>");
+        printWindow.document.write("<style>body { font-family: monospace; font-size: 12px; margin: 0; padding: 10px; } h3 { text-align: center; } .receipt-line { border-top: 1px dashed #ccc; margin: 8px 0; }</style>");
+        printWindow.document.write("</head><body>");
+        printWindow.document.write(testReceipt);
+        printWindow.document.write("</body></html>");
+        printWindow.document.close();
+        printWindow.print();
+        showToast("Test print sent!");
+      }
+    });
+
+    document.getElementById("closeEodPanel").addEventListener("click", () => {
+      hidePanel(eodPanel);
+      // Reset to today's view when closing
+      document.getElementById("eodSummary").style.display = "block";
+      document.getElementById("eodHistoryView").style.display = "none";
+      document.getElementById("eodPanelTitle").textContent = "End of Day Report";
+    });
+
+    document.getElementById("printEodBtn").addEventListener("click", () => {
+      printEodReport();
+    });
+
+    document.getElementById("viewHistoryBtn").addEventListener("click", async () => {
+      await loadEodHistory();
+    });
+
+    async function loadEodHistory() {
+      try {
+        const data = await EodReportsService.fetchWeekReports();
+        
+        const summaryEl = document.getElementById("eodSummary");
+        const historyView = document.getElementById("eodHistoryView");
+        const historyList = document.getElementById("eodHistoryList");
+        const titleEl = document.getElementById("eodPanelTitle");
+        
+        if (summaryEl.style.display !== "none") {
+          // Show history view
+          viewingHistoricalReport = null;
+          summaryEl.style.display = "none";
+          historyView.style.display = "block";
+          titleEl.textContent = "Report History (7 Days)";
+          document.getElementById("viewHistoryBtn").innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Back to Today
+          `;
+          
+          if (data.success && data.reports.length > 0) {
+            historyList.innerHTML = data.reports.map(r => `
+              <div class="history-item" onclick="showHistoryReport('${r.report_date}')" style="padding: 0.75rem; background: #2a3550; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600; color: #fff;">${new Date(r.report_date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                  <div style="font-size: 0.85rem; color: #a0a5b8;">${r.transaction_count} transactions</div>
+                </div>
+                <div style="font-weight: 600; color: #00d9a5;">$${(r.total_sales || 0).toFixed(2)}</div>
+              </div>
+            `).join('');
+          } else {
+            historyList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #a0a5b8;">No saved reports yet. Reports are saved when you print EOD.</div>';
+          }
+        } else {
+          // Go back to today's view
+          viewingHistoricalReport = null;
+          summaryEl.style.display = "block";
+          historyView.style.display = "none";
+          titleEl.textContent = "End of Day Report";
+          document.getElementById("viewHistoryBtn").innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            View History
+          `;
+          // Reload today's data
+          await loadEodData();
+        }
+      } catch (err) {
+        showToast("Failed to load history: " + err.message, true);
+      }
+    }
+
+    async function showHistoryReport(date) {
+      try {
+        const data = await EodReportsService.fetchReportByDate(date);
+        
+        if (data.success && data.report) {
+          const r = data.report;
+          const reportData = r.report_data ? JSON.parse(r.report_data) : {};
+          
+          const storedCounts = reportData.counts || {};
+          
+          const safeNum = (val) => {
+            const n = Number(val);
+            return isNaN(n) ? 0 : n;
+          };
+          
+          viewingHistoricalReport = {
+            date: r.report_date,
+            displayDate: new Date(r.report_date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+            cash: safeNum(reportData.cash_total !== undefined ? reportData.cash_total : r.cash_sales),
+            card: safeNum(reportData.card_total !== undefined ? reportData.card_total : r.card_sales),
+            ebt: safeNum(reportData.ebt_total !== undefined ? reportData.ebt_total : r.ebt_sales),
+            storeCredit: safeNum(reportData.store_credit_total !== undefined ? reportData.store_credit_total : r.store_credit_sales),
+            total: safeNum(reportData.total_sales !== undefined ? reportData.total_sales : r.total_sales),
+            transactionCount: safeNum(reportData.transaction_count !== undefined ? reportData.transaction_count : r.transaction_count),
+            counts: {
+              Cash: storedCounts.Cash,
+              "Debit Card": storedCounts["Debit Card"],
+              EBT: storedCounts.EBT,
+              "Store Credit": storedCounts["Store Credit"]
+            }
+          };
+          
+          const summaryEl = document.getElementById("eodSummary");
+          const historyView = document.getElementById("eodHistoryView");
+          const titleEl = document.getElementById("eodPanelTitle");
+          
+          historyView.style.display = "none";
+          summaryEl.style.display = "block";
+          titleEl.textContent = `Report: ${viewingHistoricalReport.displayDate}`;
+          
+          const h = viewingHistoricalReport;
+          const hc = h.counts || {};
+          const getCountDisplay = (key) => hc[key] !== undefined ? hc[key] : "-";
+          
+          summaryEl.innerHTML = `
+            <table class="eod-table" style="width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace; color: #fff;">
+              <thead>
+                <tr style="border-bottom: 2px solid #555;">
+                  <th style="text-align: left; padding: 8px; color: #fff;">Type</th>
+                  <th style="text-align: center; padding: 8px; color: #fff;">#Trn</th>
+                  <th style="text-align: right; padding: 8px; color: #fff;">$Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom: 1px dashed #555;"><td style="padding: 8px; color: #fff;">Cash</td><td style="text-align: center; padding: 8px; color: #fff;">${getCountDisplay("Cash")}</td><td style="text-align: right; padding: 8px; color: #fff;">$${h.cash.toFixed(2)}</td></tr>
+                <tr style="border-bottom: 1px dashed #555;"><td style="padding: 8px; color: #fff;">Debit Card</td><td style="text-align: center; padding: 8px; color: #fff;">${getCountDisplay("Debit Card")}</td><td style="text-align: right; padding: 8px; color: #fff;">$${h.card.toFixed(2)}</td></tr>
+                <tr style="border-bottom: 1px dashed #555;"><td style="padding: 8px; color: #fff;">EBT</td><td style="text-align: center; padding: 8px; color: #fff;">${getCountDisplay("EBT")}</td><td style="text-align: right; padding: 8px; color: #fff;">$${h.ebt.toFixed(2)}</td></tr>
+                <tr style="border-bottom: 1px dashed #555;"><td style="padding: 8px; color: #fff;">Store Credit</td><td style="text-align: center; padding: 8px; color: #fff;">${getCountDisplay("Store Credit")}</td><td style="text-align: right; padding: 8px; color: #fff;">$${h.storeCredit.toFixed(2)}</td></tr>
+                <tr style="font-weight: bold; border-top: 2px solid #fff;">
+                  <td style="padding: 8px; color: #fff;">TOTAL</td>
+                  <td style="text-align: center; padding: 8px; color: #fff;">${h.transactionCount}</td>
+                  <td style="text-align: right; padding: 8px; color: #fff;">$${h.total.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+          `;
+        } else {
+          showToast("No report found for this date", true);
+        }
+      } catch (err) {
+        showToast("Failed to load report: " + err.message, true);
+      }
+    }
+    window.showHistoryReport = showHistoryReport;
+
+    async function printEodReport() {
+      try {
+        let t, c, grand, txCount, reportDate, reportTime;
+        
+        const safeNum = (val) => {
+          const n = Number(val);
+          return isNaN(n) ? 0 : n;
+        };
+        
+        if (viewingHistoricalReport) {
+          t = {
+            "Cash": safeNum(viewingHistoricalReport.cash),
+            "Debit Card": safeNum(viewingHistoricalReport.card),
+            "EBT": safeNum(viewingHistoricalReport.ebt),
+            "Store Credit": safeNum(viewingHistoricalReport.storeCredit)
+          };
+          const hCounts = viewingHistoricalReport.counts || {};
+          c = {
+            "Cash": hCounts.Cash !== undefined ? hCounts.Cash : "-",
+            "Debit Card": hCounts["Debit Card"] !== undefined ? hCounts["Debit Card"] : "-",
+            "EBT": hCounts.EBT !== undefined ? hCounts.EBT : "-",
+            "Store Credit": hCounts["Store Credit"] !== undefined ? hCounts["Store Credit"] : "-"
+          };
+          grand = safeNum(viewingHistoricalReport.total);
+          txCount = safeNum(viewingHistoricalReport.transactionCount);
+          reportDate = new Date(viewingHistoricalReport.date + 'T12:00:00').toLocaleDateString();
+          reportTime = "(Historical)";
+        } else {
+          const data = await EodReportsService.fetchTodayReport();
+          if (!data.success) {
+            showToast("No report data to print", true);
+            return;
+          }
+          t = data.totals || {};
+          c = data.counts || {};
+          grand = data.grandTotal || 0;
+          txCount = data.transactionCount || 0;
+          reportDate = new Date().toLocaleDateString();
+          reportTime = new Date().toLocaleTimeString();
+        }
+        
+        const padLeft = (str, len) => String(str).padStart(len);
+        const padRight = (str, len) => String(str).padEnd(len);
+        const formatMoney = (amt) => '$' + (amt || 0).toFixed(2);
+        
+        const line = '-'.repeat(30);
+        const dblLine = '='.repeat(30);
+        
+        const formatRow = (type, count, amount) => {
+          return padRight(type, 12) + padLeft(count, 6) + padLeft(formatMoney(amount), 12);
+        };
+        
+        const getCount = (key) => {
+          const val = c[key];
+          return val === "-" ? "-" : (val || 0);
+        };
+        
+        const reportText = [
+          '    My Store',
+          ' ' + reportDate + ' ' + reportTime,
+          '  *** End of Day ***',
+          '',
+          line,
+          padRight('Type', 12) + padLeft('#Trn', 6) + padLeft('Amount', 12),
+          line,
+          formatRow('Cash', getCount("Cash"), t["Cash"] || 0),
+          formatRow('Debit', getCount("Debit Card"), t["Debit Card"] || 0),
+          formatRow('EBT', getCount("EBT"), t["EBT"] || 0),
+          formatRow('StoreCred', getCount("Store Credit"), t["Store Credit"] || 0),
+          dblLine,
+          formatRow('TOTAL', txCount, grand),
+          '',
+          ''
+        ].join('\n');
+        
+        const reportHtml = `
+          <html>
+          <head>
+            <title>End of Day Report</title>
+            <style>
+              body { margin: 0; padding: 5px; }
+              pre { font-family: 'Courier New', Courier, monospace; font-size: 10px; margin: 0; white-space: pre; color: #000; }
+            </style>
+          </head>
+          <body>
+            <pre>${reportText}</pre>
+          </body>
+          </html>
+        `;
+        
+        if (window.electronAPI && window.electronAPI.printReceipt) {
+          await window.electronAPI.printReceipt({ html: reportHtml });
+          showToast("Report sent to POS-80C printer");
+        } else {
+          const printWindow = window.open("", "", "height=600,width=400");
+          printWindow.document.write(reportHtml);
+          printWindow.document.close();
+          printWindow.print();
+          showToast("Report sent to printer");
+        }
+        
+        if (!viewingHistoricalReport) {
+          try {
+            await EodReportsService.saveReport();
+            console.log("Saved EOD report to database");
+          } catch (saveErr) {
+            console.error("Failed to save EOD report:", saveErr);
+          }
+        }
+      } catch (err) {
+        console.error("Print error:", err);
+        showToast("Print failed: " + err.message, true);
+      }
+    }
+
+    // Track which date we last auto-printed for (prevents duplicate prints)
+    let lastAutoPrintDate = localStorage.getItem('lastAutoPrintDate') || '';
+
+    function setupAutoPrintTimer() {
+      setInterval(() => {
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        
+        // Trigger at 11:59 PM (any second during that minute) if we haven't printed today
+        if (now.getHours() === 23 && now.getMinutes() === 59 && lastAutoPrintDate !== todayStr) {
+          console.log("Auto-print triggered at 11:59 PM for date: " + todayStr);
+          lastAutoPrintDate = todayStr;
+          localStorage.setItem('lastAutoPrintDate', todayStr);
+          autoGenerateAndPrintEod();
+        }
+      }, 1000);
+    }
+
+    async function autoGenerateAndPrintEod() {
+      try {
+        const data = await EodReportsService.fetchTodayReport();
+        if (data.success) {
+          const t = data.totals || {};
+          const c = data.counts || {};
+          const grand = data.grandTotal || 0;
+          const txCount = data.transactionCount || 0;
+          
+          // Helper to pad strings for fixed-width columns (32 char thermal paper)
+          const padLeft = (str, len) => String(str).padStart(len);
+          const padRight = (str, len) => String(str).padEnd(len);
+          const formatMoney = (amt) => '$' + (amt || 0).toFixed(2);
+          
+          // Build fixed-width text report (32 chars to fit 80mm paper)
+          const line = '-'.repeat(30);
+          const dblLine = '='.repeat(30);
+          
+          const formatRow = (type, count, amount) => {
+            return padRight(type, 12) + padLeft(count, 6) + padLeft(formatMoney(amount), 12);
+          };
+          
+          const reportText = [
+            '    My Store',
+            ' ' + new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
+            '  *** End of Day ***',
+            '   (Auto 11:59 PM)',
+            '',
+            line,
+            padRight('Type', 12) + padLeft('#Trn', 6) + padLeft('Amount', 12),
+            line,
+            formatRow('Cash', c["Cash"] || 0, t["Cash"] || 0),
+            formatRow('Debit', c["Debit Card"] || 0, t["Debit Card"] || 0),
+            formatRow('EBT', c["EBT"] || 0, t["EBT"] || 0),
+            formatRow('StoreCred', c["Store Credit"] || 0, t["Store Credit"] || 0),
+            dblLine,
+            formatRow('TOTAL', txCount, grand),
+            '',
+            ''
+          ].join('\n');
+          
+          const reportHtml = `
+            <html>
+            <head>
+              <title>End of Day Report</title>
+              <style>
+                body { margin: 0; padding: 5px; }
+                pre { font-family: 'Courier New', Courier, monospace; font-size: 10px; margin: 0; white-space: pre; color: #000; }
+              </style>
+            </head>
+            <body>
+              <pre>${reportText}</pre>
+            </body>
+            </html>
+          `;
+          
+          if (window.electronAPI && window.electronAPI.printReceipt) {
+            await window.electronAPI.printReceipt({ html: reportHtml });
+            console.log("Auto-printed End of Day report to POS-80C at 11:59 PM");
+          } else {
+            const printWindow = window.open("", "", "height=600,width=400");
+            printWindow.document.write(reportHtml);
+            printWindow.document.close();
+            printWindow.print();
+            console.log("Auto-printed End of Day report at 11:59 PM");
+          }
+          
+          // Save the daily report to database for history
+          try {
+            await EodReportsService.saveReport();
+            console.log("Saved EOD report to database");
+          } catch (saveErr) {
+            console.error("Failed to save EOD report:", saveErr);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to auto-print EOD report:", err);
+      }
+    }
+
+    // Start the auto-print timer - checks every second for 11:59 PM
+    setupAutoPrintTimer();
+    console.log("Auto-print timer started - will print EOD at 11:59 PM");
+
+    function initInputHandlers() {
+      document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.removeEventListener('focus', handleInputFocus);
+        input.removeEventListener('keydown', handleInputKey);
+        input.removeEventListener('keyup', handleInputKey);
+        input.removeEventListener('keypress', handleInputKey);
+        input.removeEventListener('click', handleInputClick);
+        
+        input.addEventListener('focus', handleInputFocus);
+        input.addEventListener('keydown', handleInputKey);
+        input.addEventListener('keyup', handleInputKey);
+        input.addEventListener('keypress', handleInputKey);
+        input.addEventListener('click', handleInputClick);
+      });
+    }
+    
+    function handleInputFocus(e) {
+      e.stopPropagation();
+    }
+    
+    function handleInputKey(e) {
+      e.stopPropagation();
+    }
+    
+    function handleInputClick(e) {
+      e.stopPropagation();
+      e.target.focus();
+    }
+    
+    const observer = new MutationObserver(() => {
+      initInputHandlers();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    initInputHandlers();
+
+    let currentUser = null;
+    let currentShift = null;
+
+    function checkSession() {
+      const userStr = sessionStorage.getItem('user');
+      if (!userStr) {
+        window.location.href = 'login.html';
+        return false;
+      }
+      try {
+        currentUser = JSON.parse(userStr);
+        updateUserDisplay();
+        return true;
+      } catch (e) {
+        window.location.href = 'login.html';
+        return false;
+      }
+    }
+
+    function updateUserDisplay() {
+      const userEl = document.querySelector('.store-info p');
+      if (userEl && currentUser) {
+        userEl.textContent = `Logged in as: ${currentUser.displayName || currentUser.username} (${currentUser.role})`;
+      }
+    }
+
+    async function checkShiftStatus() {
+      try {
+        const res = await fetch('/api/shifts/current');
+        const data = await res.json();
+        currentShift = data.isOpen ? data.shift : null;
+        updateShiftIndicator();
+      } catch (e) {
+        console.error('Failed to check shift:', e);
+      }
+    }
+
+    function updateShiftIndicator() {
+      const shiftText = document.getElementById('menuShiftText');
+      const shiftBtn = document.getElementById('menuShift');
+      if (shiftText && shiftBtn) {
+        if (currentShift) {
+          shiftText.textContent = 'Close Shift';
+          shiftBtn.style.color = '#00d9a5';
+        } else {
+          shiftText.textContent = 'Open Shift';
+          shiftBtn.style.color = '';
+        }
+      }
+    }
+
+    function showOpenShiftDialog() {
+      const modal = document.getElementById("openShiftModal");
+      const input = document.getElementById("openShiftCash");
+      input.value = "100";
+      modal.classList.add("show");
+      input.focus();
+      input.select();
+    }
+
+    document.getElementById("openShiftConfirm").addEventListener("click", async () => {
+      const input = document.getElementById("openShiftCash");
+      const startingCash = parseFloat(input.value) || 0;
+      
+      document.getElementById("openShiftModal").classList.remove("show");
+      
+      try {
+        const res = await fetch('/api/shifts/open', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUser.id, startingCash })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Shift opened!');
+          checkShiftStatus();
+        } else {
+          showToast(data.error || 'Failed to open shift', true);
+        }
+      } catch (e) {
+        showToast('Failed to open shift', true);
+      }
+    });
+
+    document.getElementById("openShiftCancel").addEventListener("click", () => {
+      document.getElementById("openShiftModal").classList.remove("show");
+    });
+
+    document.getElementById("openShiftCash").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("openShiftConfirm").click();
+    });
+
+    function showCloseShiftDialog() {
+      if (!currentShift) return;
+      
+      const modal = document.getElementById("closeShiftModal");
+      const cashInput = document.getElementById("closeShiftCash");
+      const notesInput = document.getElementById("closeShiftNotes");
+      cashInput.value = "";
+      notesInput.value = "";
+      modal.classList.add("show");
+      cashInput.focus();
+    }
+
+    document.getElementById("closeShiftConfirm").addEventListener("click", async () => {
+      const cashInput = document.getElementById("closeShiftCash");
+      const notesInput = document.getElementById("closeShiftNotes");
+      const endingCash = parseFloat(cashInput.value) || 0;
+      const notes = notesInput.value || '';
+      
+      document.getElementById("closeShiftModal").classList.remove("show");
+      
+      try {
+        const res = await fetch('/api/shifts/close', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            shiftId: currentShift.id, 
+            userId: currentUser.id, 
+            endingCash,
+            notes
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Shift closed!');
+          showShiftSummary(data.shift);
+          checkShiftStatus();
+        } else {
+          showToast(data.error || 'Failed to close shift', true);
+        }
+      } catch (e) {
+        showToast('Failed to close shift', true);
+      }
+    });
+
+    document.getElementById("closeShiftCancel").addEventListener("click", () => {
+      document.getElementById("closeShiftModal").classList.remove("show");
+    });
+
+    document.getElementById("closeShiftCash").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("closeShiftNotes").focus();
+    });
+
+    document.getElementById("closeShiftNotes").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("closeShiftConfirm").click();
+    });
+
+    function showShiftSummary(shift) {
+      const modal = document.getElementById("shiftSummaryModal");
+      const content = document.getElementById("shiftSummaryContent");
+      content.innerHTML = `
+<div style="text-align: center; font-weight: bold; margin-bottom: 0.5rem;">SHIFT SUMMARY</div>
+<div>=============</div>
+<div>Total Sales: $${(shift.total_sales || 0).toFixed(2)}</div>
+<div>Transactions: ${shift.total_transactions || 0}</div>
+<div style="margin-top: 0.5rem;">Cash: $${(shift.cash_sales || 0).toFixed(2)}</div>
+<div>Card: $${(shift.card_sales || 0).toFixed(2)}</div>
+<div>EBT: $${(shift.ebt_sales || 0).toFixed(2)}</div>
+<div style="margin-top: 0.5rem;">Starting Cash: $${(shift.starting_cash || 0).toFixed(2)}</div>
+<div>Ending Cash: $${(shift.ending_cash || 0).toFixed(2)}</div>
+      `;
+      modal.classList.add("show");
+    }
+
+    document.getElementById("shiftSummaryClose").addEventListener("click", () => {
+      document.getElementById("shiftSummaryModal").classList.remove("show");
+    });
+
+    function logout() {
+      sessionStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+
+    window.logout = logout;
+
+    if (checkSession()) {
+      checkShiftStatus();
+      loadProducts().then(() => {
+        populateCategorySelect();
+        populateEditCategorySelect();
+        renderCategories();
+        renderCart();
+      });
+      
+      // === FOCUS RECOVERY SYSTEM ===
+      // Restores barcode input instantly after sleep/wake, window switch, or idle
+
+      function restoreFocusIfIdle() {
+        const activeModal = document.querySelector('.modal.show, .input-modal.show, .inline-panel.show');
+        const activeEl = document.activeElement;
+        // Don't steal focus from modals or from inputs the cashier is actively using
+        const userIsTypingElsewhere = activeEl &&
+          (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') &&
+          activeEl !== barcodeInput;
+        if (!activeModal && !userIsTypingElsewhere) {
+          barcodeInput.focus();
+        }
+      }
+
+      // 1. PRIMARY: powerMonitor in Electron main process fires reliably on
+      //    system sleep/wake and screen lock/unlock — this is the most reliable path
+      if (window.electronAPI && window.electronAPI.onRestoreFocus) {
+        window.electronAPI.onRestoreFocus(() => {
+          console.log('[focus] restore-focus signal received from main process');
+          // Force focus unconditionally — this only fires after a real wake/unlock
+          barcodeInput.focus();
+        });
+      }
+
+      // 2. visibilitychange — works for tab switches and some sleep scenarios
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          setTimeout(restoreFocusIfIdle, 150);
+        }
+      });
+
+      // 3. window focus — works for alt-tab back into the app
+      window.addEventListener('focus', () => {
+        restoreFocusIfIdle();
+      });
+
+      // 4. Safety-net watchdog every 5s — catches anything the above missed
+      setInterval(restoreFocusIfIdle, 5000);
+    }
+
+    // Drawer Log Viewer (Owner/Manager only - PIN protected)
+    let drawerLogPinBuffer = "";
+    let managerAccessToken = null;
+    
+    function showDrawerLogPinModal() {
+      drawerLogPinBuffer = "";
+      document.getElementById("drawerLogPinDisplay").textContent = "";
+      document.getElementById("drawerLogPinModal").classList.add("show");
+    }
+    
+    function handleDrawerLogPinKey(key) {
+      if (key === 'clear') {
+        drawerLogPinBuffer = "";
+      } else if (key === 'back') {
+        drawerLogPinBuffer = drawerLogPinBuffer.slice(0, -1);
+      } else if (drawerLogPinBuffer.length < 6) {
+        drawerLogPinBuffer += key;
+      }
+      document.getElementById("drawerLogPinDisplay").textContent = "*".repeat(drawerLogPinBuffer.length);
+    }
+    
+    async function verifyDrawerLogPin() {
+      if (drawerLogPinBuffer.length < 4) {
+        showToast("Enter your PIN", true);
+        return;
+      }
+      
+      try {
+        // Verify PIN against owner/manager accounts
+        const res = await fetch("/api/auth/verify-manager-pin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin: drawerLogPinBuffer })
+        });
+        const data = await res.json();
+        
+        if (data.success && data.authorized && data.accessToken) {
+          managerAccessToken = data.accessToken;
+          document.getElementById("drawerLogPinModal").classList.remove("show");
+          await loadDrawerLog();
+        } else {
+          showToast("Invalid PIN or access denied", true);
+          drawerLogPinBuffer = "";
+          document.getElementById("drawerLogPinDisplay").textContent = "";
+        }
+      } catch (e) {
+        showToast("Verification failed", true);
+      }
+    }
+    
+    async function loadDrawerLog() {
+      try {
+        const res = await fetch("/api/drawer-log", {
+          headers: { "X-Manager-Token": managerAccessToken }
+        });
+        const data = await res.json();
+        
+        if (!data.success) {
+          showToast("Failed to load drawer log", true);
+          return;
+        }
+        
+        const logs = data.logs || [];
+        const modal = document.getElementById("drawerLogModal");
+        const content = document.getElementById("drawerLogContent");
+        
+        if (logs.length === 0) {
+          content.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 2rem;">No drawer activity recorded</div>';
+        } else {
+          content.innerHTML = logs.map(log => {
+            const date = new Date(log.created_at + 'Z');
+            const dateStr = date.toLocaleDateString();
+            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const reasonColor = log.reason === 'No Sale' ? '#f97316' : '#22c55e';
+            return `
+              <div style="display: grid; grid-template-columns: 100px 70px 1fr 80px; gap: 0.5rem; padding: 0.75rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;">
+                <span>${dateStr}</span>
+                <span>${timeStr}</span>
+                <span style="font-weight: 500;">${log.user_name || 'Unknown'}</span>
+                <span style="color: ${reasonColor}; font-weight: 600; text-align: right;">${log.reason}</span>
+              </div>
+              ${log.sale_amount > 0 ? `<div style="padding: 0.25rem 0.75rem 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">Sale: $${log.sale_amount.toFixed(2)}</div>` : ''}
+            `;
+          }).join('');
+        }
+        
+        modal.classList.add("show");
+      } catch (e) {
+        showToast("Failed to load drawer log", true);
+      }
+    }
+    
+    function showDrawerLog() {
+      showDrawerLogPinModal();
+    }
+    
+    document.getElementById("closeDrawerLogBtn").addEventListener("click", () => {
+      document.getElementById("drawerLogModal").classList.remove("show");
+    });
+    
+    document.getElementById("drawerLogPinCancel").addEventListener("click", () => {
+      document.getElementById("drawerLogPinModal").classList.remove("show");
+    });
+
+    window.showDrawerLog = showDrawerLog;
+  </script>
+</body>
+</html>
