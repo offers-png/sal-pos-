@@ -348,6 +348,10 @@
               <label class="label">Phone Number</label>
               <input type="text" class="input" value="" id="storePhone">
             </div>
+            <div class="form-group full-width">
+              <label class="label">Receipt Footer Message</label>
+              <input type="text" class="input" placeholder="Thank you for shopping with us!" id="receiptFooter">
+            </div>
           </div>
         </div>
       </div>
@@ -853,9 +857,44 @@
       }
     });
 
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      showToast("Settings saved!");
+    // ===== Store Branding (name/phone/receipt footer) =====
+    async function loadStoreSettings() {
+      try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (!data.success) return;
+        const s = data.settings || {};
+        if (s.store_name != null) document.getElementById("storeName").value = s.store_name;
+        if (s.store_phone != null) document.getElementById("storePhone").value = s.store_phone;
+        if (s.receipt_footer != null) document.getElementById("receiptFooter").value = s.receipt_footer;
+      } catch (err) {
+        console.error("Failed to load store settings:", err);
+      }
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+      const store_name = document.getElementById("storeName").value.trim() || "My Store";
+      const store_phone = document.getElementById("storePhone").value.trim();
+      const receipt_footer = document.getElementById("receiptFooter").value.trim() || "Thank you for shopping with us!";
+
+      try {
+        const res = await fetch("/api/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ store_name, store_phone, receipt_footer })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Settings saved!");
+        } else {
+          showToast(data.error || "Failed to save settings", true);
+        }
+      } catch (err) {
+        showToast("Failed to save settings: " + err.message, true);
+      }
     });
+
+    loadStoreSettings();
 
     // ===== Hardware Setup Wizard (Printer & Scanner) =====
     async function loadPrinters() {

@@ -70,7 +70,7 @@ function textToBuffer(text) {
 function generateReceiptText(payload) {
   const {
     store, items, subtotal, discount,
-    taxRate, taxAmount, total, paymentType, saleId,
+    taxRate, taxAmount, total, paymentType, saleId, footer,
     ebtAmount, nonEbtAmount, ebtDiscount, nonEbtTax, secondPaymentType
   } = payload || {};
 
@@ -177,7 +177,7 @@ function generateReceiptText(payload) {
   }
 
   lines.push('');
-  lines.push(center('Thank you for shopping!'));
+  lines.push(center(footer || 'Thank you for shopping!'));
 
   if (saleId) {
     lines.push(center('Receipt: ' + saleId));
@@ -348,7 +348,7 @@ async function openCashDrawerRaw() {
 function generateReceiptHTML(payload) {
   const {
     store, items, subtotal, discount,
-    taxRate, taxAmount, total, paymentType, saleId,
+    taxRate, taxAmount, total, paymentType, saleId, footer,
     ebtAmount, nonEbtAmount, ebtDiscount, nonEbtTax, secondPaymentType
   } = payload || {};
 
@@ -467,7 +467,7 @@ function generateReceiptHTML(payload) {
   </div>
   ${splitTotalsHTML}
   <div class="footer">
-    Thank you for shopping!
+    ${footer || 'Thank you for shopping!'}
     ${saleId ? `<div class="sale-id">Receipt: ${saleId}</div>` : ''}
   </div>
 </body>

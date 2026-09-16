@@ -299,6 +299,7 @@ async function initDefaultSettings() {
   const db = await getDb();
   const defaults = [
     { key: 'store_name', value: 'My Store' },
+    { key: 'store_phone', value: '' },
     { key: 'tax_rate', value: '0.0825' },
     { key: 'receipt_header', value: 'Welcome to My Store!' },
     { key: 'receipt_footer', value: 'Thank you for shopping with us!' },

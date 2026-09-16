@@ -2006,6 +2006,7 @@
     const NON_EBT_CATEGORIES = ["Tobacco", "Beer", "Hot Food", "Lottery", "Medicine/Pharmacy", "Household", "Pets", "Other / Misc"];
     let PRODUCTS = [];
     let barcodeIndex = {};
+    let STORE_SETTINGS = { store_name: 'My Store', store_phone: '', receipt_footer: 'Thank you for shopping with us!' };
     let cart = [];
     let discountPercentage = 0;
     let taxEnabled = false;
@@ -2862,7 +2863,8 @@
       const actualTaxRate = (paymentType === 'EBT' || tax === 0) ? 0 : (taxEnabled ? 8 : 0);
 
       ReceiptService.setLastReceipt({
-        store: { name: "My Store", phone: "" },
+        store: getStoreInfo(),
+        footer: STORE_SETTINGS.receipt_footer,
         items: cartCopy,
         subtotal,
         discount: discountAmount,
@@ -2985,7 +2987,8 @@
       const paymentType = `EBT + ${secondPaymentType}`;
 
       ReceiptService.setLastReceipt({
-        store: { name: "My Store", phone: "" },
+        store: getStoreInfo(),
+        footer: STORE_SETTINGS.receipt_footer,
         items: cartCopy,
         subtotal,
         discount: discountAmount,
@@ -3752,7 +3755,8 @@
     document.getElementById("testPrintBtn").addEventListener("click", () => {
       if (window.electronAPI && window.electronAPI.printReceipt) {
         window.electronAPI.printReceipt({
-          store: { name: "My Store", phone: "" },
+          store: getStoreInfo(),
+          footer: STORE_SETTINGS.receipt_footer,
           items: [{ name: "Test Item", qty: 1, price: 1.00 }],
           subtotal: 1.00,
           discount: 0,
@@ -4369,8 +4373,25 @@ ${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-w
 
     window.logout = logout;
 
+    function getStoreInfo() {
+      return { name: STORE_SETTINGS.store_name || 'My Store', phone: STORE_SETTINGS.store_phone || '' };
+    }
+
+    async function loadStoreSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+          STORE_SETTINGS = { ...STORE_SETTINGS, ...data.settings };
+        }
+      } catch (err) {
+        console.error('Failed to load store settings:', err);
+      }
+    }
+
     if (checkSession()) {
       checkShiftStatus();
+      loadStoreSettings();
       loadProducts().then(() => {
         populateCategorySelect();
         populateEditCategorySelect();
