@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   completeSale: (data) => ipcRenderer.invoke('complete-sale', data),
   openDrawer: () => ipcRenderer.invoke('open-drawer'),
   getPrinters: () => ipcRenderer.invoke('get-printers'),
+  setPrinter: (printerName) => ipcRenderer.invoke('set-printer', printerName),
+  testPrint: () => ipcRenderer.invoke('test-print'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   updateCustomerCart: (data) => ipcRenderer.invoke('update-customer-cart', data),
