@@ -14,3 +14,9 @@ build/
 *.mp4
 attached_assets/*.mp4
 shamrock-pos-credentials.json
+
+*.db
+*.db.*
+*credentials*.json
+backups/
+coverage/

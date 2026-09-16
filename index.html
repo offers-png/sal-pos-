@@ -1224,6 +1224,9 @@
   </style>
   <script src="services/eodReportsService.js"></script>
   <script src="services/receiptService.js"></script>
+<script src="/vendor/purify.js"></script>
+<script src="/services/browser.js"></script>
+<script src="/services/money.js"></script>
 </head>
 <body>
   <div class="pos-container">
@@ -1363,7 +1366,7 @@
                 </svg>
                 Reports
               </button>
-              <button class="menu-item" id="menuDrawerLog" onclick="showDrawerLog()">
+              <button class="menu-item" id="menuDrawerLog" data-ui-action="static-action-0">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20"/><circle cx="12" cy="15" r="1"/>
                 </svg>
@@ -1673,7 +1676,7 @@
         <div class="id-check-product-name" id="idCheckProductName"></div>
         <div class="id-check-product-category" id="idCheckProductCategory"></div>
       </div>
-      
+
       <div style="margin: 1.5rem 0; display: flex; flex-direction: column; gap: 1rem;">
         <button class="id-check-btn approve" id="idCheckConfirmAge" style="padding: 1.25rem; font-size: 1.25rem; font-weight: 700;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 0.5rem; vertical-align: middle;">
@@ -1681,24 +1684,24 @@
           </svg>
           Confirm Age 21+
         </button>
-        
+
         <div style="text-align: center; color: var(--pos-text-muted); font-size: 0.85rem; margin: 0.25rem 0;">— OR —</div>
-        
+
         <div style="font-weight: 600; color: var(--pos-text); font-size: 0.95rem;">Enter Date of Birth (optional)</div>
         <div id="dobDisplayContainer" style="display: flex; gap: 0.5rem; align-items: center;">
-          <div id="dobDisplay" style="flex: 1; padding: 1rem; border: 2px solid var(--pos-border); border-radius: 8px; font-size: 1.25rem; font-weight: 600; text-align: center; background: var(--pos-panel); color: var(--pos-text); cursor: pointer; min-height: 52px;" onclick="showDobKeypad()">
+          <div id="dobDisplay" style="flex: 1; padding: 1rem; border: 2px solid var(--pos-border); border-radius: 8px; font-size: 1.25rem; font-weight: 600; text-align: center; background: var(--pos-panel); color: var(--pos-text); cursor: pointer; min-height: 52px;" data-ui-action="static-action-1">
             <span style="color: var(--pos-text-muted);">Tap to enter DOB</span>
           </div>
         </div>
         <input type="hidden" id="idDobInput">
-        
+
         <button class="id-check-btn approve" id="idCheckVerifyDob" style="margin-top: 0.25rem;">
           Verify Age from DOB
         </button>
       </div>
-      
+
       <div id="idCheckResult" style="display: none; padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; font-weight: 600; text-align: center;"></div>
-      
+
       <div class="id-check-buttons" style="margin-top: 0.5rem;">
         <button class="id-check-btn deny" id="idCheckDeny">Cancel Sale</button>
         <button class="id-check-btn approve" id="idCheckApprove" style="display: none;">Proceed with Sale</button>
@@ -1710,11 +1713,11 @@
     <div class="id-check-content" style="max-width: 340px; padding: 1.25rem;">
       <div style="font-weight: 700; font-size: 1.25rem; color: var(--pos-text); margin-bottom: 0.5rem; text-align: center;">Enter Date of Birth</div>
       <div style="font-size: 0.85rem; color: var(--pos-text-muted); text-align: center; margin-bottom: 1rem;">MM / DD / YYYY</div>
-      
+
       <div id="keypadDobDisplay" style="background: var(--pos-panel); border: 2px solid var(--pos-accent); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; text-align: center; font-size: 1.75rem; font-weight: 700; letter-spacing: 2px; color: var(--pos-text); min-height: 60px;">
         __ / __ / ____
       </div>
-      
+
       <div id="dobKeypadGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem;">
         <button class="keypad-btn" data-digit="1">1</button>
         <button class="keypad-btn" data-digit="2">2</button>
@@ -1735,7 +1738,7 @@
           </svg>
         </button>
       </div>
-      
+
       <div style="display: flex; gap: 0.75rem;">
         <button class="id-check-btn deny" id="dobKeypadCancel" style="flex: 1;">Cancel</button>
         <button class="id-check-btn approve" id="dobKeypadConfirm" style="flex: 1;">Confirm</button>
@@ -1895,22 +1898,22 @@
         <div id="drawerLogPinDisplay" style="font-size: 2rem; letter-spacing: 0.5rem; min-height: 2.5rem; color: var(--text-primary);"></div>
       </div>
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; padding: 0 0.5rem;">
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('1')" style="padding: 1rem; font-size: 1.5rem;">1</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('2')" style="padding: 1rem; font-size: 1.5rem;">2</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('3')" style="padding: 1rem; font-size: 1.5rem;">3</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('4')" style="padding: 1rem; font-size: 1.5rem;">4</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('5')" style="padding: 1rem; font-size: 1.5rem;">5</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('6')" style="padding: 1rem; font-size: 1.5rem;">6</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('7')" style="padding: 1rem; font-size: 1.5rem;">7</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('8')" style="padding: 1rem; font-size: 1.5rem;">8</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('9')" style="padding: 1rem; font-size: 1.5rem;">9</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('clear')" style="padding: 1rem; font-size: 1rem; color: #f97316;">Clear</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('0')" style="padding: 1rem; font-size: 1.5rem;">0</button>
-        <button class="input-modal-btn" onclick="handleDrawerLogPinKey('back')" style="padding: 1rem; font-size: 1rem;">&#9003;</button>
+        <button class="input-modal-btn" data-ui-action="static-action-2" style="padding: 1rem; font-size: 1.5rem;">1</button>
+        <button class="input-modal-btn" data-ui-action="static-action-3" style="padding: 1rem; font-size: 1.5rem;">2</button>
+        <button class="input-modal-btn" data-ui-action="static-action-4" style="padding: 1rem; font-size: 1.5rem;">3</button>
+        <button class="input-modal-btn" data-ui-action="static-action-5" style="padding: 1rem; font-size: 1.5rem;">4</button>
+        <button class="input-modal-btn" data-ui-action="static-action-6" style="padding: 1rem; font-size: 1.5rem;">5</button>
+        <button class="input-modal-btn" data-ui-action="static-action-7" style="padding: 1rem; font-size: 1.5rem;">6</button>
+        <button class="input-modal-btn" data-ui-action="static-action-8" style="padding: 1rem; font-size: 1.5rem;">7</button>
+        <button class="input-modal-btn" data-ui-action="static-action-9" style="padding: 1rem; font-size: 1.5rem;">8</button>
+        <button class="input-modal-btn" data-ui-action="static-action-10" style="padding: 1rem; font-size: 1.5rem;">9</button>
+        <button class="input-modal-btn" data-ui-action="static-action-11" style="padding: 1rem; font-size: 1rem; color: #f97316;">Clear</button>
+        <button class="input-modal-btn" data-ui-action="static-action-12" style="padding: 1rem; font-size: 1.5rem;">0</button>
+        <button class="input-modal-btn" data-ui-action="static-action-13" style="padding: 1rem; font-size: 1rem;">&#9003;</button>
       </div>
       <div class="input-modal-buttons" style="margin-top: 1rem;">
         <button class="input-modal-btn cancel" id="drawerLogPinCancel">Cancel</button>
-        <button class="input-modal-btn confirm" onclick="verifyDrawerLogPin()">Verify</button>
+        <button class="input-modal-btn confirm" data-ui-action="static-action-14">Verify</button>
       </div>
     </div>
   </div>
@@ -2007,9 +2010,9 @@
     let PRODUCTS = [];
     let barcodeIndex = {};
     let STORE_SETTINGS = { store_name: 'My Store', store_phone: '', receipt_footer: 'Thank you for shopping with us!' };
-    let cart = [];
-    let discountPercentage = 0;
-    let taxEnabled = false;
+    let cart = JSON.parse(localStorage.getItem('sal-pending-sale') || 'null')?.items || [];
+    let discountPercentage = JSON.parse(localStorage.getItem('sal-pending-sale') || 'null')?.discountPercentage || 0;
+    let taxEnabled = JSON.parse(localStorage.getItem('sal-pending-sale') || 'null')?.taxEnabled ?? true;
     let BASE_TAX_RATE = 0.08;
     let keypadBuffer = "";
     let pendingQty = 1;
@@ -2110,13 +2113,13 @@
       const normalizedCode = normalizeBarcode(code);
       let product = barcodeIndex[code] || barcodeIndex[normalizedCode];
       if (product) return { product, matchType: 'barcode' };
-      
+
       // If not found, search by name (case-insensitive partial match)
       const searchTerm = code.toLowerCase().trim();
-      const matches = PRODUCTS.filter(p => 
+      const matches = PRODUCTS.filter(p =>
         p.name.toLowerCase().includes(searchTerm)
       );
-      
+
       if (matches.length === 1) {
         // Exact single match - add it directly
         return { product: matches[0], matchType: 'name' };
@@ -2124,7 +2127,7 @@
         // Multiple matches - show them in a popup
         return { product: null, matchType: 'multiple', matches };
       }
-      
+
       return { product: null, matchType: 'none' };
     }
 
@@ -2135,38 +2138,39 @@
         modal = document.createElement('div');
         modal.id = 'searchResultsModal';
         modal.className = 'modal';
-        modal.innerHTML = `
+        modal.innerHTML = SafeHtml.clean(`
           <div class="modal-content" style="max-width: 500px; max-height: 80vh; overflow-y: auto;">
             <h3 style="margin-bottom: 15px;">Search Results</h3>
             <div id="searchResultsList" style="display: flex; flex-direction: column; gap: 10px;"></div>
             <button id="closeSearchResults" class="btn btn-secondary" style="margin-top: 15px; width: 100%;">Close</button>
           </div>
-        `;
+        `);
         document.body.appendChild(modal);
         document.getElementById('closeSearchResults').addEventListener('click', () => {
           modal.classList.remove('show');
           barcodeInput.focus();
         });
       }
-      
+
       const list = document.getElementById('searchResultsList');
-      list.innerHTML = matches.slice(0, 10).map(p => `
-        <button class="btn" style="text-align: left; padding: 12px; display: flex; justify-content: space-between;" 
-                onclick="document.getElementById('searchResultsModal').classList.remove('show'); handleProductClick(PRODUCTS.find(x => x.barcode === '${p.barcode}')); barcodeInput.focus();">
+      list.innerHTML = SafeHtml.clean(matches.slice(0, 10).map((p, index) => `
+        <button class="btn" style="text-align: left; padding: 12px; display: flex; justify-content: space-between;"
+                data-search-index="${index}">
           <span>${p.name}</span>
           <span style="font-weight: bold;">$${p.price.toFixed(2)}</span>
         </button>
-      `).join('');
-      
+      `).join(''));
+
+      list.onclick = event => { const button = event.target.closest('[data-search-index]'); if (button) { modal.classList.remove('show'); handleProductClick(matches[Number(button.dataset.searchIndex)]); barcodeInput.focus(); } };
       if (matches.length > 10) {
-        list.innerHTML += `<p style="text-align: center; color: var(--text-muted);">Showing 10 of ${matches.length} results</p>`;
+        list.innerHTML += SafeHtml.clean(`<p style="text-align: center; color: var(--text-muted);">Showing 10 of ${matches.length} results</p>`);
       }
-      
+
       modal.classList.add('show');
     }
 
     function populateCategorySelect() {
-      addCategorySelect.innerHTML = "";
+      addCategorySelect.innerHTML = SafeHtml.clean("");
       CATEGORIES.forEach(cat => {
         const opt = document.createElement("option");
         opt.value = cat;
@@ -2176,7 +2180,7 @@
     }
 
     function populateEditCategorySelect() {
-      editCategorySelect.innerHTML = "";
+      editCategorySelect.innerHTML = SafeHtml.clean("");
       CATEGORIES.forEach(cat => {
         const opt = document.createElement("option");
         opt.value = cat;
@@ -2238,12 +2242,12 @@
     }
 
     function renderCategories() {
-      categoriesGrid.innerHTML = "";
+      categoriesGrid.innerHTML = SafeHtml.clean("");
       CATEGORIES.forEach(cat => {
         const btn = document.createElement("button");
         btn.className = `category-tile ${getCategoryClass(cat)}`;
         btn.dataset.category = cat;
-        btn.innerHTML = `${getCategoryIcon(cat)}<span>${cat}</span>`;
+        btn.innerHTML = SafeHtml.clean(`${getCategoryIcon(cat)}<span>${cat}</span>`);
         btn.addEventListener("click", () => showCategoryProducts(cat));
         categoriesGrid.appendChild(btn);
       });
@@ -2253,18 +2257,18 @@
       activeCategory = cat;
       categoryTitle.textContent = cat;
       const filtered = PRODUCTS.filter(p => (p.category || "Misc") === cat);
-      productsGrid.innerHTML = "";
+      productsGrid.innerHTML = SafeHtml.clean("");
       if (filtered.length === 0) {
-        productsGrid.innerHTML = '<p style="color: #8b8fa3; text-align: center; grid-column: span 4;">No products in this category</p>';
+        productsGrid.innerHTML = SafeHtml.clean('<p style="color: #8b8fa3; text-align: center; grid-column: span 4;">No products in this category</p>');
       } else {
         filtered.forEach(product => {
           const btn = document.createElement("button");
           btn.className = "product-btn";
-          btn.innerHTML = `
+          btn.innerHTML = SafeHtml.clean(`
             <div class="product-name">${product.name}</div>
             <div class="product-price">$${product.price.toFixed(2)}</div>
             ${product.barcode ? `<div class="product-barcode">#${product.barcode}</div>` : ""}
-          `;
+          `);
           btn.addEventListener("click", () => handleProductClick(product));
           productsGrid.appendChild(btn);
         });
@@ -2326,7 +2330,7 @@
       document.getElementById("idDobInput").value = "";
       document.getElementById("idCheckResult").style.display = "none";
       document.getElementById("idCheckApprove").style.display = "none";
-      document.getElementById("dobDisplay").innerHTML = '<span style="color: var(--pos-text-muted);">Tap to enter DOB</span>';
+      document.getElementById("dobDisplay").innerHTML = SafeHtml.clean('<span style="color: var(--pos-text-muted);">Tap to enter DOB</span>');
       keypadDobValue = "";
     }
 
@@ -2367,7 +2371,7 @@
       const btn = e.target.closest(".keypad-btn");
       if (!btn) return;
       e.preventDefault();
-      
+
       if (btn.dataset.digit) {
         keypadPress(btn.dataset.digit);
       } else if (btn.dataset.action === "clear") {
@@ -2392,11 +2396,11 @@
       let mm = keypadDobValue.substring(0, 2) || "__";
       let dd = keypadDobValue.substring(2, 4) || "__";
       let yyyy = keypadDobValue.substring(4, 8) || "____";
-      
+
       if (mm.length === 1) mm = mm + "_";
       if (dd.length === 1) dd = dd + "_";
       if (yyyy.length < 4) yyyy = yyyy + "_".repeat(4 - yyyy.length);
-      
+
       display.textContent = `${mm} / ${dd} / ${yyyy}`;
     }
 
@@ -2405,15 +2409,15 @@
         showToast("Please enter complete date (MMDDYYYY)", true);
         return;
       }
-      
+
       const mm = keypadDobValue.substring(0, 2);
       const dd = keypadDobValue.substring(2, 4);
       const yyyy = keypadDobValue.substring(4, 8);
-      
+
       const month = parseInt(mm, 10);
       const day = parseInt(dd, 10);
       const year = parseInt(yyyy, 10);
-      
+
       if (month < 1 || month > 12) {
         showToast("Invalid month (01-12)", true);
         return;
@@ -2426,12 +2430,12 @@
         showToast("Invalid year", true);
         return;
       }
-      
+
       const dobString = `${yyyy}-${mm}-${dd}`;
       document.getElementById("idDobInput").value = dobString;
-      document.getElementById("dobDisplay").innerHTML = `<span style="color: var(--pos-text);">${mm}/${dd}/${yyyy}</span>`;
+      document.getElementById("dobDisplay").innerHTML = SafeHtml.clean(`<span style="color: var(--pos-text);">${mm}/${dd}/${yyyy}</span>`);
       closeDobKeypad();
-      
+
       // Auto-trigger verification after keypad entry
       setTimeout(() => {
         document.getElementById("idCheckVerifyDob").click();
@@ -2498,7 +2502,7 @@
     document.getElementById("idCheckConfirmAge").addEventListener("click", () => {
       idCheckVerified = true;
       logIdCheck("visual_confirm", null, null, true);
-      
+
       // Immediately add to cart and close modal
       if (pendingAgeRestrictedProduct) {
         addToCart(pendingAgeRestrictedProduct, pendingQty);
@@ -2564,7 +2568,7 @@
 
     function renderCart() {
       if (cart.length === 0) {
-        cartItemsContainer.innerHTML = `
+        cartItemsContainer.innerHTML = SafeHtml.clean(`
           <div class="empty-cart">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
@@ -2572,17 +2576,17 @@
             </svg>
             <span>Cart is empty</span>
           </div>
-        `;
+        `);
       } else {
-        cartItemsContainer.innerHTML = "";
+        cartItemsContainer.innerHTML = SafeHtml.clean("");
         cart.forEach(item => {
           const row = document.createElement("div");
           row.className = "cart-row";
-          row.innerHTML = `
+          row.innerHTML = SafeHtml.clean(`
             <div class="cart-item-name">${item.name}</div>
             <div class="cart-item-qty">${item.qty}</div>
             <div class="cart-item-price">$${(item.price * item.qty).toFixed(2)}</div>
-          `;
+          `);
           row.addEventListener("click", () => {
             if (confirm(`Remove ${item.name} from cart?`)) {
               removeItem(item.barcode, item.name);
@@ -2598,7 +2602,7 @@
       // Category is the default; a product's own ebt_eligible flag can only ADD
       // eligibility (an exception within a normally-ineligible category), never
       // remove it — so existing stores relying on the category list see no change.
-      return EBT_ELIGIBLE_CATEGORIES.includes(item.category) || !!item.ebt_eligible;
+      return !!item.ebt_eligible;
     }
 
     function isTaxable(item) {
@@ -2606,44 +2610,9 @@
     }
 
     function getEbtSplit() {
-      let ebtSubtotal = 0;
-      let nonEbtTaxableSubtotal = 0;
-      let nonEbtNonTaxableSubtotal = 0;
-      let totalSubtotal = 0;
-
-      cart.forEach(item => {
-        const itemTotal = item.price * item.qty;
-        totalSubtotal += itemTotal;
-        if (isEbtEligible(item)) {
-          ebtSubtotal += itemTotal;
-        } else if (isTaxable(item)) {
-          nonEbtTaxableSubtotal += itemTotal;
-        } else {
-          nonEbtNonTaxableSubtotal += itemTotal;
-        }
-      });
-
-      const nonEbtSubtotal = nonEbtTaxableSubtotal + nonEbtNonTaxableSubtotal;
-      const discountRatio = discountPercentage / 100;
-      const ebtAfterDiscount = ebtSubtotal * (1 - discountRatio);
-      const nonEbtTaxableAfterDiscount = nonEbtTaxableSubtotal * (1 - discountRatio);
-      const nonEbtNonTaxableAfterDiscount = nonEbtNonTaxableSubtotal * (1 - discountRatio);
-
-      // Only the taxable portion of the non-EBT total is taxed — untaxed items
-      // (e.g. unprepared grocery, where exempt by local law) pass through at cost.
-      const taxRate = taxEnabled ? BASE_TAX_RATE : 0;
-      const nonEbtTax = nonEbtTaxableAfterDiscount * taxRate;
-      const nonEbtWithTax = nonEbtTaxableAfterDiscount + nonEbtNonTaxableAfterDiscount + nonEbtTax;
-
-      return {
-        ebtSubtotal,
-        nonEbtSubtotal,
-        ebtAmount: ebtAfterDiscount,
-        nonEbtAmount: nonEbtWithTax,
-        ebtDiscount: ebtSubtotal * discountRatio,
-        nonEbtDiscount: nonEbtSubtotal * discountRatio,
-        nonEbtTax
-      };
+      if (!cart.length) return { ebtSubtotal: 0, nonEbtSubtotal: 0, ebtAmount: 0, nonEbtAmount: 0, nonEbtTax: 0 };
+      const result = PosMoney.calculate(cart, { paymentType: 'EBT + Cash', discountPercentage, taxRate: BASE_TAX_RATE, taxEnabled });
+      return { ebtSubtotal: cart.filter(isEbtEligible).reduce((n, i) => n + i.price * i.qty, 0), nonEbtSubtotal: cart.filter(i => !isEbtEligible(i)).reduce((n, i) => n + i.price * i.qty, 0), ebtAmount: (result.tenders.EBT || 0) / 100, nonEbtAmount: (result.tenders.Cash || 0) / 100, nonEbtTax: result.tax };
     }
 
     function updateTotals() {
@@ -2651,10 +2620,11 @@
       let subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
       let discountAmount = subtotal * (discountPercentage / 100);
       let afterDiscount = subtotal - discountAmount;
-      
-      let tax = taxEnabled ? split.nonEbtTax : 0;
-      let total = split.ebtAmount + split.nonEbtAmount;
-      
+
+      const cashQuote = cart.length ? PosMoney.calculate(cart, { paymentType: 'Cash', discountPercentage, taxRate: BASE_TAX_RATE, taxEnabled }) : { tax: 0, total: 0 };
+      let tax = cashQuote.tax;
+      let total = cashQuote.total;
+
       if (subtotal === 0) {
         tax = 0;
         total = 0;
@@ -2664,12 +2634,12 @@
       discountAmountSpan.textContent = discountAmount.toFixed(2);
       taxSpan.textContent = tax.toFixed(2);
       totalSpan.textContent = total.toFixed(2);
-      taxRateLabel.textContent = taxEnabled ? "8" : "0";
+      taxRateLabel.textContent = taxEnabled ? String(BASE_TAX_RATE * 100) : "0";
 
       const ebtSplitSection = document.getElementById("ebtSplitSection");
       const hasEbt = split.ebtSubtotal > 0;
       const hasNonEbt = split.nonEbtSubtotal > 0;
-      
+
       if (hasEbt && hasNonEbt) {
         ebtSplitSection.style.display = "block";
         document.getElementById("ebtTotal").textContent = split.ebtAmount.toFixed(2);
@@ -2677,10 +2647,10 @@
       } else {
         ebtSplitSection.style.display = "none";
       }
-      
+
       syncCustomerDisplay(subtotal, tax, total);
     }
-    
+
     function syncCustomerDisplay(subtotal, tax, total) {
       if (window.electronAPI && window.electronAPI.updateCustomerCart) {
         window.electronAPI.updateCustomerCart({
@@ -2874,108 +2844,67 @@
       document.querySelectorAll(".inline-panel").forEach(p => p.classList.remove("show"));
     }
 
-    function completeSaleInstantly(paymentType) {
-      if (cart.length === 0) {
-        showToast("Cart is empty!", true);
+    let checkoutBusy = false;
+    async function completeSaleInstantly(paymentType) {
+      if (checkoutBusy) return;
+      const stored = localStorage.getItem('sal-pending-sale');
+      if (!stored && !cart.length) return showToast('Cart is empty', true);
+      checkoutBusy = true;
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:#0009;z-index:9999;display:grid;place-items:center;color:white;font-size:24px';
+      overlay.textContent = 'Saving sale…'; document.body.append(overlay);
+      let result;
+      try {
+        await loadStoreSettings();
+        const quote = stored ? null : PosMoney.calculate(cart, { paymentType, discountPercentage, taxRate: BASE_TAX_RATE, taxEnabled });
+        const pending = stored ? JSON.parse(stored) : {
+          idempotencyKey: crypto.randomUUID(), items: cart.map(i => ({ ...i })), paymentType,
+          discountPercentage, taxEnabled, total: quote.total
+        };
+        localStorage.setItem('sal-pending-sale', JSON.stringify(pending));
+        const response = await fetch('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pending) });
+        result = await response.json();
+        if (!response.ok || !result.success) {
+          if (response.status === 400) localStorage.removeItem('sal-pending-sale');
+          throw Error(result.error || 'Sale could not be saved');
+        }
+      } catch (error) {
+        showToast(error.message + '. Cart kept; retry to recover the same sale.', true);
         return;
-      }
-
-      const split = getEbtSplit();
-      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-      const discountAmount = subtotal * (discountPercentage / 100);
-      const afterDiscount = subtotal - discountAmount;
-      const tax = taxEnabled ? split.nonEbtTax : 0;
-      const total = split.ebtAmount + split.nonEbtAmount;
-
-      const cartCopy = cart.map(item => ({ ...item }));
-
-      // For EBT-only, tax is always 0 regardless of taxEnabled setting
-      const actualTaxRate = (paymentType === 'EBT' || tax === 0) ? 0 : (taxEnabled ? 8 : 0);
-
-      ReceiptService.setLastReceipt({
-        store: getStoreInfo(),
-        footer: STORE_SETTINGS.receipt_footer,
-        items: cartCopy,
-        subtotal,
-        discount: discountAmount,
-        taxRate: actualTaxRate,
-        taxAmount: tax,
-        total,
-        paymentType
-      });
-
-      (async () => {
-        // 1. Save sale to database
+      } finally { overlay.remove(); checkoutBusy = false; }
+      localStorage.removeItem('sal-pending-sale');
+      const receipt = { store: getStoreInfo(), footer: STORE_SETTINGS.receipt_footer, ...result, taxAmount: result.tax, taxRate: BASE_TAX_RATE * 100 };
+      ReceiptService.setLastReceipt(receipt);
+      generateReceipt(result.items, result.subtotal, result.discount, result.tax, result.total, result.paymentType, null, 0);
+      const idLine = document.createElement('div'); idLine.textContent = 'Receipt: ' + result.saleId; receiptContentDiv.append(idLine);
+      const tendersLine = document.createElement('div'); tendersLine.textContent = Object.entries(result.tenders).map(([method, cents]) => method + ': $' + (cents / 100).toFixed(2)).join(' / '); receiptContentDiv.append(tendersLine);
+      showPanel(receiptPanel); clearCart(); keypadBuffer = ''; updateKeypadDisplay();
+      showToast('Sale saved: ' + result.saleId);
+      if (!result.duplicate && result.tenders.Cash > 0 && window.electronAPI?.completeSale) {
         try {
-          await fetch("/api/sales", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              items: cartCopy,
-              paymentType,
-              subtotal,
-              discount: discountAmount,
-              tax,
-              total,
-              clientTimestamp: new Date().toISOString(),
-            }),
-          });
-        } catch (err) {
-          console.error("Failed to log sale:", err);
-        }
-
-        // 2. Open drawer for cash sales only
-        if (window.electronAPI) {
-          if (paymentType === "Cash" && window.electronAPI.completeSale) {
-            try {
-              const result = await window.electronAPI.completeSale({ openDrawer: true });
-              if (result && result.warning) {
-                showToast("Drawer: " + result.warning, true);
-              }
-              // Log drawer open
-              fetch("/api/drawer-log", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  reason: "Sale",
-                  sale_amount: total,
-                  user_id: currentUser?.id || 0,
-                  user_name: currentUser?.displayName || currentUser?.username || "Unknown"
-                })
-              }).catch(() => {});
-            } catch (e) {
-              showToast("Drawer error: " + e.message, true);
-            }
-          }
-        }
-      })();
-
-      generateReceipt(cartCopy, subtotal, discountAmount, tax, total, paymentType, null, 0);
-      showPanel(receiptPanel);
-      
-      clearCart();
-      keypadBuffer = "";
-      updateKeypadDisplay();
-      
-      showToast(`${paymentType} payment complete!`);
+          const drawer = await window.electronAPI.completeSale({ openDrawer: true });
+          if (!drawer.ok || drawer.warning) showToast(drawer.warning || drawer.error, true);
+          await fetch('/api/drawer-log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'Sale', sale_amount: result.tenders.Cash / 100, sale_id: result.saleId }) });
+        } catch (error) { showToast('Sale saved; drawer error: ' + error.message, true); }
+      }
     }
 
     document.getElementById("payCashBtn").addEventListener("click", () => completeSaleInstantly("Cash"));
     document.getElementById("payDebitBtn").addEventListener("click", () => completeSaleInstantly("Debit Card"));
-    
+
     document.getElementById("payEBTBtn").addEventListener("click", () => {
       if (cart.length === 0) {
         showToast("Cart is empty!", true);
         return;
       }
-      
+
       const split = getEbtSplit();
-      
+
       if (split.ebtSubtotal === 0) {
         showToast("No EBT-eligible items in cart!", true);
         return;
       }
-      
+
       if (split.nonEbtSubtotal > 0) {
         document.getElementById("splitEbtAmount").textContent = split.ebtAmount.toFixed(2);
         document.getElementById("splitNonEbtAmount").textContent = split.nonEbtAmount.toFixed(2);
@@ -3000,109 +2929,24 @@
     });
 
     function completeSplitSale(secondPaymentType) {
-      if (cart.length === 0) {
-        showToast("Cart is empty!", true);
-        return;
-      }
-
-      const split = getEbtSplit();
-      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-      const discountAmount = subtotal * (discountPercentage / 100);
-      const total = split.ebtAmount + split.nonEbtAmount;
-
-      const cartCopy = cart.map(item => ({ ...item, ebt_eligible: isEbtEligible(item) }));
-      const paymentType = `EBT + ${secondPaymentType}`;
-
-      ReceiptService.setLastReceipt({
-        store: getStoreInfo(),
-        footer: STORE_SETTINGS.receipt_footer,
-        items: cartCopy,
-        subtotal,
-        discount: discountAmount,
-        taxRate: taxEnabled ? 8 : 0,
-        taxAmount: split.nonEbtTax,
-        total,
-        paymentType,
-        ebtAmount: split.ebtAmount,
-        nonEbtAmount: split.nonEbtAmount,
-        ebtDiscount: split.ebtDiscount,
-        nonEbtDiscount: split.nonEbtDiscount,
-        nonEbtTax: split.nonEbtTax,
-        secondPaymentType
-      });
-
-      (async () => {
-        try {
-          await fetch("/api/sales", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              items: cartCopy,
-              paymentType,
-              subtotal,
-              discount: discountAmount,
-              tax: split.nonEbtTax,
-              total,
-              ebtAmount: split.ebtAmount,
-              nonEbtAmount: split.nonEbtAmount,
-              clientTimestamp: new Date().toISOString(),
-            }),
-          });
-        } catch (err) {
-          console.error("Failed to log sale:", err);
-        }
-
-        if (window.electronAPI) {
-          // Open drawer for cash second payment
-          if (secondPaymentType === "Cash" && window.electronAPI.completeSale) {
-            try {
-              const result = await window.electronAPI.completeSale({ openDrawer: true });
-              if (result && result.warning) {
-                showToast("Drawer: " + result.warning, true);
-              }
-              // Log drawer open (was missing for split sales)
-              fetch("/api/drawer-log", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  reason: "Sale",
-                  sale_amount: total,
-                  user_id: currentUser?.id || 0,
-                  user_name: currentUser?.displayName || currentUser?.username || "Unknown"
-                })
-              }).catch(() => {});
-            } catch (e) {
-              showToast("Drawer error: " + e.message, true);
-            }
-          }
-        }
-      })();
-
-      generateSplitReceipt(cartCopy, subtotal, discountAmount, split.nonEbtTax, total, split.ebtAmount, split.nonEbtAmount, secondPaymentType, split.ebtDiscount, split.nonEbtDiscount);
-      showPanel(receiptPanel);
-      
-      clearCart();
-      keypadBuffer = "";
-      updateKeypadDisplay();
-      
-      showToast(`Split payment complete! EBT: $${split.ebtAmount.toFixed(2)}, ${secondPaymentType}: $${split.nonEbtAmount.toFixed(2)}`);
+      return completeSaleInstantly('EBT + ' + secondPaymentType);
     }
 
     function generateSplitReceipt(items, subtotal, discount, tax, total, ebtAmount, nonEbtAmount, secondPaymentType, ebtDiscount = 0, nonEbtDiscount = 0) {
       const now = new Date();
       const dateStr = now.toLocaleDateString();
       const timeStr = now.toLocaleTimeString();
-      
+
       let html = `
-        <div style="text-align: center; font-weight: bold; font-size: 1.2rem;">SHAMROCK MARKET</div>
+        <div style="text-align: center; font-weight: bold; font-size: 1.2rem;">${STORE_SETTINGS.store_name || "My Store"}</div>
         <div style="text-align: center; font-size: 0.85rem; color: #888;"></div>
         <div style="text-align: center; font-size: 0.85rem; color: #888; margin-bottom: 1rem;">${dateStr} ${timeStr}</div>
         <div style="border-top: 1px dashed #444; padding-top: 0.5rem;">
       `;
-      
+
       const ebtItems = items.filter(i => i.ebt_eligible);
       const nonEbtItems = items.filter(i => !i.ebt_eligible);
-      
+
       if (ebtItems.length > 0) {
         html += `<div style="font-weight: 600; color: #22c55e; margin: 0.5rem 0;">-- EBT ELIGIBLE (Tax Exempt) --</div>`;
         ebtItems.forEach(item => {
@@ -3112,7 +2956,7 @@
           </div>`;
         });
       }
-      
+
       if (nonEbtItems.length > 0) {
         html += `<div style="font-weight: 600; color: #f97316; margin: 0.5rem 0;">-- NON-EBT (Taxable) --</div>`;
         nonEbtItems.forEach(item => {
@@ -3122,7 +2966,7 @@
           </div>`;
         });
       }
-      
+
       html += `
         </div>
         <div style="border-top: 1px dashed #444; margin-top: 0.5rem; padding-top: 0.5rem;">
@@ -3144,8 +2988,8 @@
         </div>
         <div style="text-align: center; margin-top: 1rem; font-size: 0.85rem; color: #888;">Thank you for shopping!</div>
       `;
-      
-      receiptContentDiv.innerHTML = html;
+
+      receiptContentDiv.innerHTML = SafeHtml.clean(html);
     }
 
     document.getElementById("checkoutBtn").addEventListener("click", () => completeSaleInstantly("Cash"));
@@ -3155,21 +2999,21 @@
 
     document.getElementById("saveEditProductBtn").addEventListener("click", async () => {
       if (!editingProduct) return;
-      
+
       const newName = editNameInput.value.trim();
       const newPrice = parseFloat(editPriceInput.value);
       const newCategory = editCategorySelect.value;
-      
+
       if (!newName || isNaN(newPrice) || newPrice <= 0) {
         showToast("Enter a valid name and price", true);
         return;
       }
-      
+
       editingProduct.name = newName;
       editingProduct.price = newPrice;
       editingProduct.category = newCategory;
       rebuildBarcodeIndex();
-      
+
       try {
         const res = await fetch("/api/products", {
           method: "POST",
@@ -3185,7 +3029,7 @@
       } catch (e) {
         showToast("Updated locally only", true);
       }
-      
+
       if (activeCategory) {
         showCategoryProducts(activeCategory);
       }
@@ -3195,14 +3039,14 @@
 
     document.getElementById("deleteProductBtn").addEventListener("click", async () => {
       if (!editingProduct) return;
-      
+
       if (confirm(`Delete "${editingProduct.name}"?`)) {
         const idx = PRODUCTS.indexOf(editingProduct);
         if (idx > -1) {
           PRODUCTS.splice(idx, 1);
           rebuildBarcodeIndex();
         }
-        
+
         showToast("Product deleted");
         if (activeCategory) {
           showCategoryProducts(activeCategory);
@@ -3279,11 +3123,11 @@
       } finally {
         isPrintingReceipt = false;
         printReceiptBtn.disabled = false;
-        printReceiptBtn.innerHTML = `
+        printReceiptBtn.innerHTML = SafeHtml.clean(`
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:middle;">
             <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
           </svg>
-          Print Receipt`;
+          Print Receipt`);
       }
     });
 
@@ -3323,7 +3167,7 @@
         receiptHtml += `<div class="receipt-item-row"><span>Discount:</span><span></span><span>-$${discountAmount.toFixed(2)}</span></div>`;
       }
       receiptHtml += `
-        <div class="receipt-item-row"><span>Tax (${taxEnabled ? "8" : "0"}%):</span><span></span><span>$${tax.toFixed(2)}</span></div>
+        <div class="receipt-item-row"><span>Tax (${taxEnabled ? String(BASE_TAX_RATE * 100) : "0"}%):</span><span></span><span>$${tax.toFixed(2)}</span></div>
         <div class="receipt-item-row"><strong><span>TOTAL:</span><span></span><span>$${total.toFixed(2)}</span></strong></div>
         <div class="receipt-line"></div>
       `;
@@ -3335,7 +3179,7 @@
         <div class="receipt-footer">Thank you for shopping with us!</div>
       `;
 
-      receiptContentDiv.innerHTML = receiptHtml;
+      receiptContentDiv.innerHTML = SafeHtml.clean(receiptHtml);
     }
 
     menuBtn.addEventListener("click", (e) => {
@@ -3362,12 +3206,12 @@
       try {
         const data = await EodReportsService.fetchTodayReport();
         if (data.success) {
-          eodSummary.innerHTML = EodReportsService.formatReportTableHtml(data);
+          eodSummary.innerHTML = SafeHtml.clean(EodReportsService.formatReportTableHtml(data));
         } else {
-          eodSummary.innerHTML = '<p style="color: #dc3545;">Failed to load report</p>';
+          eodSummary.innerHTML = SafeHtml.clean('<p style="color: #dc3545;">Failed to load report</p>');
         }
       } catch (err) {
-        eodSummary.innerHTML = '<p style="color: #dc3545;">Error loading report</p>';
+        eodSummary.innerHTML = SafeHtml.clean('<p style="color: #dc3545;">Error loading report</p>');
       }
       showPanel(eodPanel);
     });
@@ -3400,6 +3244,7 @@
 
     // ===== Returns / Refunds =====
     let returnSaleData = null;
+    let returnBusy = false;
 
     document.getElementById("menuReturns").addEventListener("click", () => {
       menuDropdown.classList.remove("show");
@@ -3440,6 +3285,7 @@
 
     function openReturnItemsModal(sale) {
       returnSaleData = sale;
+      const pending = JSON.parse(localStorage.getItem('sal-pending-return') || 'null');
       const listEl = document.getElementById("returnItemsList");
       const infoEl = document.getElementById("returnSaleInfo");
       infoEl.textContent = `Sale ${sale.saleId} · ${new Date(sale.createdAt).toLocaleString()} · Paid: ${sale.paymentType}`;
@@ -3448,10 +3294,10 @@
       const items = sale.items || [];
 
       if (items.length === 0) {
-        listEl.innerHTML = '<div style="color:#a0a5b8;">No items on this sale.</div>';
+        listEl.innerHTML = SafeHtml.clean('<div style="color:#a0a5b8;">No items on this sale.</div>');
       } else {
-        listEl.innerHTML = items.map(item => {
-          const key = (item.barcode || '') + '::' + item.name;
+        listEl.innerHTML = SafeHtml.clean(items.map(item => {
+          const key = item.lineId;
           const purchasedQty = item.qty || 1;
           const returnedQty = alreadyReturned[key] || 0;
           const maxReturnable = Math.max(0, purchasedQty - returnedQty);
@@ -3463,10 +3309,10 @@
                 <div style="font-size:0.75rem;color:#a0a5b8;">Bought: ${purchasedQty}${returnedQty ? ` · Already returned: ${returnedQty}` : ''} · $${Number(item.price || 0).toFixed(2)} ea</div>
               </div>
               <input type="number" class="return-qty-input input-modal-field" style="width:70px;margin:0;text-align:center;padding:0.5rem;" min="0" max="${maxReturnable}" value="0"
-                data-barcode="${item.barcode || ''}" data-name="${safeName}" data-price="${item.price || 0}" ${maxReturnable === 0 ? 'disabled title="Fully returned"' : ''}>
+                data-line-id="${item.lineId}" data-paid-cents="${item.paidCents}" data-purchased="${item.qty}" data-returned="${returnedQty}" data-barcode="${item.barcode || ''}" data-name="${safeName}" data-price="${item.price || 0}" ${maxReturnable === 0 ? 'disabled title="Fully returned"' : ''}>
             </div>
           `;
-        }).join('');
+        }).join(''));
       }
 
       const methodSelect = document.getElementById("returnRefundMethod");
@@ -3474,6 +3320,14 @@
       methodSelect.value = knownMethods.includes(sale.paymentType) ? sale.paymentType : 'Cash';
 
       document.getElementById("returnReasonInput").value = "";
+      if (pending && JSON.parse(pending.signature).saleId === sale.saleId) {
+        for (const input of listEl.querySelectorAll('.return-qty-input')) {
+          input.value = pending.body.items.find(i => i.lineId === input.dataset.lineId)?.qty || 0;
+          input.disabled = false;
+        }
+        methodSelect.value = pending.body.refundMethod;
+        document.getElementById('returnReasonInput').value = pending.body.reason || '';
+      }
       updateReturnTotal();
       document.getElementById("returnItemsModal").classList.add("show");
 
@@ -3487,7 +3341,9 @@
       document.querySelectorAll("#returnItemsList .return-qty-input").forEach(input => {
         const qty = parseInt(input.value) || 0;
         const price = parseFloat(input.dataset.price) || 0;
-        total += qty * price;
+        const done = Number(input.dataset.returned);
+        const paid = Number(input.dataset.paidCents), purchased = Number(input.dataset.purchased);
+        total += (Math.round(paid * (done + qty) / purchased) - Math.round(paid * done / purchased)) / 100;
       });
       document.getElementById("returnTotalDisplay").textContent = "$" + total.toFixed(2);
     }
@@ -3505,6 +3361,7 @@
         const qty = parseInt(input.value) || 0;
         if (qty > 0) {
           items.push({
+            lineId: input.dataset.lineId,
             barcode: input.dataset.barcode,
             name: input.dataset.name,
             qty,
@@ -3521,23 +3378,33 @@
       const refundMethod = document.getElementById("returnRefundMethod").value;
       const reason = document.getElementById("returnReasonInput").value || '';
       const saleId = returnSaleData.saleId;
+      if (returnBusy) return;
+      const signature = JSON.stringify({ saleId, items, refundMethod, reason });
+      const previous = JSON.parse(localStorage.getItem('sal-pending-return') || 'null');
+      if (previous && previous.signature !== signature) return showToast('Retry the previous return before starting another', true);
+      const pendingReturn = previous?.body || { items, refundMethod, reason, idempotencyKey: crypto.randomUUID() };
+      localStorage.setItem('sal-pending-return', JSON.stringify({ signature, body: pendingReturn }));
+      returnBusy = true;
+
 
       try {
         const res = await fetch(`/api/sales/${encodeURIComponent(saleId)}/return`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items, refundMethod, reason, userId: currentUser?.id })
+          body: JSON.stringify(pendingReturn)
         });
         const data = await res.json();
         if (!data.success) {
+          if (res.status === 400) localStorage.removeItem('sal-pending-return');
           showToast(data.error || 'Return failed', true);
           return;
         }
 
         document.getElementById("returnItemsModal").classList.remove("show");
-        showToast(`Refunded $${data.refundAmount.toFixed(2)}`);
+        localStorage.removeItem('sal-pending-return');
+        showToast(`Refund recorded: $${data.refundAmount.toFixed(2)}. Complete any external terminal refund separately.`);
 
-        if (refundMethod === 'Cash' && window.electronAPI && window.electronAPI.openDrawer) {
+        if (!data.duplicate && refundMethod === 'Cash' && window.electronAPI && window.electronAPI.openDrawer) {
           try { await window.electronAPI.openDrawer(); } catch (e) {}
         }
 
@@ -3561,7 +3428,7 @@
         loadProducts();
       } catch (err) {
         showToast("Return failed: " + err.message, true);
-      }
+      } finally { returnBusy = false; }
     });
 
     document.getElementById("menuAddProduct").addEventListener("click", () => {
@@ -3582,12 +3449,12 @@
       const input = document.getElementById("barcodeSearchInput");
       const barcode = input.value.trim();
       if (!barcode) return;
-      
+
       const normalizedCode = normalizeBarcode(barcode);
       const product = barcodeIndex[barcode] || barcodeIndex[normalizedCode];
-      
+
       document.getElementById("barcodeSearchModal").classList.remove("show");
-      
+
       if (product) {
         openEditProductPanel(product);
       } else {
@@ -3640,7 +3507,7 @@
       addNameInput.value = "";
       addPriceInput.value = "";
       addBarcodeInput.value = "";
-      
+
       if (activeCategory) {
         showCategoryProducts(activeCategory);
       }
@@ -3679,17 +3546,23 @@
       });
     });
 
-    document.getElementById("saveSettings").addEventListener("click", () => {
+    document.getElementById("saveSettings").addEventListener("click", async () => {
       const newName = document.getElementById("settingsStoreName").value;
       const newPhone = document.getElementById("settingsPhone").value;
       const newLogo = document.getElementById("settingsLogoEmoji").value;
-      const newTaxRate = parseFloat(document.getElementById("settingsTaxRate").value) || 8;
-      
+      const newTaxRate = Number(document.getElementById("settingsTaxRate").value);
+
       document.querySelector(".store-info h1").textContent = newName;
       document.querySelector(".store-info p").textContent = newPhone;
       document.querySelector(".store-logo").textContent = newLogo;
-      BASE_TAX_RATE = newTaxRate / 100;
-      
+      try {
+        const response = await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ store_name: newName, store_phone: newPhone, tax_rate: String(newTaxRate / 100) }) });
+        const data = await response.json();
+        if (!response.ok) throw Error(data.error || 'Settings not saved');
+        BASE_TAX_RATE = newTaxRate / 100;
+        await loadStoreSettings();
+      } catch (error) { showToast(error.message, true); return; }
+
       showToast("Settings saved!");
       hidePanel(settingsPanel);
     });
@@ -3726,11 +3599,11 @@
 
     function renderCategoryList() {
       const list = document.getElementById("categoryList");
-      list.innerHTML = "";
+      list.innerHTML = SafeHtml.clean("");
       CATEGORIES.forEach((cat, idx) => {
         const item = document.createElement("div");
         item.className = "category-item";
-        item.innerHTML = `
+        item.innerHTML = SafeHtml.clean(`
           <div class="category-item-info">
             <span>${cat}</span>
             <span class="category-item-count">${PRODUCTS.filter(p => (p.category || "Misc") === cat).length} items</span>
@@ -3740,7 +3613,7 @@
               <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
             </svg>
           </button>
-        `;
+        `);
         list.appendChild(item);
       });
 
@@ -3835,37 +3708,37 @@
     async function loadEodHistory() {
       try {
         const data = await EodReportsService.fetchWeekReports();
-        
+
         const summaryEl = document.getElementById("eodSummary");
         const historyView = document.getElementById("eodHistoryView");
         const historyList = document.getElementById("eodHistoryList");
         const titleEl = document.getElementById("eodPanelTitle");
-        
+
         if (summaryEl.style.display !== "none") {
           // Show history view
           viewingHistoricalReport = null;
           summaryEl.style.display = "none";
           historyView.style.display = "block";
           titleEl.textContent = "Report History (7 Days)";
-          document.getElementById("viewHistoryBtn").innerHTML = `
+          document.getElementById("viewHistoryBtn").innerHTML = SafeHtml.clean(`
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
             Back to Today
-          `;
-          
+          `);
+
           if (data.success && data.reports.length > 0) {
-            historyList.innerHTML = data.reports.map(r => `
-              <div class="history-item" onclick="showHistoryReport('${r.report_date}')" style="padding: 0.75rem; background: #2a3550; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            historyList.innerHTML = SafeHtml.clean(data.reports.map(r => `
+              <div class="history-item" data-report-date="${r.report_date}" style="padding: 0.75rem; background: #2a3550; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                   <div style="font-weight: 600; color: #fff;">${new Date(r.report_date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
                   <div style="font-size: 0.85rem; color: #a0a5b8;">${r.transaction_count} transactions</div>
                 </div>
                 <div style="font-weight: 600; color: #00d9a5;">$${(r.total_sales || 0).toFixed(2)}</div>
               </div>
-            `).join('');
+            `).join(''));
           } else {
-            historyList.innerHTML = '<div style="padding: 1rem; text-align: center; color: #a0a5b8;">No saved reports yet. Reports are saved when you print EOD.</div>';
+            historyList.innerHTML = SafeHtml.clean('<div style="padding: 1rem; text-align: center; color: #a0a5b8;">No saved reports yet. Reports are saved when you print EOD.</div>');
           }
         } else {
           // Go back to today's view
@@ -3873,13 +3746,13 @@
           summaryEl.style.display = "block";
           historyView.style.display = "none";
           titleEl.textContent = "End of Day Report";
-          document.getElementById("viewHistoryBtn").innerHTML = `
+          document.getElementById("viewHistoryBtn").innerHTML = SafeHtml.clean(`
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
             </svg>
             View History
-          `;
+          `);
           // Reload today's data
           await loadEodData();
         }
@@ -3891,18 +3764,18 @@
     async function showHistoryReport(date) {
       try {
         const data = await EodReportsService.fetchReportByDate(date);
-        
+
         if (data.success && data.report) {
           const r = data.report;
           const reportData = r.report_data ? JSON.parse(r.report_data) : {};
-          
+
           const storedCounts = reportData.counts || {};
-          
+
           const safeNum = (val) => {
             const n = Number(val);
             return isNaN(n) ? 0 : n;
           };
-          
+
           viewingHistoricalReport = {
             date: r.report_date,
             displayDate: new Date(r.report_date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
@@ -3919,20 +3792,20 @@
               "Store Credit": storedCounts["Store Credit"]
             }
           };
-          
+
           const summaryEl = document.getElementById("eodSummary");
           const historyView = document.getElementById("eodHistoryView");
           const titleEl = document.getElementById("eodPanelTitle");
-          
+
           historyView.style.display = "none";
           summaryEl.style.display = "block";
           titleEl.textContent = `Report: ${viewingHistoricalReport.displayDate}`;
-          
+
           const h = viewingHistoricalReport;
           const hc = h.counts || {};
           const getCountDisplay = (key) => hc[key] !== undefined ? hc[key] : "-";
-          
-          summaryEl.innerHTML = `
+
+          summaryEl.innerHTML = SafeHtml.clean(`
             <table class="eod-table" style="width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace; color: #fff;">
               <thead>
                 <tr style="border-bottom: 2px solid #555;">
@@ -3953,7 +3826,7 @@
                 </tr>
               </tbody>
             </table>
-          `;
+          `);
         } else {
           showToast("No report found for this date", true);
         }
@@ -3966,12 +3839,12 @@
     async function printEodReport() {
       try {
         let t, c, grand, txCount, reportDate, reportTime;
-        
+
         const safeNum = (val) => {
           const n = Number(val);
           return isNaN(n) ? 0 : n;
         };
-        
+
         if (viewingHistoricalReport) {
           t = {
             "Cash": safeNum(viewingHistoricalReport.cash),
@@ -4003,23 +3876,23 @@
           reportDate = new Date().toLocaleDateString();
           reportTime = new Date().toLocaleTimeString();
         }
-        
+
         const padLeft = (str, len) => String(str).padStart(len);
         const padRight = (str, len) => String(str).padEnd(len);
         const formatMoney = (amt) => '$' + (amt || 0).toFixed(2);
-        
+
         const line = '-'.repeat(30);
         const dblLine = '='.repeat(30);
-        
+
         const formatRow = (type, count, amount) => {
           return padRight(type, 12) + padLeft(count, 6) + padLeft(formatMoney(amount), 12);
         };
-        
+
         const getCount = (key) => {
           const val = c[key];
           return val === "-" ? "-" : (val || 0);
         };
-        
+
         const reportText = [
           '    My Store',
           ' ' + reportDate + ' ' + reportTime,
@@ -4037,7 +3910,7 @@
           '',
           ''
         ].join('\n');
-        
+
         const reportHtml = `
           <html>
           <head>
@@ -4052,7 +3925,7 @@
           </body>
           </html>
         `;
-        
+
         if (window.electronAPI && window.electronAPI.printReceipt) {
           await window.electronAPI.printReceipt({ html: reportHtml });
           showToast("Report sent to POS-80C printer");
@@ -4063,7 +3936,7 @@
           printWindow.print();
           showToast("Report sent to printer");
         }
-        
+
         if (!viewingHistoricalReport) {
           try {
             await EodReportsService.saveReport();
@@ -4085,7 +3958,7 @@
       setInterval(() => {
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
-        
+
         // Trigger at 11:59 PM (any second during that minute) if we haven't printed today
         if (now.getHours() === 23 && now.getMinutes() === 59 && lastAutoPrintDate !== todayStr) {
           console.log("Auto-print triggered at 11:59 PM for date: " + todayStr);
@@ -4104,20 +3977,20 @@
           const c = data.counts || {};
           const grand = data.grandTotal || 0;
           const txCount = data.transactionCount || 0;
-          
+
           // Helper to pad strings for fixed-width columns (32 char thermal paper)
           const padLeft = (str, len) => String(str).padStart(len);
           const padRight = (str, len) => String(str).padEnd(len);
           const formatMoney = (amt) => '$' + (amt || 0).toFixed(2);
-          
+
           // Build fixed-width text report (32 chars to fit 80mm paper)
           const line = '-'.repeat(30);
           const dblLine = '='.repeat(30);
-          
+
           const formatRow = (type, count, amount) => {
             return padRight(type, 12) + padLeft(count, 6) + padLeft(formatMoney(amount), 12);
           };
-          
+
           const reportText = [
             '    My Store',
             ' ' + new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
@@ -4136,7 +4009,7 @@
             '',
             ''
           ].join('\n');
-          
+
           const reportHtml = `
             <html>
             <head>
@@ -4151,7 +4024,7 @@
             </body>
             </html>
           `;
-          
+
           if (window.electronAPI && window.electronAPI.printReceipt) {
             await window.electronAPI.printReceipt({ html: reportHtml });
             console.log("Auto-printed End of Day report to POS-80C at 11:59 PM");
@@ -4162,7 +4035,7 @@
             printWindow.print();
             console.log("Auto-printed End of Day report at 11:59 PM");
           }
-          
+
           // Save the daily report to database for history
           try {
             await EodReportsService.saveReport();
@@ -4187,7 +4060,7 @@
         input.removeEventListener('keyup', handleInputKey);
         input.removeEventListener('keypress', handleInputKey);
         input.removeEventListener('click', handleInputClick);
-        
+
         input.addEventListener('focus', handleInputFocus);
         input.addEventListener('keydown', handleInputKey);
         input.addEventListener('keyup', handleInputKey);
@@ -4195,25 +4068,25 @@
         input.addEventListener('click', handleInputClick);
       });
     }
-    
+
     function handleInputFocus(e) {
       e.stopPropagation();
     }
-    
+
     function handleInputKey(e) {
       e.stopPropagation();
     }
-    
+
     function handleInputClick(e) {
       e.stopPropagation();
       e.target.focus();
     }
-    
+
     const observer = new MutationObserver(() => {
       initInputHandlers();
     });
     observer.observe(document.body, { childList: true, subtree: true });
-    
+
     initInputHandlers();
 
     let currentUser = null;
@@ -4279,9 +4152,9 @@
     document.getElementById("openShiftConfirm").addEventListener("click", async () => {
       const input = document.getElementById("openShiftCash");
       const startingCash = parseFloat(input.value) || 0;
-      
+
       document.getElementById("openShiftModal").classList.remove("show");
-      
+
       try {
         const res = await fetch('/api/shifts/open', {
           method: 'POST',
@@ -4310,7 +4183,7 @@
 
     function showCloseShiftDialog() {
       if (!currentShift) return;
-      
+
       const modal = document.getElementById("closeShiftModal");
       const cashInput = document.getElementById("closeShiftCash");
       const notesInput = document.getElementById("closeShiftNotes");
@@ -4325,16 +4198,16 @@
       const notesInput = document.getElementById("closeShiftNotes");
       const endingCash = parseFloat(cashInput.value) || 0;
       const notes = notesInput.value || '';
-      
+
       document.getElementById("closeShiftModal").classList.remove("show");
-      
+
       try {
         const res = await fetch('/api/shifts/close', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            shiftId: currentShift.id, 
-            userId: currentUser.id, 
+          body: JSON.stringify({
+            shiftId: currentShift.id,
+            userId: currentUser.id,
             endingCash,
             notes
           })
@@ -4373,7 +4246,7 @@
       const varianceColor = Math.abs(variance) < 0.01 ? '#4ade80' : (variance < 0 ? '#f87171' : '#fbbf24');
       const varianceLabel = Math.abs(variance) < 0.01 ? 'Exact' : (variance < 0 ? 'SHORT' : 'OVER');
 
-      content.innerHTML = `
+      content.innerHTML = SafeHtml.clean(`
 <div style="text-align: center; font-weight: bold; margin-bottom: 0.5rem;">SHIFT SUMMARY</div>
 <div>=============</div>
 <div>Total Sales: $${(shift.total_sales || 0).toFixed(2)}</div>
@@ -4385,7 +4258,7 @@
 ${hasVariance ? `<div>Expected Cash: $${(shift.expected_cash || 0).toFixed(2)}</div>` : ''}
 <div>Counted Cash: $${(shift.ending_cash || 0).toFixed(2)}</div>
 ${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-weight: bold;">Variance: ${variance >= 0 ? '+' : ''}$${variance.toFixed(2)} (${varianceLabel})</div>` : ''}
-      `;
+      `);
       modal.classList.add("show");
     }
 
@@ -4394,6 +4267,7 @@ ${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-w
     });
 
     function logout() {
+      fetch('/api/auth/logout', { method: 'POST', keepalive: true });
       sessionStorage.removeItem('user');
       window.location.href = 'login.html';
     }
@@ -4410,6 +4284,10 @@ ${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-w
         const data = await res.json();
         if (data.success && data.settings) {
           STORE_SETTINGS = { ...STORE_SETTINGS, ...data.settings };
+          BASE_TAX_RATE = Number(data.settings.tax_rate || 0);
+          taxToggleBtn.textContent = taxEnabled ? 'ON' : 'OFF';
+          taxToggleBtn.className = 'tax-toggle-btn ' + (taxEnabled ? 'on' : 'off');
+          updateTotals();
         }
       } catch (err) {
         console.error('Failed to load store settings:', err);
@@ -4425,7 +4303,7 @@ ${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-w
         renderCategories();
         renderCart();
       });
-      
+
       // === FOCUS RECOVERY SYSTEM ===
       // Restores barcode input instantly after sleep/wake, window switch, or idle
 
@@ -4470,30 +4348,30 @@ ${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-w
     // Drawer Log Viewer (Owner/Manager only - PIN protected)
     let drawerLogPinBuffer = "";
     let managerAccessToken = null;
-    
+
     function showDrawerLogPinModal() {
       drawerLogPinBuffer = "";
       document.getElementById("drawerLogPinDisplay").textContent = "";
       document.getElementById("drawerLogPinModal").classList.add("show");
     }
-    
+
     function handleDrawerLogPinKey(key) {
       if (key === 'clear') {
         drawerLogPinBuffer = "";
       } else if (key === 'back') {
         drawerLogPinBuffer = drawerLogPinBuffer.slice(0, -1);
-      } else if (drawerLogPinBuffer.length < 6) {
+      } else if (drawerLogPinBuffer.length < 12) {
         drawerLogPinBuffer += key;
       }
       document.getElementById("drawerLogPinDisplay").textContent = "*".repeat(drawerLogPinBuffer.length);
     }
-    
+
     async function verifyDrawerLogPin() {
-      if (drawerLogPinBuffer.length < 4) {
+      if (drawerLogPinBuffer.length < 12) {
         showToast("Enter your PIN", true);
         return;
       }
-      
+
       try {
         // Verify PIN against owner/manager accounts
         const res = await fetch("/api/auth/verify-manager-pin", {
@@ -4502,7 +4380,7 @@ ${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-w
           body: JSON.stringify({ pin: drawerLogPinBuffer })
         });
         const data = await res.json();
-        
+
         if (data.success && data.authorized && data.accessToken) {
           managerAccessToken = data.accessToken;
           document.getElementById("drawerLogPinModal").classList.remove("show");
@@ -4516,27 +4394,27 @@ ${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-w
         showToast("Verification failed", true);
       }
     }
-    
+
     async function loadDrawerLog() {
       try {
         const res = await fetch("/api/drawer-log", {
           headers: { "X-Manager-Token": managerAccessToken }
         });
         const data = await res.json();
-        
+
         if (!data.success) {
           showToast("Failed to load drawer log", true);
           return;
         }
-        
+
         const logs = data.logs || [];
         const modal = document.getElementById("drawerLogModal");
         const content = document.getElementById("drawerLogContent");
-        
+
         if (logs.length === 0) {
-          content.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 2rem;">No drawer activity recorded</div>';
+          content.innerHTML = SafeHtml.clean('<div style="text-align: center; color: var(--text-secondary); padding: 2rem;">No drawer activity recorded</div>');
         } else {
-          content.innerHTML = logs.map(log => {
+          content.innerHTML = SafeHtml.clean(logs.map(log => {
             const date = new Date(log.created_at + 'Z');
             const dateStr = date.toLocaleDateString();
             const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -4550,28 +4428,44 @@ ${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-w
               </div>
               ${log.sale_amount > 0 ? `<div style="padding: 0.25rem 0.75rem 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">Sale: $${log.sale_amount.toFixed(2)}</div>` : ''}
             `;
-          }).join('');
+          }).join(''));
         }
-        
+
         modal.classList.add("show");
       } catch (e) {
         showToast("Failed to load drawer log", true);
       }
     }
-    
+
     function showDrawerLog() {
       showDrawerLogPinModal();
     }
-    
+
     document.getElementById("closeDrawerLogBtn").addEventListener("click", () => {
       document.getElementById("drawerLogModal").classList.remove("show");
     });
-    
+
     document.getElementById("drawerLogPinCancel").addEventListener("click", () => {
       document.getElementById("drawerLogPinModal").classList.remove("show");
     });
 
     window.showDrawerLog = showDrawerLog;
-  </script>
+  document.querySelector('[data-ui-action="static-action-0"]').addEventListener('click', () => { showDrawerLog(); });
+document.querySelector('[data-ui-action="static-action-1"]').addEventListener('click', () => { showDobKeypad(); });
+document.querySelector('[data-ui-action="static-action-2"]').addEventListener('click', () => { handleDrawerLogPinKey('1'); });
+document.querySelector('[data-ui-action="static-action-3"]').addEventListener('click', () => { handleDrawerLogPinKey('2'); });
+document.querySelector('[data-ui-action="static-action-4"]').addEventListener('click', () => { handleDrawerLogPinKey('3'); });
+document.querySelector('[data-ui-action="static-action-5"]').addEventListener('click', () => { handleDrawerLogPinKey('4'); });
+document.querySelector('[data-ui-action="static-action-6"]').addEventListener('click', () => { handleDrawerLogPinKey('5'); });
+document.querySelector('[data-ui-action="static-action-7"]').addEventListener('click', () => { handleDrawerLogPinKey('6'); });
+document.querySelector('[data-ui-action="static-action-8"]').addEventListener('click', () => { handleDrawerLogPinKey('7'); });
+document.querySelector('[data-ui-action="static-action-9"]').addEventListener('click', () => { handleDrawerLogPinKey('8'); });
+document.querySelector('[data-ui-action="static-action-10"]').addEventListener('click', () => { handleDrawerLogPinKey('9'); });
+document.querySelector('[data-ui-action="static-action-11"]').addEventListener('click', () => { handleDrawerLogPinKey('clear'); });
+document.querySelector('[data-ui-action="static-action-12"]').addEventListener('click', () => { handleDrawerLogPinKey('0'); });
+document.querySelector('[data-ui-action="static-action-13"]').addEventListener('click', () => { handleDrawerLogPinKey('back'); });
+document.querySelector('[data-ui-action="static-action-14"]').addEventListener('click', () => { verifyDrawerLogPin(); });
+document.addEventListener('click', event => { const item = event.target.closest('[data-report-date]'); if (item && /^\d{4}-\d{2}-\d{2}$/.test(item.dataset.reportDate)) showHistoryReport(item.dataset.reportDate); });
+</script>
 </body>
 </html>

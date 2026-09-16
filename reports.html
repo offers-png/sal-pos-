@@ -284,6 +284,9 @@
       }
     }
   </style>
+<script src="/vendor/purify.js"></script>
+<script src="/services/browser.js"></script>
+<script src="/services/money.js"></script>
 </head>
 <body>
   <nav class="sidebar">
@@ -510,6 +513,7 @@
     <div class="eod-section">
       <h2 class="eod-title">End of Day Summary</h2>
       <p class="eod-description">Complete breakdown of today's business activity.</p>
+      <p id="refundSummary"></p>
       <div class="eod-stats">
         <div class="eod-stat">
           <div class="eod-stat-label">Total Revenue</div>
@@ -561,7 +565,7 @@
       try {
         const res = await fetch("/api/eod-today");
         const data = await res.json();
-        
+
         if (data.success) {
           const t = data.totals || {};
           const c = data.counts || {};
@@ -570,28 +574,29 @@
 
           document.getElementById("totalRevenue").textContent = "$" + grand.toFixed(2);
           document.getElementById("totalTransactions").textContent = txCount;
-          
+
           const cashTotal = t["Cash"] || 0;
           const cardTotal = t["Debit Card"] || 0;
-          
+
           document.getElementById("cashSales").textContent = "$" + cashTotal.toFixed(2);
           document.getElementById("cashCount").textContent = (c["Cash"] || 0) + " transactions";
-          
+
           document.getElementById("cardSales").textContent = "$" + cardTotal.toFixed(2);
           document.getElementById("cardCount").textContent = (c["Debit Card"] || 0) + " transactions";
 
           document.getElementById("cashAmount").textContent = "$" + cashTotal.toFixed(2);
           document.getElementById("cashTxCount").textContent = (c["Cash"] || 0) + " transactions";
-          
+
           document.getElementById("debitAmount").textContent = "$" + cardTotal.toFixed(2);
           document.getElementById("debitTxCount").textContent = (c["Debit Card"] || 0) + " transactions";
-          
+
           document.getElementById("ebtAmount").textContent = "$" + (t["EBT"] || 0).toFixed(2);
           document.getElementById("ebtTxCount").textContent = (c["EBT"] || 0) + " transactions";
-          
+
           document.getElementById("creditAmount").textContent = "$" + (t["Store Credit"] || 0).toFixed(2);
           document.getElementById("creditTxCount").textContent = (c["Store Credit"] || 0) + " transactions";
 
+          document.getElementById('refundSummary').textContent = 'Refunds: $' + Number(data.refundTotal || 0).toFixed(2) + ' · Legacy unallocated tenders: $' + Number(data.unallocatedTotal || 0).toFixed(2);
           document.getElementById("eodRevenue").textContent = "$" + grand.toFixed(2);
           document.getElementById("eodTransactions").textContent = txCount;
 
@@ -612,14 +617,14 @@
       try {
         const res = await fetch("/api/sales");
         const data = await res.json();
-        
+
         const tbody = document.getElementById("salesHistoryBody");
-        
+
         if (data.success && Array.isArray(data.sales)) {
           if (data.sales.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--muted-foreground);">No sales recorded yet</td></tr>';
+            tbody.innerHTML = SafeHtml.clean('<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--muted-foreground);">No sales recorded yet</td></tr>');
           } else {
-            tbody.innerHTML = data.sales.map(sale => {
+            tbody.innerHTML = SafeHtml.clean(data.sales.map(sale => {
               let dateStr = "Unknown";
               let timeStr = "";
               try {
@@ -631,12 +636,12 @@
                   }
                 }
               } catch (e) {}
-              
-              const saleIdDisplay = sale.saleId ? "#" + String(sale.saleId).slice(-6) : "---";
+
+              const saleIdDisplay = sale.saleId ? "#" + String(sale.saleId) : "---";
               const paymentDisplay = sale.paymentType || "---";
               const itemsDisplay = typeof sale.itemCount === 'number' ? sale.itemCount : 0;
               const totalDisplay = typeof sale.total === 'number' ? sale.total.toFixed(2) : "0.00";
-              
+
               return `
                 <tr style="border-bottom: 1px solid var(--border);">
                   <td style="padding: 0.75rem 0.5rem;">${dateStr} ${timeStr}</td>
@@ -646,14 +651,14 @@
                   <td style="text-align: right; padding: 0.75rem 0.5rem; font-weight: 600; color: var(--primary);">$${totalDisplay}</td>
                 </tr>
               `;
-            }).join('');
+            }).join(''));
           }
         } else {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--destructive);">Failed to load sales</td></tr>';
+          tbody.innerHTML = SafeHtml.clean('<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--destructive);">Failed to load sales</td></tr>');
         }
       } catch (err) {
         console.error("Error loading sales history:", err);
-        document.getElementById("salesHistoryBody").innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--destructive);">Error loading sales</td></tr>';
+        document.getElementById("salesHistoryBody").innerHTML = SafeHtml.clean('<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--destructive);">Error loading sales</td></tr>');
       }
     }
 
@@ -672,11 +677,11 @@
         showToast("Please select a date", true);
         return;
       }
-      
+
       try {
         const res = await fetch(`/api/daily-reports/${date}`);
         const data = await res.json();
-        
+
         if (data.success && data.report) {
           const r = data.report;
           document.getElementById("totalRevenue").textContent = "$" + (r.total_sales || 0).toFixed(2);
@@ -686,6 +691,7 @@
           document.getElementById("cashAmount").textContent = "$" + (r.cash_sales || 0).toFixed(2);
           document.getElementById("debitAmount").textContent = "$" + (r.card_sales || 0).toFixed(2);
           document.getElementById("ebtAmount").textContent = "$" + (r.ebt_sales || 0).toFixed(2);
+          document.getElementById('refundSummary').textContent = 'Refunds: $' + Number(data.refundTotal || 0).toFixed(2) + ' · Legacy unallocated tenders: $' + Number(data.unallocatedTotal || 0).toFixed(2);
           document.getElementById("eodRevenue").textContent = "$" + (r.total_sales || 0).toFixed(2);
           document.getElementById("eodTransactions").textContent = r.transaction_count || 0;
           showToast("Loaded report for " + date);

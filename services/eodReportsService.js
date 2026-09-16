@@ -33,6 +33,8 @@ const EodReportsService = {
     const txCount = data.transactionCount || 0;
 
     return `
+      <p>Refunds: $${Number(data.refundTotal || 0).toFixed(2)} · Net sales after refunds</p>
+      ${data.unallocatedTotal ? `<p>Legacy split tenders unallocated: $${Number(data.unallocatedTotal).toFixed(2)}</p>` : ''}
       <table class="eod-table" style="width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace;">
         <thead>
           <tr style="border-bottom: 2px solid currentColor;">
@@ -142,7 +144,9 @@ const EodReportsService = {
       `Time: ${timeStr}`,
       '',
       '----------------------------------------',
-      'Payment Type         #Trn      Amount',
+      `Refunds: $${Number(data.refundTotal || 0).toFixed(2)}`,
+      `Legacy unallocated: $${Number(data.unallocatedTotal || 0).toFixed(2)}`,
+      'Payment Type         #Trn      Net Amount',
       '----------------------------------------',
       `Cash                 ${String(c["Cash"] || 0).padStart(4)}    $${(t["Cash"] || 0).toFixed(2).padStart(8)}`,
       `Debit Card           ${String(c["Debit Card"] || 0).padStart(4)}    $${(t["Debit Card"] || 0).toFixed(2).padStart(8)}`,

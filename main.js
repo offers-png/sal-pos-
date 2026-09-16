@@ -14,11 +14,11 @@ function isAutoUpdateConfigured() {
   try {
     const pkg = require('./package.json');
     const publish = pkg.build?.publish;
-    
+
     if (!publish) return false;
-    
+
     const configs = Array.isArray(publish) ? publish : [publish];
-    
+
     return configs.some(cfg => {
       if (!cfg || typeof cfg !== 'object') return false;
       return cfg.provider && cfg.owner && !String(cfg.owner).includes('YOUR_');
@@ -128,14 +128,14 @@ function setupAutoUpdater() {
 
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('no-sandbox');
+if (!app.requestSingleInstanceLock()) app.quit();
 
 function setupPaths() {
   const userData = app.getPath('userData');
-  
+
   process.env.SAL_DB_PATH = path.join(userData, 'sal-pos.db');
   process.env.SAL_IS_PACKAGED = app.isPackaged ? 'true' : 'false';
-  
+
   if (app.isPackaged) {
     process.env.SAL_SQLJS_DIR = process.resourcesPath;
     process.env.SAL_STATIC_DIR = app.getAppPath();
@@ -145,16 +145,16 @@ function setupPaths() {
     process.env.SAL_STATIC_DIR = __dirname;
     process.env.SAL_RESOURCES_DIR = __dirname;
   }
-  
-  const seedDb = app.isPackaged 
+
+  const seedDb = app.isPackaged
     ? path.join(process.resourcesPath, 'sal-pos.db')
     : path.join(__dirname, 'sal-pos.db');
-    
+
   if (!fs.existsSync(process.env.SAL_DB_PATH) && fs.existsSync(seedDb)) {
     console.log('Copying seed database to userData...');
     fs.copyFileSync(seedDb, process.env.SAL_DB_PATH);
   }
-  
+
   console.log('Database path:', process.env.SAL_DB_PATH);
   console.log('SQL.js directory:', process.env.SAL_SQLJS_DIR);
   console.log('Static directory:', process.env.SAL_STATIC_DIR);
@@ -190,12 +190,13 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      sandbox: true
     },
     autoHideMenuBar: true
   });
 
-  mainWindow.loadURL('http://localhost:5000');
+  mainWindow.loadURL('http://127.0.0.1:5000');
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -206,26 +207,26 @@ function createWindow() {
 }
 
 function getMarketingImages() {
-  const marketingDir = app.isPackaged 
+  const marketingDir = app.isPackaged
     ? path.join(process.resourcesPath, 'marketing-images')
     : path.join(__dirname, 'marketing-images');
-  
+
   try {
     if (!fs.existsSync(marketingDir)) {
       console.log('Marketing images folder not found:', marketingDir);
       return [];
     }
-    
+
     const files = fs.readdirSync(marketingDir);
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-    
+
     const images = files
       .filter(file => imageExtensions.includes(path.extname(file).toLowerCase()))
       .map(file => {
         const filePath = path.join(marketingDir, file);
-        return 'file://' + filePath.replace(/\\/g, '/');
+        return 'http://127.0.0.1:5000/marketing-images/' + encodeURIComponent(file);
       });
-    
+
     console.log('Found marketing images:', images.length);
     return images;
   } catch (err) {
@@ -237,16 +238,16 @@ function getMarketingImages() {
 function createCustomerDisplay() {
   const displays = screen.getAllDisplays();
   console.log('Available displays:', displays.length);
-  
+
   let externalDisplay = displays.find(display => display.bounds.x !== 0 || display.bounds.y !== 0);
-  
+
   if (!externalDisplay && displays.length > 1) {
     externalDisplay = displays[1];
   }
-  
+
   const targetDisplay = externalDisplay || displays[0];
   console.log('Customer display on:', targetDisplay.bounds);
-  
+
   customerWindow = new BrowserWindow({
     x: targetDisplay.bounds.x,
     y: targetDisplay.bounds.y,
@@ -258,17 +259,18 @@ function createCustomerDisplay() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      sandbox: true
     }
   });
 
   const customerDisplayPath = path.join(process.env.SAL_STATIC_DIR || __dirname, 'customer-display.html');
-  customerWindow.loadFile(customerDisplayPath);
-  
+  customerWindow.loadURL('http://127.0.0.1:5000/customer-display.html');
+
   customerWindow.on('closed', () => {
     customerWindow = null;
   });
-  
+
   customerWindow.webContents.on('did-finish-load', () => {
     const images = getMarketingImages();
     customerWindow.webContents.send('marketing-images', images);
@@ -277,7 +279,7 @@ function createCustomerDisplay() {
 
 app.whenReady().then(async () => {
   setupPaths();
-  
+
   try {
     const server = require('./server.js');
     await server.start();
@@ -285,15 +287,13 @@ app.whenReady().then(async () => {
   } catch (err) {
     console.error('Failed to start server:', err);
   }
-  
-  const serverReady = await waitForServer('http://localhost:5000/api/products');
+
+  const serverReady = await waitForServer('http://127.0.0.1:5000/api/products');
   if (serverReady) {
     // Apply the printer picked in the Hardware Setup wizard (Settings), if any.
     // Falls back to auto-detecting the OS default printer when nothing is saved.
     try {
-      const res = await fetch('http://localhost:5000/api/settings');
-      const data = await res.json();
-      const savedPrinter = data?.settings?.printer_name;
+      const savedPrinter = await require('./database').settingsRepo.get('printer_name');
       if (savedPrinter) {
         require('./printer').setPrinterName(savedPrinter);
         console.log('Loaded saved printer:', savedPrinter);
@@ -311,7 +311,7 @@ app.whenReady().then(async () => {
     console.error('Server failed to respond after multiple attempts');
     createWindow();
   }
-  
+
   setTimeout(() => {
     setupAutoUpdater();
   }, 3000);
@@ -376,10 +376,32 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+// IPC authority is based on the sending frame and server session, never renderer data.
+const registerHandle = ipcMain.handle.bind(ipcMain);
+ipcMain.handle = (channel, handler) => registerHandle(channel, async (event, ...args) => {
+  const source = new URL(event.senderFrame.url);
+  if (source.origin !== 'http://127.0.0.1:5000') throw Error('Untrusted IPC sender');
+  const publicChannels = ['request-current-theme', 'sync-theme', 'set-theme', 'get-app-version'];
+  if (!publicChannels.includes(channel)) {
+    const cookies = await event.sender.session.cookies.get({ url: source.origin });
+    const response = await fetch(source.origin + '/api/auth/me', { headers: { Cookie: cookies.map(c => c.name + '=' + c.value).join('; ') } });
+    const session = await response.json();
+    if (!response.ok || session.mustChangePin) throw Error('Sign in first');
+    if (channel === 'set-printer' && !['owner', 'manager'].includes(session.user.role)) throw Error('Manager required');
+  }
+  return handler(event, ...args);
+});
+app.on('web-contents-created', (_, contents) => {
+  contents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  contents.on('will-navigate', (event, url) => {
+    if (!url.startsWith('http://127.0.0.1:5000/')) event.preventDefault();
+  });
+});
+
 ipcMain.handle('print-receipt', async (event, payload) => {
   try {
     const { printReceipt } = require('./printer');
-    const openDrawer = payload?.paymentType === 'Cash' || String(payload?.paymentType || '').includes('Cash');
+    const openDrawer = false; // Checkout opens the drawer once; printing/reprinting never does.
     await new Promise(resolve => setTimeout(resolve, 300));
     await printReceipt(mainWindow, payload, openDrawer);
     return { ok: true };
@@ -392,7 +414,7 @@ ipcMain.handle('print-receipt', async (event, payload) => {
 ipcMain.handle('complete-sale', async (event, payload) => {
   const { openCashDrawer } = require('./printer');
   let drawerWarning = null;
-  
+
   if (payload.openDrawer !== false) {
     try {
       await openCashDrawer();
@@ -401,7 +423,7 @@ ipcMain.handle('complete-sale', async (event, payload) => {
       drawerWarning = 'Cash drawer could not be opened';
     }
   }
-  
+
   return { ok: true, warning: drawerWarning };
 });
 
@@ -433,11 +455,7 @@ ipcMain.handle('set-printer', async (event, printerName) => {
     setPrinterName(printerName);
 
     // Persist so the choice survives an app restart.
-    await fetch('http://localhost:5000/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ printer_name: printerName })
-    });
+    await require('./database').settingsRepo.set('printer_name', printerName);
 
     return { ok: true };
   } catch (err) {

@@ -1,5 +1,5 @@
 const { BrowserWindow } = require('electron');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -10,6 +10,7 @@ const os = require('os');
 let configuredPrinterName = process.env.SAL_PRINTER_NAME || null;
 
 function setPrinterName(name) {
+  if (name != null && (typeof name !== 'string' || name.length > 200 || /[\r\n\0]/.test(name))) throw Error('Invalid printer name');
   configuredPrinterName = name || null;
 }
 
@@ -51,211 +52,21 @@ const CMD = {
   FEED_6_LINES: Buffer.from([ESC, 0x64, 0x06])
 };
 
-let nativePrinter = null;
-let nativePrinterAvailable = false;
-
-try {
-  nativePrinter = require('printer');
-  nativePrinterAvailable = true;
-  console.log('Native printer module loaded successfully');
-} catch (e) {
-  console.warn('Native printer module not available:', e.message);
-  console.log('Will use Electron webContents.print() fallback');
-}
-
-function textToBuffer(text) {
-  return Buffer.from(text, 'utf8');
-}
-
-function generateReceiptText(payload) {
-  const {
-    store, items, subtotal, discount,
-    taxRate, taxAmount, total, paymentType, saleId, footer,
-    ebtAmount, nonEbtAmount, ebtDiscount, nonEbtTax, secondPaymentType
-  } = payload || {};
-
-  const isSplitEbt = !!secondPaymentType;
-
-  const fmt = (n) => Number(n || 0).toFixed(2);
-  const timestamp = new Date().toLocaleString();
-  const width = 48;
-
-  function center(text) {
-    const pad = Math.max(0, Math.floor((width - text.length) / 2));
-    return ' '.repeat(pad) + text;
-  }
-
-  function leftRight(left, right) {
-    const maxLeft = width - 1 - right.length;
-    if (left.length > maxLeft) {
-      left = left.slice(0, maxLeft - 3) + '...';
-    }
-    const spaces = width - left.length - right.length;
-    return left + ' '.repeat(spaces) + right;
-  }
-
-  const lines = [];
-
-  lines.push(center(store?.name || 'My Store'));
-  if (store?.phone) {
-    lines.push(center(store.phone));
-  }
-  lines.push(center(timestamp));
-  lines.push('-'.repeat(width));
-
-  if (paymentType) {
-    lines.push(center('Payment: ' + paymentType));
-    lines.push('-'.repeat(width));
-  }
-
-  if (Array.isArray(items)) {
-    if (isSplitEbt) {
-      const ebtItems = items.filter(i => i.ebt_eligible);
-      const nonEbtItems = items.filter(i => !i.ebt_eligible);
-
-      if (ebtItems.length > 0) {
-        lines.push(center('-- EBT (Tax Exempt) --'));
-        ebtItems.forEach((item) => {
-          const name = String(item.name || '').slice(0, 32);
-          const qty = item.qty || 1;
-          const price = fmt(item.price);
-          const lineTotal = fmt(item.total || qty * (item.price || 0));
-          lines.push(name);
-          lines.push(leftRight(`  ${qty} x $${price}`, '$' + lineTotal));
-        });
-      }
-
-      if (nonEbtItems.length > 0) {
-        lines.push(center('-- Non-EBT (Taxable) --'));
-        nonEbtItems.forEach((item) => {
-          const name = String(item.name || '').slice(0, 32);
-          const qty = item.qty || 1;
-          const price = fmt(item.price);
-          const lineTotal = fmt(item.total || qty * (item.price || 0));
-          lines.push(name);
-          lines.push(leftRight(`  ${qty} x $${price}`, '$' + lineTotal));
-        });
-      }
-    } else {
-      items.forEach((item) => {
-        const name = String(item.name || '').slice(0, 32);
-        const qty = item.qty || 1;
-        const price = fmt(item.price);
-        const lineTotal = fmt(item.total || qty * (item.price || 0));
-        lines.push(name);
-        lines.push(leftRight(`  ${qty} x $${price}`, '$' + lineTotal));
-      });
-    }
-  }
-
-  lines.push('-'.repeat(width));
-  lines.push(leftRight('Subtotal:', '$' + fmt(subtotal)));
-
-  if (discount) {
-    lines.push(leftRight('Discount:', '-$' + fmt(discount)));
-  }
-
-  if (isSplitEbt) {
-    if (nonEbtTax) {
-      lines.push(leftRight('Tax (non-EBT only):', '$' + fmt(nonEbtTax)));
-    }
-  } else {
-    if (taxAmount) {
-      lines.push(leftRight(`Tax (${taxRate || 0}%):`, '$' + fmt(taxAmount)));
-    }
-  }
-
-  lines.push('='.repeat(width));
-  lines.push(leftRight('TOTAL:', '$' + fmt(total)));
-
-  if (isSplitEbt) {
-    lines.push('-'.repeat(width));
-    lines.push('SPLIT PAYMENT:');
-    const ebtLabel = ebtDiscount > 0 ? 'EBT (Food, after disc.)' : 'EBT (Food)';
-    lines.push(leftRight(ebtLabel, '$' + fmt(ebtAmount)));
-    lines.push(leftRight(secondPaymentType + ' (incl. tax):', '$' + fmt(nonEbtAmount)));
-  }
-
-  lines.push('');
-  lines.push(center(footer || 'Thank you for shopping!'));
-
-  if (saleId) {
-    lines.push(center('Receipt: ' + saleId));
-  }
-
-  // Extra blank lines to push content fully past the print head before cutting
-  lines.push('');
-  lines.push('');
-  lines.push('');
-  lines.push('');
-  lines.push('');
-  lines.push('');
-  lines.push('');
-  lines.push('');
-
-  return lines.join('\n');
-}
-
-async function printReceiptRaw(payload, includeCut = true, includeDrawer = true) {
-  if (!nativePrinterAvailable) {
-    throw new Error('Native printer module not available');
-  }
-
-  const targetPrinter = await resolvePrinterName();
-  const receiptText = generateReceiptText(payload);
-  console.log('Printing receipt to:', targetPrinter);
-
-  const buffers = [
-    CMD.INIT,
-    textToBuffer(receiptText)
-  ];
-
-  if (includeDrawer) {
-    buffers.push(CMD.OPEN_DRAWER);
-  }
-
-  if (includeCut) {
-    // ESC d 6 — advance 6 lines past print head before cutting.
-    // Prevents last lines being eaten by the cutter.
-    buffers.push(CMD.FEED_6_LINES);
-    buffers.push(CMD.CUT_PAPER);
-  }
-
-  const finalBuffer = Buffer.concat(buffers);
-
-  return new Promise((resolve, reject) => {
-    nativePrinter.printDirect({
-      data: finalBuffer,
-      type: 'RAW',
-      printer: targetPrinter,
-      success: (jobId) => {
-        console.log('Receipt printed successfully, Job ID:', jobId);
-        resolve();
-      },
-      error: (err) => {
-        console.error('Print error:', err);
-        reject(new Error(typeof err === 'string' ? err : err.message || 'Print failed'));
-      }
-    });
-  });
-}
-
 async function openCashDrawerWindows() {
   if (process.platform !== 'win32') {
-    console.warn('Windows drawer fallback only works on Windows');
-    return;
+    throw Error('Cash-drawer control is currently supported on Windows only');
   }
 
   const targetPrinter = await resolvePrinterName();
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     try {
       const tempDir = os.tmpdir();
       const dataFile = path.join(tempDir, 'drawer_cmd.bin');
       const scriptFile = path.join(tempDir, 'open_drawer.ps1');
       const drawerCommand = Buffer.concat([CMD.INIT, CMD.OPEN_DRAWER]);
       fs.writeFileSync(dataFile, drawerCommand);
-      
+
       const psScript = `
 Add-Type -TypeDefinition @'
 using System;
@@ -284,68 +95,45 @@ public class RawPrinter {
         if (!StartDocPrinter(hPrinter, 1, ref di)) { ClosePrinter(hPrinter); return false; }
         StartPagePrinter(hPrinter);
         int written;
-        WritePrinter(hPrinter, data, data.Length, out written);
+        bool success = WritePrinter(hPrinter, data, data.Length, out written);
         EndPagePrinter(hPrinter);
         EndDocPrinter(hPrinter);
         ClosePrinter(hPrinter);
-        return true;
+        return success && written == data.Length;
     }
 }
 '@
-$bytes = [System.IO.File]::ReadAllBytes('${dataFile.replace(/\\/g, '\\\\')}')
-[RawPrinter]::SendRaw('${targetPrinter}', $bytes)
+$bytes = [System.IO.File]::ReadAllBytes('${dataFile.replace(/'/g, "''")}')
+if (-not [RawPrinter]::SendRaw([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${Buffer.from(targetPrinter, 'utf8').toString('base64')}')), $bytes)) { throw 'Printer rejected the cash drawer command' }
 `;
       fs.writeFileSync(scriptFile, psScript, 'utf8');
-      
+
       console.log('Opening drawer via PowerShell Win32 API');
-      
+
       try {
-        execSync(`powershell -NoProfile -ExecutionPolicy Bypass -File "${scriptFile}"`, 
+        execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', scriptFile],
           { windowsHide: true, timeout: 15000 });
         console.log('Cash drawer opened via PowerShell Win32 API');
-      } catch (cmdErr) {
-        console.warn('PowerShell drawer command failed:', cmdErr.message);
+      } finally {
+        try { fs.unlinkSync(dataFile); } catch (e) {}
+        try { fs.unlinkSync(scriptFile); } catch (e) {}
       }
-      
-      try { fs.unlinkSync(dataFile); } catch (e) {}
-      try { fs.unlinkSync(scriptFile); } catch (e) {}
       resolve();
     } catch (err) {
       console.error('Windows drawer fallback error:', err);
-      resolve();
+      reject(err);
     }
   });
 }
 
-async function openCashDrawerRaw() {
-  if (!nativePrinterAvailable) {
-    console.warn('Native printer not available - trying Windows fallback');
-    return openCashDrawerWindows();
-  }
+async function openCashDrawerRaw() { return openCashDrawerWindows(); }
 
-  const targetPrinter = await resolvePrinterName();
-  console.log('Opening cash drawer via raw ESC/POS command');
-
-  const drawerCommand = Buffer.concat([CMD.INIT, CMD.OPEN_DRAWER]);
-
-  return new Promise((resolve) => {
-    nativePrinter.printDirect({
-      data: drawerCommand,
-      type: 'RAW',
-      printer: targetPrinter,
-      success: (jobId) => {
-        console.log('Cash drawer opened, Job ID:', jobId);
-        resolve();
-      },
-      error: (err) => {
-        console.error('Cash drawer error:', err);
-        openCashDrawerWindows().then(resolve);
-      }
-    });
-  });
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 }
 
 function generateReceiptHTML(payload) {
+  payload = { ...payload, store: { name: escapeHtml(payload.store?.name), phone: escapeHtml(payload.store?.phone) }, items: (payload.items || []).map(item => ({ ...item, name: escapeHtml(item.name) })), footer: escapeHtml(payload.footer), paymentType: escapeHtml(payload.paymentType), saleId: escapeHtml(payload.saleId) };
   const {
     store, items, subtotal, discount,
     taxRate, taxAmount, total, paymentType, saleId, footer,
@@ -487,7 +275,9 @@ async function printReceiptWindows(mainWindow, payload) {
       height: 600,
       webPreferences: {
         nodeIntegration: false,
-        contextIsolation: true
+        contextIsolation: true,
+        sandbox: true,
+        javascript: false
       }
     });
 
@@ -537,13 +327,6 @@ async function printReceipt(mainWindow, payload, openDrawer = true) {
       return;
     }
 
-    if (nativePrinterAvailable) {
-      // Use ESC/POS only — no Windows fallback to prevent double printing
-      await printReceiptRaw(payload, true, openDrawer);
-      return;
-    }
-
-    // ESC/POS native module not available — use Windows driver
     await printReceiptWindows(mainWindow, payload);
 
     if (openDrawer) {
@@ -570,7 +353,9 @@ async function printCustomHTML(mainWindow, htmlContent) {
       height: 600,
       webPreferences: {
         nodeIntegration: false,
-        contextIsolation: true
+        contextIsolation: true,
+        sandbox: true,
+        javascript: false
       }
     });
 
@@ -608,21 +393,13 @@ async function openCashDrawer() {
 
 function getAvailablePrinters() {
   return new Promise((resolve) => {
-    if (nativePrinterAvailable) {
-      try {
-        const printers = nativePrinter.getPrinters();
-        resolve(printers.map(p => ({ name: p.name, isDefault: p.isDefault })));
-        return;
-      } catch (err) {
-        console.warn('Failed to get printers via native module:', err.message);
-      }
-    }
-
     const tempWindow = new BrowserWindow({
       show: false,
       webPreferences: {
         nodeIntegration: false,
-        contextIsolation: true
+        contextIsolation: true,
+        sandbox: true,
+        javascript: false
       }
     });
 
@@ -644,6 +421,5 @@ module.exports = {
   setPrinterName,
   getPrinterName,
   resolvePrinterName,
-  nativePrinterAvailable,
   CMD
 };

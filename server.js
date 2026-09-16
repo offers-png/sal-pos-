@@ -4,24 +4,24 @@ const fs = require("fs");
 const bcrypt = require("bcryptjs");
 const { google } = require("googleapis");
 
-const { 
+const {
   initDatabase,
   productRepo,
   salesRepo,
   returnsRepo,
   userRepo,
-  shiftRepo, 
+  shiftRepo,
   settingsRepo,
   dailyReportsRepo,
   idChecksRepo,
   drawerLogRepo,
   getDb,
   saveDb,
-  dbPath 
+  dbPath
 } = require("./database");
 
-const PRODUCTS_SPREADSHEET_ID = process.env.PRODUCTS_SPREADSHEET_ID || "1y2TG1m9usaHE0uA6oOOiUYoj26n9jZRMXlQ9ASQ6Ptw";
-const SALES_SPREADSHEET_ID = process.env.SALES_SPREADSHEET_ID || "1tzcyBK-wGnh8eFd8AZSA_xs1oMzCDg1NQgzfgFSvN5Q";
+const PRODUCTS_SPREADSHEET_ID = process.env.PRODUCTS_SPREADSHEET_ID;
+const SALES_SPREADSHEET_ID = process.env.SALES_SPREADSHEET_ID;
 const PRODUCTS_SHEET = "Sheet1";
 const SALES_SHEET = "Sheet1";
 
@@ -31,7 +31,7 @@ async function initGoogleSheets() {
   try {
     let credentials = null;
     let credSource = null;
-    
+
     // Method 1: Try environment variable JSON first (for Replit)
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
       console.log("Using Google credentials from GOOGLE_APPLICATION_CREDENTIALS_JSON env var");
@@ -41,12 +41,12 @@ async function initGoogleSheets() {
       // Method 2: Try keyFile paths (for Windows POS)
       const possiblePaths = [
         process.env.GOOGLE_APPLICATION_CREDENTIALS,
-        
+
         path.join(process.env.SAL_RESOURCES_DIR || __dirname, "google-credentials.json"),
         path.join(__dirname, "google-credentials.json"),
         path.join(process.resourcesPath || __dirname, "google-credentials.json")
       ].filter(Boolean);
-      
+
       for (const p of possiblePaths) {
         if (fs.existsSync(p)) {
           console.log("Using Google credentials from file:", p);
@@ -56,18 +56,18 @@ async function initGoogleSheets() {
         }
       }
     }
-    
+
     if (!credentials) {
       console.log("Google credentials not found - Sheets sync disabled");
       console.log("Place google-credentials.json in the app folder or set GOOGLE_APPLICATION_CREDENTIALS_JSON env var");
       return null;
     }
-    
+
     const auth = new google.auth.GoogleAuth({
       credentials,
       scopes: ["https://www.googleapis.com/auth/spreadsheets"]
     });
-    
+
     sheetsApi = google.sheets({ version: "v4", auth });
     console.log("Google Sheets API initialized successfully from:", credSource);
     return sheetsApi;
@@ -79,13 +79,13 @@ async function initGoogleSheets() {
 }
 
 async function syncProductToSheets(product) {
-  if (!sheetsApi) return;
+  if (!sheetsApi || !PRODUCTS_SPREADSHEET_ID) return;
   try {
     const existingData = await sheetsApi.spreadsheets.values.get({
       spreadsheetId: PRODUCTS_SPREADSHEET_ID,
       range: `${PRODUCTS_SHEET}!A:A`
     });
-    
+
     const rows = existingData.data.values || [];
     let rowIndex = -1;
     for (let i = 0; i < rows.length; i++) {
@@ -94,14 +94,14 @@ async function syncProductToSheets(product) {
         break;
       }
     }
-    
+
     const rowData = [
       product.barcode,
       product.name,
       product.price,
       product.category || ""
     ];
-    
+
     if (rowIndex > 0) {
       await sheetsApi.spreadsheets.values.update({
         spreadsheetId: PRODUCTS_SPREADSHEET_ID,
@@ -125,48 +125,41 @@ async function syncProductToSheets(product) {
   }
 }
 
-async function syncSaleToSheets(sale) {
-  if (!sheetsApi) {
-    console.log("Sheets API not initialized - skipping sync");
-    return;
-  }
+let flushingOutbox = false;
+async function flushSalesOutbox() {
+  if (flushingOutbox || !sheetsApi || !SALES_SPREADSHEET_ID) return;
+  flushingOutbox = true;
   try {
-    console.log("Syncing sale to Sheets:", sale.saleId);
-    const rowData = [
-      sale.timestamp || new Date().toISOString(),
-      sale.saleId,
-      sale.paymentType,
-      sale.subtotal,
-      sale.discount || 0,
-      sale.tax || 0,
-      sale.total,
-      sale.itemCount
-    ];
-    console.log("Row data:", rowData);
-    
-    const result = await sheetsApi.spreadsheets.values.append({
-      spreadsheetId: SALES_SPREADSHEET_ID,
-      range: `${SALES_SHEET}!A:H`,
-      valueInputOption: "RAW",
-      insertDataOption: "INSERT_ROWS",
-      resource: { values: [rowData] }
-    });
-    console.log(`Added sale to Sheets: ${sale.saleId}`, result.data);
-  } catch (err) {
-    console.error("Error syncing sale to Sheets:", err.message);
-    console.error("Full error:", err);
-  }
+    const pending = transactions.rows(await getDb(), 'SELECT * FROM sync_outbox ORDER BY rowid LIMIT 100');
+    if (!pending.length) return;
+    const existing = await sheetsApi.spreadsheets.values.get({ spreadsheetId: SALES_SPREADSHEET_ID, range: `${SALES_SHEET}!B:B` });
+    const ids = new Set((existing.data.values || []).flat().map(String));
+    for (const entry of pending) {
+      try {
+        const sale = JSON.parse(entry.payload);
+        if (!ids.has(sale.saleId)) {
+          await sheetsApi.spreadsheets.values.append({ spreadsheetId: SALES_SPREADSHEET_ID, range: `${SALES_SHEET}!A:H`, valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS', resource: { values: [[sale.timestamp, sale.saleId, sale.paymentType, sale.subtotal, sale.discount, sale.tax, sale.total, sale.itemCount]] } });
+          ids.add(sale.saleId);
+        }
+        const db = await getDb(); db.run('DELETE FROM sync_outbox WHERE sale_id = ?', [entry.sale_id]); saveDb();
+      } catch (error) {
+        const db = await getDb(); db.run('UPDATE sync_outbox SET attempts = attempts + 1, last_error = ? WHERE sale_id = ?', [error.message, entry.sale_id]); saveDb();
+        break;
+      }
+    }
+  } catch (error) { console.warn('Sheets sync pending:', error.message); }
+  finally { flushingOutbox = false; }
 }
 
 async function deleteProductFromSheets(barcode) {
-  if (!sheetsApi) return;
+  if (!sheetsApi || !PRODUCTS_SPREADSHEET_ID) return;
   try {
     // First get the spreadsheet ID (needed for batchUpdate)
     const existingData = await sheetsApi.spreadsheets.values.get({
       spreadsheetId: PRODUCTS_SPREADSHEET_ID,
       range: `${PRODUCTS_SHEET}!A:A`
     });
-    
+
     const rows = existingData.data.values || [];
     let rowIndex = -1;
     for (let i = 0; i < rows.length; i++) {
@@ -206,7 +199,7 @@ async function deleteProductFromSheets(barcode) {
 }
 
 async function syncProductsFromSheets() {
-  if (!sheetsApi) {
+  if (!sheetsApi || !PRODUCTS_SPREADSHEET_ID) {
     return { success: false, error: "Google Sheets not connected" };
   }
   try {
@@ -215,16 +208,16 @@ async function syncProductsFromSheets() {
       spreadsheetId: PRODUCTS_SPREADSHEET_ID,
       range: `${PRODUCTS_SHEET}!A:D`
     });
-    
+
     const rows = response.data.values || [];
     if (rows.length === 0) {
       return { success: true, synced: 0, message: "No products in Sheets" };
     }
-    
+
     let synced = 0;
     let updated = 0;
     let skipped = 0;
-    
+
     for (const row of rows) {
       const [barcode, name, price, category] = row;
       if (!barcode || !name) {
@@ -236,14 +229,14 @@ async function syncProductsFromSheets() {
         skipped++;
         continue;
       }
-      
+
       const productData = {
         barcode: String(barcode).trim(),
         name: String(name).trim(),
         price: parseFloat(price) || 0,
         category: category || "Other / Misc"
       };
-      
+
       try {
         const existing = await productRepo.getByBarcode(productData.barcode);
         if (existing) {
@@ -258,7 +251,7 @@ async function syncProductsFromSheets() {
         skipped++;
       }
     }
-    
+
     console.log(`Sync complete: ${synced} new, ${updated} updated, ${skipped} skipped`);
     return { success: true, synced, updated, skipped, total: rows.length };
   } catch (err) {
@@ -267,11 +260,47 @@ async function syncProductsFromSheets() {
   }
 }
 
-initGoogleSheets();
+if (process.env.SAL_DISABLE_SHEETS !== "true") initGoogleSheets();
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: '32mb' }));
+app.use((req, res, next) => {
+  const host = req.headers.host || '';
+  if (!/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)) return res.status(403).end();
+  if (req.headers.origin && req.headers.origin !== 'http://' + host) return res.status(403).json({ success: false, error: 'Cross-origin requests are not allowed' });
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  next();
+});
+// Serialize API work, including reads and restore, across asynchronous repository calls.
+let apiQueue = Promise.resolve();
+app.use('/api', (req, res, next) => {
+  const prior = apiQueue;
+  apiQueue = new Promise(resolve => {
+    res.once('finish', resolve);
+    prior.then(() => { if (res.destroyed) resolve(); else { res.once('close', resolve); next(); } });
+  });
+});
+const auth = require('./services/auth');
+const transactions = require('./services/transactions');
+auth.register(app);
+const verifyManagerToken = auth.manager;
+app.use('/api', (req, res, next) => {
+  if (req.method === 'POST' && req.path === '/settings') {
+    if ('tax_rate' in req.body && (!Number.isFinite(Number(req.body.tax_rate)) || Number(req.body.tax_rate) < 0 || Number(req.body.tax_rate) > 1)) return res.status(400).json({ success: false, error: 'Tax rate must be between 0 and 1' });
+    if (Object.values(req.body).some(value => !['string','number','boolean'].includes(typeof value))) return res.status(400).json({ success: false, error: 'Invalid setting value' });
+  }
+  if (['POST','PUT'].includes(req.method) && (req.path === '/products' || (req.method === 'PUT' && req.path.startsWith('/products/')))) {
+    const p = req.body;
+    const invalid = typeof p.name !== 'string' || !p.name.trim() || p.name.length > 200 || !Number.isFinite(p.price) || p.price < 0 || p.price > 1000000
+      || (p.cost !== undefined && (!Number.isFinite(p.cost) || p.cost < 0))
+      || ['stock','min_age','reorder_point'].some(field => p[field] !== undefined && (!Number.isSafeInteger(p[field]) || (field !== 'stock' && p[field] < 0)))
+      || ['taxable','age_restricted','ebt_eligible'].some(field => p[field] !== undefined && typeof p[field] !== 'boolean');
+    if (invalid) return res.status(400).json({ success: false, error: 'Invalid product fields' });
+  }
+  next();
+});
 
 app.use((req, res, next) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -286,7 +315,24 @@ console.log('Server staticDir:', staticDir);
 console.log('Server resourcesDir:', resourcesDir);
 console.log('Server isPackaged:', isPackaged);
 
-app.use(express.static(staticDir));
+const publicFiles = new Set(['index.html', 'login.html', 'products.html', 'settings.html', 'reports.html', 'customer-display.html', 'styles.css', 'icon.png', 'services/receiptService.js', 'services/eodReportsService.js', 'services/money.js', 'services/browser.js']);
+app.get('/marketing-images/:name', (req, res) => {
+  const name = req.params.name;
+  if (name !== path.basename(name) || !/\.(png|jpe?g|gif|webp|bmp)$/i.test(name)) return res.status(404).end();
+  res.sendFile(path.join(resourcesDir, 'marketing-images', name));
+});
+app.get('/vendor/purify.js', (req, res) => res.sendFile(require.resolve('dompurify/dist/purify.min.js')));
+app.use((req, res, next) => {
+  const file = req.path === '/' ? 'login.html' : req.path.slice(1);
+  if (!publicFiles.has(file)) return next();
+  if (file.endsWith('.html')) {
+    const html = fs.readFileSync(path.join(staticDir, file), 'utf8');
+    const hashes = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].filter(m => m[1].trim()).map(m => "'sha256-" + require('crypto').createHash('sha256').update(m[1]).digest('base64') + "'");
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' " + hashes.join(' ') + "; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    return res.type('html').send(html);
+  }
+  res.sendFile(path.join(staticDir, file));
+});
 
 const productsFile = path.join(resourcesDir, "products.json");
 const salesFile = path.join(resourcesDir, "sales.json");
@@ -435,57 +481,12 @@ app.post("/api/products/update-stock", async (req, res) => {
   }
 });
 
-app.post("/api/sales", async (req, res) => {
-  const { items, paymentType, subtotal, discount, tax, total, clientTimestamp, userId, shiftId } = req.body || {};
-  const saleId = Date.now().toString();
-  const itemCount = Array.isArray(items) ? items.reduce((sum, it) => sum + (it.qty || 1), 0) : 0;
-  const timestamp = clientTimestamp || new Date().toISOString();
-  const safePaymentType = paymentType || 'Cash';
-
-  console.log("Sale request received:", { items: items?.length, paymentType: safePaymentType, subtotal, total, userId });
-
+app.post('/api/sales', async (req, res) => {
   try {
-    const currentShift = await shiftRepo.getOpen();
-    
-    await salesRepo.create({
-      saleId,
-      items: items || [],
-      subtotal: subtotal || 0,
-      discount: discount || 0,
-      tax: tax || 0,
-      total: total || 0,
-      paymentType: safePaymentType,
-      itemCount,
-      userId: userId !== undefined ? userId : null,
-      shiftId: currentShift ? currentShift.id : null
-    });
-
-    for (const item of items || []) {
-      if (item.barcode) {
-        await productRepo.updateStock(item.barcode, -(item.qty || 1), 'sale', userId);
-      }
-    }
-
-    syncSaleToSheets({
-      timestamp,
-      saleId,
-      paymentType,
-      subtotal: subtotal || 0,
-      discount: discount || 0,
-      tax: tax || 0,
-      total: total || 0,
-      itemCount,
-      items
-    });
-
-    res.json({ success: true, saleId, saved_to: "sqlite+sheets" });
-  } catch (err) {
-    console.error("Error saving sale:", err);
-    console.error("Error type:", typeof err);
-    console.error("Error message:", err?.message);
-    console.error("Error stack:", err?.stack);
-    res.status(500).json({ success: false, error: err?.message || String(err) });
-  }
+    const result = await transactions.sale(req.body, req.user.id);
+    if (!result.duplicate) void flushSalesOutbox();
+    res.json({ success: true, ...result, saved_to: 'sqlite', sheets_sync: 'queued' });
+  } catch (error) { res.status(400).json({ success: false, error: error.message }); }
 });
 
 app.get("/api/sales", async (req, res) => {
@@ -521,135 +522,20 @@ app.post("/api/sales/:saleId/void", async (req, res) => {
   const { saleId } = req.params;
   const { reason, userId } = req.body;
   try {
-    await salesRepo.voidSale(saleId, reason, userId);
+    await transactions.voidSale(saleId, reason, req.user.id);
     res.json({ success: true, message: "Sale voided" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Keyed by barcode+name so items without a barcode (custom/manual entries) still match correctly
-function returnItemKey(item) {
-  return (item.barcode || '') + '::' + item.name;
-}
-
-async function getAlreadyReturnedMap(saleId) {
-  const priorReturns = await returnsRepo.getBySaleId(saleId);
-  const alreadyReturned = {};
-  for (const ret of priorReturns) {
-    for (const it of ret.items || []) {
-      const key = returnItemKey(it);
-      alreadyReturned[key] = (alreadyReturned[key] || 0) + (it.qty || 0);
-    }
-  }
-  return alreadyReturned;
-}
-
-app.get("/api/sales/:saleId", async (req, res) => {
-  const { saleId } = req.params;
-  try {
-    const sale = await salesRepo.getById(saleId);
-    if (!sale) {
-      return res.status(404).json({ success: false, error: "Sale not found" });
-    }
-
-    const items = JSON.parse(sale.items || '[]');
-    const alreadyReturned = await getAlreadyReturnedMap(saleId);
-
-    res.json({
-      success: true,
-      sale: {
-        saleId: sale.sale_id,
-        items,
-        alreadyReturned,
-        subtotal: sale.subtotal,
-        discount: sale.discount,
-        tax: sale.tax,
-        total: sale.total,
-        paymentType: sale.payment_type,
-        voided: sale.voided === 1,
-        createdAt: sale.created_at
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
+app.get('/api/sales/:saleId', async (req, res) => {
+  try { res.json({ success: true, sale: await transactions.lookup(req.params.saleId) }); }
+  catch (error) { res.status(404).json({ success: false, error: error.message }); }
 });
-
-app.post("/api/sales/:saleId/return", async (req, res) => {
-  const { saleId } = req.params;
-  const { items, refundMethod, reason, userId } = req.body || {};
-
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ success: false, error: "No items to return" });
-  }
-
-  try {
-    const sale = await salesRepo.getById(saleId);
-    if (!sale) {
-      return res.status(404).json({ success: false, error: "Sale not found" });
-    }
-    if (sale.voided) {
-      return res.status(400).json({ success: false, error: "Cannot return items from a voided sale" });
-    }
-
-    const saleItems = JSON.parse(sale.items || '[]');
-    const alreadyReturned = await getAlreadyReturnedMap(saleId);
-
-    let refundAmount = 0;
-    const validatedItems = [];
-
-    for (const reqItem of items) {
-      const key = returnItemKey(reqItem);
-      const originalItem = saleItems.find(si => returnItemKey(si) === key);
-      if (!originalItem) {
-        return res.status(400).json({ success: false, error: `Item "${reqItem.name}" was not part of this sale` });
-      }
-
-      const purchasedQty = originalItem.qty || 1;
-      const returnedSoFar = alreadyReturned[key] || 0;
-      const remaining = purchasedQty - returnedSoFar;
-      const qty = Number(reqItem.qty) || 0;
-
-      if (qty <= 0) continue;
-      if (qty > remaining) {
-        return res.status(400).json({ success: false, error: `Cannot return ${qty} of "${originalItem.name}" — only ${remaining} eligible` });
-      }
-
-      const price = Number(originalItem.price) || 0;
-      refundAmount += qty * price;
-      validatedItems.push({ barcode: originalItem.barcode || '', name: originalItem.name, qty, price });
-    }
-
-    if (validatedItems.length === 0) {
-      return res.status(400).json({ success: false, error: "No valid items to return" });
-    }
-
-    const currentShift = await shiftRepo.getOpen();
-    const returnId = "RET-" + Date.now().toString();
-
-    await returnsRepo.create({
-      returnId,
-      originalSaleId: saleId,
-      items: validatedItems,
-      refundAmount,
-      refundMethod: refundMethod || 'Cash',
-      reason: reason || '',
-      userId,
-      shiftId: currentShift ? currentShift.id : null
-    });
-
-    for (const item of validatedItems) {
-      if (item.barcode) {
-        await productRepo.updateStock(item.barcode, item.qty, 'return', userId);
-      }
-    }
-
-    res.json({ success: true, returnId, refundAmount });
-  } catch (err) {
-    console.error("Error processing return:", err.message);
-    res.status(500).json({ success: false, error: err.message });
-  }
+app.post('/api/sales/:saleId/return', async (req, res) => {
+  try { res.json({ success: true, ...await transactions.refund(req.params.saleId, req.body, req.user.id) }); }
+  catch (error) { res.status(400).json({ success: false, error: error.message }); }
 });
 
 app.get("/api/returns", async (req, res) => {
@@ -690,13 +576,13 @@ app.get("/api/eod-today", async (req, res) => {
       EBT: summary.ebt_total || 0,
       "Store Credit": summary.store_credit_total || 0
     };
-    
+
     const sales = await salesRepo.getTodaySales();
     const counts = { Cash: 0, "Debit Card": 0, EBT: 0, "Store Credit": 0 };
     for (const sale of sales) {
-      if (counts[sale.payment_type] !== undefined) {
-        counts[sale.payment_type]++;
-      }
+      const methods = sale.tenders ? Object.keys(JSON.parse(sale.tenders)) : [sale.payment_type];
+      for (const method of methods) if (counts[method] !== undefined) counts[method]++;
+
     }
 
     res.json({
@@ -704,6 +590,8 @@ app.get("/api/eod-today", async (req, res) => {
       totals,
       counts,
       grandTotal: summary.total_sales || 0,
+      refundTotal: summary.refund_total,
+      unallocatedTotal: summary.unallocated_total,
       transactionCount: summary.transaction_count || 0,
       totalItems: summary.total_items || 0,
       totalDiscounts: summary.total_discounts || 0,
@@ -717,21 +605,21 @@ app.get("/api/eod-today", async (req, res) => {
 app.post("/api/daily-reports", async (req, res) => {
   try {
     const summary = await salesRepo.getDailySummary();
-    const today = new Date().toISOString().split('T')[0];
-    
+    const today = new Date().toLocaleDateString('en-CA');
+
     const sales = await salesRepo.getTodaySales();
     const counts = { Cash: 0, "Debit Card": 0, EBT: 0, "Store Credit": 0 };
     for (const sale of sales) {
-      if (counts[sale.payment_type] !== undefined) {
-        counts[sale.payment_type]++;
-      }
+      const methods = sale.tenders ? Object.keys(JSON.parse(sale.tenders)) : [sale.payment_type];
+      for (const method of methods) if (counts[method] !== undefined) counts[method]++;
+
     }
-    
+
     const fullReportData = {
       ...summary,
       counts
     };
-    
+
     const reportData = {
       report_date: today,
       total_sales: summary.total_sales || 0,
@@ -741,11 +629,11 @@ app.post("/api/daily-reports", async (req, res) => {
       store_credit_sales: summary.store_credit_total || 0,
       tax_collected: summary.total_tax || 0,
       transaction_count: summary.transaction_count || 0,
-      refund_total: 0,
+      refund_total: summary.refund_total,
       report_data: JSON.stringify(fullReportData),
       created_by: req.body.userId || null
     };
-    
+
     await dailyReportsRepo.save(reportData);
     res.json({ success: true, message: "Daily report saved", report: reportData });
   } catch (err) {
@@ -790,74 +678,14 @@ app.get("/api/daily-reports-week", async (req, res) => {
   }
 });
 
-app.post("/api/auth/login", async (req, res) => {
-  const { username, pin } = req.body;
-  if (!username || !pin) {
-    return res.status(400).json({ success: false, error: "Username and PIN required" });
+async function authorizeUserChange(req, id, newRole) {
+  const target = await userRepo.getById(Number(id));
+  if (!target) throw Error('User not found');
+  if ((target.role === 'owner' || newRole === 'owner') && req.user.role !== 'owner') throw Error('Only owners can change owner accounts');
+  if (target.role === 'owner' && newRole && newRole !== 'owner') {
+    const owners = (await userRepo.getAll()).filter(u => u.active && u.role === 'owner');
+    if (owners.length <= 1) throw Error('Cannot remove the last owner');
   }
-
-  try {
-    const user = await userRepo.verifyPin(username, pin);
-    if (user) {
-      res.json({ success: true, user });
-    } else {
-      res.status(401).json({ success: false, error: "Invalid username or PIN" });
-    }
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Temporary access tokens for protected features (expires after 5 minutes)
-const managerAccessTokens = new Map();
-
-// Prune expired tokens every 10 minutes to prevent memory leak
-setInterval(() => {
-  const now = Date.now();
-  for (const [token, data] of managerAccessTokens.entries()) {
-    if (data.expires < now) managerAccessTokens.delete(token);
-  }
-}, 10 * 60 * 1000);
-
-// Verify manager/owner PIN for protected features
-app.post("/api/auth/verify-manager-pin", async (req, res) => {
-  const { pin } = req.body;
-  if (!pin) {
-    return res.status(400).json({ success: false, error: "PIN required" });
-  }
-
-  try {
-    // Get all users and check if PIN matches an owner or manager
-    const users = await userRepo.getAll();
-    for (const user of users) {
-      if (user.role === 'owner' || user.role === 'manager') {
-        const isValid = await userRepo.verifyPin(user.username, pin);
-        if (isValid) {
-          // Generate temporary access token (valid for 5 minutes)
-          const token = Math.random().toString(36).substr(2) + Date.now().toString(36);
-          managerAccessTokens.set(token, { role: user.role, expires: Date.now() + 5 * 60 * 1000 });
-          return res.json({ success: true, authorized: true, role: user.role, accessToken: token });
-        }
-      }
-    }
-    res.json({ success: true, authorized: false });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Middleware to verify manager access token
-function verifyManagerToken(req, res, next) {
-  const token = req.headers['x-manager-token'];
-  if (!token) {
-    return res.status(401).json({ success: false, error: "Access token required" });
-  }
-  const tokenData = managerAccessTokens.get(token);
-  if (!tokenData || tokenData.expires < Date.now()) {
-    managerAccessTokens.delete(token);
-    return res.status(401).json({ success: false, error: "Invalid or expired token" });
-  }
-  next();
 }
 
 app.get("/api/users", async (req, res) => {
@@ -871,11 +699,12 @@ app.get("/api/users", async (req, res) => {
 
 app.post("/api/users", verifyManagerToken, async (req, res) => {
   const { username, pin, displayName, role } = req.body;
-  if (!username || !pin) {
+  if (!username || !auth.validPin(pin) || !['owner','manager','cashier'].includes(role)) {
     return res.status(400).json({ success: false, error: "Username and PIN required" });
   }
 
   try {
+    if (role === 'owner' && req.user.role !== 'owner') throw Error('Only an owner can create another owner');
     const id = await userRepo.create({ username, pin, displayName, role });
     res.json({ success: true, id });
   } catch (err) {
@@ -887,6 +716,8 @@ app.put("/api/users/:id", verifyManagerToken, async (req, res) => {
   const { id } = req.params;
   const { displayName, role } = req.body;
   try {
+    if (!['owner','manager','cashier'].includes(role)) throw Error('Invalid role');
+    await authorizeUserChange(req, id, role);
     await userRepo.update(id, { displayName, role });
     res.json({ success: true });
   } catch (err) {
@@ -897,11 +728,13 @@ app.put("/api/users/:id", verifyManagerToken, async (req, res) => {
 app.put("/api/users/:id/pin", verifyManagerToken, async (req, res) => {
   const { id } = req.params;
   const { newPin } = req.body;
-  if (!newPin || newPin.length < 4) {
-    return res.status(400).json({ success: false, error: "PIN must be at least 4 digits" });
+  if (!auth.validPin(newPin)) {
+    return res.status(400).json({ success: false, error: "PIN must contain 6-12 digits" });
   }
   try {
+    await authorizeUserChange(req, id);
     await userRepo.updatePin(id, newPin);
+    auth.clearSessions();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -911,6 +744,7 @@ app.put("/api/users/:id/pin", verifyManagerToken, async (req, res) => {
 app.delete("/api/users/:id", verifyManagerToken, async (req, res) => {
   const { id } = req.params;
   try {
+    await authorizeUserChange(req, id, 'inactive');
     await userRepo.deactivate(id);
     res.json({ success: true });
   } catch (err) {
@@ -992,7 +826,7 @@ app.post("/api/settings", async (req, res) => {
   const settings = req.body;
   try {
     for (const [key, value] of Object.entries(settings)) {
-      await settingsRepo.set(key, value);
+      await settingsRepo.set(key, String(value));
     }
     res.json({ success: true });
   } catch (err) {
@@ -1017,16 +851,9 @@ app.get("/api/reports/x-report", async (req, res) => {
       return res.json({ success: true, message: "No shift open", data: null });
     }
 
-    const sales = await salesRepo.getShiftSales(currentShift.id);
-    let totalSales = 0, cashSales = 0, cardSales = 0, ebtSales = 0, itemCount = 0;
-    
-    for (const sale of sales) {
-      totalSales += sale.total;
-      itemCount += sale.item_count;
-      if (sale.payment_type === 'Cash' || sale.payment_type === 'EBT + Cash') cashSales += sale.total;
-      else if (sale.payment_type === 'Debit Card' || sale.payment_type === 'EBT + Debit Card') cardSales += sale.total;
-      if (sale.payment_type === 'EBT' || String(sale.payment_type).startsWith('EBT +')) ebtSales += sale.total;
-    }
+    const summary = transactions.summarize(await getDb(), 'shift_id = ?', [currentShift.id]);
+    const totalSales = summary.total_sales, cashSales = summary.cash_total, cardSales = summary.card_total, ebtSales = summary.ebt_total, itemCount = summary.total_items;
+    const sales = { length: summary.transaction_count };
 
     res.json({
       success: true,
@@ -1039,7 +866,7 @@ app.get("/api/reports/x-report", async (req, res) => {
         cashSales,
         cardSales,
         ebtSales,
-        itemCount
+        itemCount, refundTotal: summary.refund_total, unallocatedTotal: summary.unallocated_total
       }
     });
   } catch (err) {
@@ -1082,22 +909,22 @@ app.post("/api/products/import/csv", async (req, res) => {
   try {
     const { csvData } = req.body;
     if (!csvData) return res.status(400).json({ success: false, error: "No CSV data provided" });
-    
+
     const lines = csvData.split("\n").filter(l => l.trim());
     const headers = lines[0].toLowerCase().split(",").map(h => h.replace(/"/g, "").trim());
-    
+
     let imported = 0;
     let skipped = 0;
-    
+
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].match(/(".*?"|[^,]+)/g) || [];
       const row = {};
       headers.forEach((h, idx) => {
         row[h] = (values[idx] || "").replace(/"/g, "").trim();
       });
-      
+
       if (!row.name) { skipped++; continue; }
-      
+
       const product = {
         barcode: row.barcode || "",
         name: row.name,
@@ -1111,11 +938,11 @@ app.post("/api/products/import/csv", async (req, res) => {
         min_age: parseInt(row.min_age) || 0,
         reorder_point: row.reorder_point !== undefined && row.reorder_point !== "" ? parseInt(row.reorder_point) : 5
       };
-      
+
       await productRepo.upsert(product);
       imported++;
     }
-    
+
     res.json({ success: true, imported, skipped });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1139,16 +966,10 @@ app.post("/api/backup/restore", async (req, res) => {
   try {
     const { dbBase64 } = req.body;
     if (!dbBase64) return res.status(400).json({ success: false, error: "No database file provided" });
-    
-    // Save current db as emergency backup first
-    const emergencyBackup = dbPath + ".emergency-" + Date.now();
-    fs.copyFileSync(dbPath, emergencyBackup);
-    
-    // Write the restored database
-    const dbBuffer = Buffer.from(dbBase64, "base64");
-    fs.writeFileSync(dbPath, dbBuffer);
-    
-    res.json({ success: true, message: "Database restored. Please restart the app." });
+
+    await require('./database').restoreDatabase(Buffer.from(dbBase64, 'base64'));
+    auth.clearSessions();
+    res.json({ success: true, message: 'Database restored. Sign in again.' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1184,16 +1005,16 @@ app.post("/api/backup/auto", async (req, res) => {
     const db = await getDb();
     const result = db.exec("SELECT value FROM settings WHERE key = 'auto_backup_path'");
     const backupFolder = result.length && result[0].values.length ? result[0].values[0][0] : "";
-    
+
     if (!backupFolder || !fs.existsSync(backupFolder)) {
       return res.status(400).json({ success: false, error: "Backup folder not set or not found. Please set a backup folder in Settings." });
     }
-    
+
     const timestamp = new Date().toISOString().slice(0,10);
     const backupName = `sal-pos-backup-${timestamp}.db`;
     const backupPath = path.join(backupFolder, backupName);
     fs.copyFileSync(dbPath, backupPath);
-    
+
     res.json({ success: true, path: backupPath, filename: backupName });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1208,7 +1029,7 @@ app.get("/api/reports/export/csv", async (req, res) => {
       const inclusiveEnd = new Date(endDate);
       inclusiveEnd.setDate(inclusiveEnd.getDate() + 1);
       const inclusiveEndStr = inclusiveEnd.toISOString().split('T')[0];
-      sales = await salesRepo.getByDateRange(startDate, inclusiveEndStr);
+      sales = await salesRepo.getByDateRange(startDate, endDate);
     } else {
       sales = await salesRepo.getAll(10000);
     }
@@ -1228,7 +1049,7 @@ app.get("/api/reports/export/csv", async (req, res) => {
 
 app.post("/api/backup", async (req, res) => {
   try {
-    const backupDir = path.join(__dirname, "backups");
+    const backupDir = path.join(path.dirname(dbPath), "backups");
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir);
     }
@@ -1240,7 +1061,7 @@ app.post("/api/backup", async (req, res) => {
     fs.copyFileSync(dbPath, backupPath);
 
     const stats = fs.statSync(backupPath);
-    
+
     const db = await getDb();
     db.run('INSERT INTO backups (filename, file_path, size_bytes, backup_type) VALUES (?, ?, ?, ?)',
       [backupName, backupPath, stats.size, "manual"]);
@@ -1297,8 +1118,8 @@ app.post("/api/migrate", async (req, res) => {
       console.log(`Migrated ${localSales.length} sales from local JSON`);
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       productsImported: imported,
       salesImported: localSales.length
     });
@@ -1364,7 +1185,7 @@ app.get("/", (req, res) => {
 
 async function start() {
   await initDatabase();
-  
+
   const products = await productRepo.getAll();
   if (products.length === 0) {
     const localProducts = loadLocalProducts();
@@ -1374,13 +1195,15 @@ async function start() {
     }
   }
 
+  const timer = setInterval(flushSalesOutbox, 60000); timer.unref();
+  void flushSalesOutbox();
   const PORT = 5000;
-  app.listen(PORT, "0.0.0.0", async () => {
+  return app.listen(PORT, "127.0.0.1", async () => {
     const allProducts = await productRepo.getAll();
     console.log(`Sal POS running on http://localhost:${PORT}`);
     console.log(`Database: SQLite (${dbPath})`);
     console.log(`Products loaded: ${allProducts.length}`);
-    
+
     // Auto-sync products from Google Sheets on startup
     if (sheetsApi) {
       console.log("Auto-syncing products from Google Sheets...");
@@ -1399,6 +1222,8 @@ async function start() {
     }
   });
 }
+
+app.use((err, req, res, next) => res.status(err.status || 500).json({ success: false, error: err.status === 413 ? 'Upload too large (32 MB limit)' : 'Request failed' }));
 
 module.exports = { start, app };
 

@@ -1,6 +1,6 @@
 {
   "name": "sal-pos",
-  "version": "1.0.35",
+  "version": "1.0.36",
   "description": "Sal POS POS Desktop App",
   "author": "Sal POS",
   "main": "main.js",
@@ -8,7 +8,9 @@
     "start": "electron .",
     "dist": "electron-builder --win",
     "dist-mac": "electron-builder --mac",
-    "dist-linux": "electron-builder --linux"
+    "dist-linux": "electron-builder --linux",
+    "test": "node --test tests/*.test.js",
+    "check": "node scripts/check.js"
   },
   "build": {
     "appId": "com.sal.pos",
@@ -18,49 +20,21 @@
       "output": "dist"
     },
     "files": [
-      "**/*",
-      "index.html",
-      "login.html",
-      "products.html",
-      "settings.html",
-      "reports.html",
-      "customer-display.html",
+      "*.html",
       "styles.css",
       "main.js",
       "server.js",
       "database.js",
       "printer.js",
       "preload.js",
-      "!dist/**",
-      "!*.md",
-      "!.git/**",
-      "!node_modules/.cache/**"
+      "services/**",
+      "icon.png",
+      "!**/*credentials*.json",
+      "!**/*.db",
+      "!tests/**",
+      "!scripts/**"
     ],
     "extraResources": [
-      {
-        "from": "sal-pos.db",
-        "to": "sal-pos.db"
-      },
-      {
-        "from": "sales.json",
-        "to": "sales.json"
-      },
-      {
-        "from": "products.json",
-        "to": "products.json"
-      },
-      {
-        "from": "settings.json",
-        "to": "settings.json"
-      },
-      {
-        "from": "reports.json",
-        "to": "reports.json"
-      },
-      {
-        "from": "sal-pos-credentials.json",
-        "to": "sal-pos-credentials.json"
-      },
       {
         "from": "node_modules/sql.js/dist/sql-wasm.wasm",
         "to": "sql-wasm.wasm"
@@ -82,11 +56,6 @@
       "icon": "icon.png",
       "requestedExecutionLevel": "asInvoker"
     },
-    "asarUnpack": [
-      "node_modules/printer/**/*",
-      "node_modules/escpos/**/*",
-      "node_modules/escpos-usb/**/*"
-    ],
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -101,25 +70,23 @@
       {
         "provider": "github",
         "owner": "offers-png",
-        "repo": "sal-pos",
+        "repo": "sal-pos-",
         "releaseType": "release"
       }
     ]
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "electron-updater": "^6.6.2",
-    "escpos": "^3.0.0-alpha.6",
-    "express": "^4.22.1",
-    "googleapis": "^128.0.0",
-    "sql.js": "^1.13.0"
+    "dompurify": "^3.4.15",
+    "electron-updater": "^6.8.9",
+    "express": "^4.22.3",
+    "googleapis": "^181.0.0",
+    "sql.js": "^1.14.2"
   },
   "devDependencies": {
-    "electron": "^39.2.4",
-    "electron-builder": "^24.9.1"
-  },
-  "optionalDependencies": {
-    "escpos-usb": "^3.0.0-alpha.4",
-    "printer": "^0.4.0"
+    "acorn": "^8.18.0",
+    "electron": "^44.4.1",
+    "electron-builder": "^26.15.3",
+    "jsdom": "^29.1.1"
   }
 }
