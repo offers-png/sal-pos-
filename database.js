@@ -380,8 +380,11 @@ const productRepo = {
       product.ebt_eligible ? 1 : 0,
       product.reorder_point != null ? Number(product.reorder_point) : 5
     ]);
+    // saveDb() exports the database, which resets sql.js's last_insert_rowid()
+    // tracking to 0 — must read it before saving, never after.
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
     saveDb();
-    return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    return newId;
   },
 
   async update(barcode, product) {
@@ -493,8 +496,9 @@ const salesRepo = {
       INSERT INTO sales (sale_id, items, subtotal, discount, tax, total, payment_type, item_count, user_id, shift_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, params);
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
     saveDb();
-    return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    return newId;
   },
 
   async getById(saleId) {
@@ -602,8 +606,9 @@ const returnsRepo = {
       safeUserId,
       safeShiftId
     ]);
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
     saveDb();
-    return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    return newId;
   },
 
   async getBySaleId(saleId) {
@@ -692,8 +697,9 @@ const userRepo = {
     const hashedPin = bcrypt.hashSync(user.pin, 10);
     db.run('INSERT INTO users (username, pin, display_name, role) VALUES (?, ?, ?, ?)',
       [user.username, hashedPin, user.displayName || user.username, user.role || 'cashier']);
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
     saveDb();
-    return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    return newId;
   },
 
   async updatePin(id, newPin) {
@@ -735,8 +741,9 @@ const shiftRepo = {
     const db = await getDb();
     db.run("INSERT INTO shifts (opened_by, starting_cash, status) VALUES (?, ?, 'open')",
       [userId, startingCash || 0]);
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
     saveDb();
-    return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    return newId;
   },
 
   async close(shiftId, userId, endingCash, notes) {
