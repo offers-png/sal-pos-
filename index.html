@@ -1375,6 +1375,12 @@
                 </svg>
                 Reprint Last Receipt
               </button>
+              <button class="menu-item" id="menuReturns">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+                </svg>
+                Returns / Refund
+              </button>
               <div class="menu-divider"></div>
               <button class="menu-item" id="menuAddProduct">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1824,6 +1830,43 @@
       <div class="input-modal-buttons">
         <button class="input-modal-btn cancel" id="closeShiftCancel">Cancel</button>
         <button class="input-modal-btn confirm" id="closeShiftConfirm">Close Shift</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-modal" id="returnLookupModal">
+    <div class="input-modal-content">
+      <div class="input-modal-header">Return / Refund</div>
+      <label class="input-modal-label">Sale ID (from receipt)</label>
+      <input type="text" id="returnSaleIdInput" class="input-modal-field" placeholder="Enter Sale ID">
+      <div class="input-modal-buttons">
+        <button class="input-modal-btn cancel" id="returnLookupCancel">Cancel</button>
+        <button class="input-modal-btn confirm" id="returnLookupConfirm">Find Sale</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-modal" id="returnItemsModal">
+    <div class="input-modal-content" style="min-width: 380px; max-width: 480px; max-height: 85vh; overflow-y: auto;">
+      <div class="input-modal-header">Return Items</div>
+      <div id="returnSaleInfo" style="color: #a0a5b8; font-size: 0.85rem; margin-bottom: 0.75rem;"></div>
+      <div id="returnItemsList"></div>
+      <label class="input-modal-label">Refund Method</label>
+      <select id="returnRefundMethod" class="input-modal-field">
+        <option value="Cash">Cash</option>
+        <option value="Debit Card">Debit Card</option>
+        <option value="EBT">EBT</option>
+        <option value="Store Credit">Store Credit</option>
+      </select>
+      <label class="input-modal-label">Reason (optional)</label>
+      <input type="text" id="returnReasonInput" class="input-modal-field" placeholder="e.g. Wrong item, defective, changed mind">
+      <div style="display: flex; justify-content: space-between; color: white; font-weight: 700; margin: 0.75rem 0; font-size: 1.1rem;">
+        <span>Refund Total:</span>
+        <span id="returnTotalDisplay">$0.00</span>
+      </div>
+      <div class="input-modal-buttons">
+        <button class="input-modal-btn cancel" id="returnItemsCancel">Cancel</button>
+        <button class="input-modal-btn confirm" id="returnItemsConfirm">Process Return</button>
       </div>
     </div>
   </div>
@@ -3325,6 +3368,172 @@
       }
     });
 
+    // ===== Returns / Refunds =====
+    let returnSaleData = null;
+
+    document.getElementById("menuReturns").addEventListener("click", () => {
+      menuDropdown.classList.remove("show");
+      document.getElementById("returnSaleIdInput").value = "";
+      document.getElementById("returnLookupModal").classList.add("show");
+      document.getElementById("returnSaleIdInput").focus();
+    });
+
+    document.getElementById("returnLookupCancel").addEventListener("click", () => {
+      document.getElementById("returnLookupModal").classList.remove("show");
+    });
+
+    document.getElementById("returnSaleIdInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("returnLookupConfirm").click();
+    });
+
+    document.getElementById("returnLookupConfirm").addEventListener("click", async () => {
+      const saleId = document.getElementById("returnSaleIdInput").value.trim();
+      if (!saleId) return showToast("Enter a Sale ID", true);
+
+      try {
+        const res = await fetch(`/api/sales/${encodeURIComponent(saleId)}`);
+        const data = await res.json();
+        if (!data.success || !data.sale) {
+          showToast(data.error || "Sale not found", true);
+          return;
+        }
+        if (data.sale.voided) {
+          showToast("This sale was voided — nothing to return", true);
+          return;
+        }
+        document.getElementById("returnLookupModal").classList.remove("show");
+        openReturnItemsModal(data.sale);
+      } catch (err) {
+        showToast("Error looking up sale: " + err.message, true);
+      }
+    });
+
+    function openReturnItemsModal(sale) {
+      returnSaleData = sale;
+      const listEl = document.getElementById("returnItemsList");
+      const infoEl = document.getElementById("returnSaleInfo");
+      infoEl.textContent = `Sale ${sale.saleId} · ${new Date(sale.createdAt).toLocaleString()} · Paid: ${sale.paymentType}`;
+
+      const alreadyReturned = sale.alreadyReturned || {};
+      const items = sale.items || [];
+
+      if (items.length === 0) {
+        listEl.innerHTML = '<div style="color:#a0a5b8;">No items on this sale.</div>';
+      } else {
+        listEl.innerHTML = items.map(item => {
+          const key = (item.barcode || '') + '::' + item.name;
+          const purchasedQty = item.qty || 1;
+          const returnedQty = alreadyReturned[key] || 0;
+          const maxReturnable = Math.max(0, purchasedQty - returnedQty);
+          const safeName = String(item.name || '').replace(/"/g, '&quot;');
+          return `
+            <div class="return-item-row" style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid #2a3550;color:white;">
+              <div style="flex:1;">
+                <div>${item.name}</div>
+                <div style="font-size:0.75rem;color:#a0a5b8;">Bought: ${purchasedQty}${returnedQty ? ` · Already returned: ${returnedQty}` : ''} · $${Number(item.price || 0).toFixed(2)} ea</div>
+              </div>
+              <input type="number" class="return-qty-input input-modal-field" style="width:70px;margin:0;text-align:center;padding:0.5rem;" min="0" max="${maxReturnable}" value="0"
+                data-barcode="${item.barcode || ''}" data-name="${safeName}" data-price="${item.price || 0}" ${maxReturnable === 0 ? 'disabled title="Fully returned"' : ''}>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const methodSelect = document.getElementById("returnRefundMethod");
+      const knownMethods = ['Cash', 'Debit Card', 'EBT', 'Store Credit'];
+      methodSelect.value = knownMethods.includes(sale.paymentType) ? sale.paymentType : 'Cash';
+
+      document.getElementById("returnReasonInput").value = "";
+      updateReturnTotal();
+      document.getElementById("returnItemsModal").classList.add("show");
+
+      listEl.querySelectorAll(".return-qty-input").forEach(input => {
+        input.addEventListener("input", updateReturnTotal);
+      });
+    }
+
+    function updateReturnTotal() {
+      let total = 0;
+      document.querySelectorAll("#returnItemsList .return-qty-input").forEach(input => {
+        const qty = parseInt(input.value) || 0;
+        const price = parseFloat(input.dataset.price) || 0;
+        total += qty * price;
+      });
+      document.getElementById("returnTotalDisplay").textContent = "$" + total.toFixed(2);
+    }
+
+    document.getElementById("returnItemsCancel").addEventListener("click", () => {
+      document.getElementById("returnItemsModal").classList.remove("show");
+      returnSaleData = null;
+    });
+
+    document.getElementById("returnItemsConfirm").addEventListener("click", async () => {
+      if (!returnSaleData) return;
+
+      const items = [];
+      document.querySelectorAll("#returnItemsList .return-qty-input").forEach(input => {
+        const qty = parseInt(input.value) || 0;
+        if (qty > 0) {
+          items.push({
+            barcode: input.dataset.barcode,
+            name: input.dataset.name,
+            qty,
+            price: parseFloat(input.dataset.price) || 0
+          });
+        }
+      });
+
+      if (items.length === 0) {
+        showToast("Enter a quantity to return", true);
+        return;
+      }
+
+      const refundMethod = document.getElementById("returnRefundMethod").value;
+      const reason = document.getElementById("returnReasonInput").value || '';
+      const saleId = returnSaleData.saleId;
+
+      try {
+        const res = await fetch(`/api/sales/${encodeURIComponent(saleId)}/return`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items, refundMethod, reason, userId: currentUser?.id })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          showToast(data.error || 'Return failed', true);
+          return;
+        }
+
+        document.getElementById("returnItemsModal").classList.remove("show");
+        showToast(`Refunded $${data.refundAmount.toFixed(2)}`);
+
+        if (refundMethod === 'Cash' && window.electronAPI && window.electronAPI.openDrawer) {
+          try { await window.electronAPI.openDrawer(); } catch (e) {}
+        }
+
+        if (window.electronAPI && window.electronAPI.printReceipt) {
+          const lines = [
+            '', '========================================',
+            '            RETURN RECEIPT', '========================================', '',
+            `Original Sale: ${saleId}`,
+            `Date: ${new Date().toLocaleString()}`, '',
+            ...items.map(it => `${it.name}  x${it.qty}   -$${(it.qty * it.price).toFixed(2)}`),
+            '----------------------------------------',
+            `Refund (${refundMethod}): -$${data.refundAmount.toFixed(2)}`,
+            reason ? `Reason: ${reason}` : null,
+            '', ''
+          ].filter(line => line !== null).join('\n');
+          const html = `<html><head><style>body{font-family:'Courier New',monospace;font-size:12px;width:280px;margin:0;padding:8px;}</style></head><body><pre>${lines}</pre></body></html>`;
+          try { await window.electronAPI.printReceipt({ html }); } catch (e) {}
+        }
+
+        returnSaleData = null;
+        loadProducts();
+      } catch (err) {
+        showToast("Return failed: " + err.message, true);
+      }
+    });
+
     document.getElementById("menuAddProduct").addEventListener("click", () => {
       showPanel(addProductPanel);
       menuDropdown.classList.remove("show");
@@ -4127,6 +4336,12 @@
     function showShiftSummary(shift) {
       const modal = document.getElementById("shiftSummaryModal");
       const content = document.getElementById("shiftSummaryContent");
+
+      const hasVariance = shift.expected_cash !== null && shift.expected_cash !== undefined;
+      const variance = shift.cash_variance || 0;
+      const varianceColor = Math.abs(variance) < 0.01 ? '#4ade80' : (variance < 0 ? '#f87171' : '#fbbf24');
+      const varianceLabel = Math.abs(variance) < 0.01 ? 'Exact' : (variance < 0 ? 'SHORT' : 'OVER');
+
       content.innerHTML = `
 <div style="text-align: center; font-weight: bold; margin-bottom: 0.5rem;">SHIFT SUMMARY</div>
 <div>=============</div>
@@ -4136,7 +4351,9 @@
 <div>Card: $${(shift.card_sales || 0).toFixed(2)}</div>
 <div>EBT: $${(shift.ebt_sales || 0).toFixed(2)}</div>
 <div style="margin-top: 0.5rem;">Starting Cash: $${(shift.starting_cash || 0).toFixed(2)}</div>
-<div>Ending Cash: $${(shift.ending_cash || 0).toFixed(2)}</div>
+${hasVariance ? `<div>Expected Cash: $${(shift.expected_cash || 0).toFixed(2)}</div>` : ''}
+<div>Counted Cash: $${(shift.ending_cash || 0).toFixed(2)}</div>
+${hasVariance ? `<div style="margin-top: 0.5rem; color: ${varianceColor}; font-weight: bold;">Variance: ${variance >= 0 ? '+' : ''}$${variance.toFixed(2)} (${varianceLabel})</div>` : ''}
       `;
       modal.classList.add("show");
     }
