@@ -2069,7 +2069,10 @@
             price: Number(p.price) || 0,
             barcode: p.barcode || "",
             category: p.category || "Misc",
-            ebt_eligible: p.ebt_eligible || false
+            ebt_eligible: p.ebt_eligible || false,
+            taxable: p.taxable !== 0 && p.taxable !== false,
+            age_restricted: !!p.age_restricted,
+            min_age: Number(p.min_age) || 0
           }));
           rebuildBarcodeIndex();
         }
@@ -2276,8 +2279,18 @@
       categoriesGrid.style.display = "grid";
     });
 
+    function isAgeRestricted(product) {
+      // Category is the default; a product's own age_restricted flag can only ADD
+      // the restriction, never remove it — existing category-based behavior is unchanged.
+      return AGE_RESTRICTED_CATEGORIES.includes(product.category) || !!product.age_restricted;
+    }
+
+    function getRequiredAge(product) {
+      return (product && product.min_age) || 21;
+    }
+
     function handleProductClick(product) {
-      if (AGE_RESTRICTED_CATEGORIES.includes(product.category)) {
+      if (isAgeRestricted(product)) {
         showIdCheck(product);
       } else {
         addToCart(product, pendingQty);
@@ -2285,9 +2298,9 @@
       }
     }
 
-    function getAge21Cutoff() {
+    function getAgeCutoff(minAge) {
       const today = new Date();
-      const cutoff = new Date(today.getFullYear() - 21, today.getMonth(), today.getDate());
+      const cutoff = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
       return cutoff.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
@@ -2427,21 +2440,23 @@
 
     function showIdCheck(product) {
       pendingAgeRestrictedProduct = product;
+      const requiredAge = getRequiredAge(product);
       resetIdCheckModal();
       document.getElementById("idCheckProductName").textContent = product.name;
-      document.getElementById("idCheckProductCategory").textContent = product.category + " - Age 21+ Required";
-      document.getElementById("idCheckCutoff").textContent = "Must be born on or before: " + getAge21Cutoff();
+      document.getElementById("idCheckProductCategory").textContent = product.category + ` - Age ${requiredAge}+ Required`;
+      document.getElementById("idCheckCutoff").textContent = "Must be born on or before: " + getAgeCutoff(requiredAge);
       idCheckModal.classList.add("show");
     }
 
     function verifyAge(dob, checkType) {
       const age = calculateAge(dob);
+      const requiredAge = getRequiredAge(pendingAgeRestrictedProduct);
       idCheckAge = age;
       idCheckDob = dob;
       const resultDiv = document.getElementById("idCheckResult");
       const approveBtn = document.getElementById("idCheckApprove");
 
-      if (age >= 21) {
+      if (age >= requiredAge) {
         idCheckVerified = true;
         resultDiv.style.display = "block";
         resultDiv.style.background = "rgba(34, 197, 94, 0.15)";
@@ -2454,7 +2469,7 @@
         resultDiv.style.display = "block";
         resultDiv.style.background = "rgba(239, 68, 68, 0.15)";
         resultDiv.style.color = "#ef4444";
-        resultDiv.textContent = `DENIED - Age ${age} (Must be 21+)`;
+        resultDiv.textContent = `DENIED - Age ${age} (Must be ${requiredAge}+)`;
         approveBtn.style.display = "none";
         logIdCheck(checkType, dob, age, false);
       }
@@ -2470,7 +2485,7 @@
             dob: dob,
             age: age,
             verified: verified,
-            min_age_required: 21,
+            min_age_required: getRequiredAge(pendingAgeRestrictedProduct),
             notes: pendingAgeRestrictedProduct ? pendingAgeRestrictedProduct.name : null
           })
         });
@@ -2580,39 +2595,54 @@
     }
 
     function isEbtEligible(item) {
-      return EBT_ELIGIBLE_CATEGORIES.includes(item.category);
+      // Category is the default; a product's own ebt_eligible flag can only ADD
+      // eligibility (an exception within a normally-ineligible category), never
+      // remove it — so existing stores relying on the category list see no change.
+      return EBT_ELIGIBLE_CATEGORIES.includes(item.category) || !!item.ebt_eligible;
+    }
+
+    function isTaxable(item) {
+      return item.taxable !== false && item.taxable !== 0;
     }
 
     function getEbtSplit() {
       let ebtSubtotal = 0;
-      let nonEbtSubtotal = 0;
+      let nonEbtTaxableSubtotal = 0;
+      let nonEbtNonTaxableSubtotal = 0;
       let totalSubtotal = 0;
-      
+
       cart.forEach(item => {
         const itemTotal = item.price * item.qty;
         totalSubtotal += itemTotal;
         if (isEbtEligible(item)) {
           ebtSubtotal += itemTotal;
+        } else if (isTaxable(item)) {
+          nonEbtTaxableSubtotal += itemTotal;
         } else {
-          nonEbtSubtotal += itemTotal;
+          nonEbtNonTaxableSubtotal += itemTotal;
         }
       });
-      
+
+      const nonEbtSubtotal = nonEbtTaxableSubtotal + nonEbtNonTaxableSubtotal;
       const discountRatio = discountPercentage / 100;
       const ebtAfterDiscount = ebtSubtotal * (1 - discountRatio);
-      const nonEbtAfterDiscount = nonEbtSubtotal * (1 - discountRatio);
-      
+      const nonEbtTaxableAfterDiscount = nonEbtTaxableSubtotal * (1 - discountRatio);
+      const nonEbtNonTaxableAfterDiscount = nonEbtNonTaxableSubtotal * (1 - discountRatio);
+
+      // Only the taxable portion of the non-EBT total is taxed — untaxed items
+      // (e.g. unprepared grocery, where exempt by local law) pass through at cost.
       const taxRate = taxEnabled ? BASE_TAX_RATE : 0;
-      const nonEbtWithTax = nonEbtAfterDiscount * (1 + taxRate);
-      
-      return { 
-        ebtSubtotal, 
+      const nonEbtTax = nonEbtTaxableAfterDiscount * taxRate;
+      const nonEbtWithTax = nonEbtTaxableAfterDiscount + nonEbtNonTaxableAfterDiscount + nonEbtTax;
+
+      return {
+        ebtSubtotal,
         nonEbtSubtotal,
         ebtAmount: ebtAfterDiscount,
         nonEbtAmount: nonEbtWithTax,
         ebtDiscount: ebtSubtotal * discountRatio,
         nonEbtDiscount: nonEbtSubtotal * discountRatio,
-        nonEbtTax: nonEbtAfterDiscount * taxRate
+        nonEbtTax
       };
     }
 
@@ -2978,9 +3008,6 @@
       const split = getEbtSplit();
       const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
       const discountAmount = subtotal * (discountPercentage / 100);
-      const afterDiscount = subtotal - discountAmount;
-      const taxRate = taxEnabled ? BASE_TAX_RATE : 0;
-      const tax = afterDiscount * taxRate;
       const total = split.ebtAmount + split.nonEbtAmount;
 
       const cartCopy = cart.map(item => ({ ...item, ebt_eligible: isEbtEligible(item) }));

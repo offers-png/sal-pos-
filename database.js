@@ -775,10 +775,14 @@ const shiftRepo = {
 
   async getById(id) {
     const db = await getDb();
-    const result = db.exec(`SELECT * FROM shifts WHERE id = ${id}`);
-    if (result.length && result[0].values.length) {
-      return rowToShift(result[0].columns, result[0].values[0]);
+    const stmt = db.prepare('SELECT * FROM shifts WHERE id = ?');
+    stmt.bind([Number(id) || 0]);
+    if (stmt.step()) {
+      const row = stmt.getAsObject();
+      stmt.free();
+      return row;
     }
+    stmt.free();
     return null;
   },
 
