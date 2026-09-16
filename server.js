@@ -869,7 +869,7 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-app.post("/api/users", async (req, res) => {
+app.post("/api/users", verifyManagerToken, async (req, res) => {
   const { username, pin, displayName, role } = req.body;
   if (!username || !pin) {
     return res.status(400).json({ success: false, error: "Username and PIN required" });
@@ -883,7 +883,7 @@ app.post("/api/users", async (req, res) => {
   }
 });
 
-app.put("/api/users/:id", async (req, res) => {
+app.put("/api/users/:id", verifyManagerToken, async (req, res) => {
   const { id } = req.params;
   const { displayName, role } = req.body;
   try {
@@ -894,7 +894,7 @@ app.put("/api/users/:id", async (req, res) => {
   }
 });
 
-app.put("/api/users/:id/pin", async (req, res) => {
+app.put("/api/users/:id/pin", verifyManagerToken, async (req, res) => {
   const { id } = req.params;
   const { newPin } = req.body;
   if (!newPin || newPin.length < 4) {
@@ -908,7 +908,7 @@ app.put("/api/users/:id/pin", async (req, res) => {
   }
 });
 
-app.delete("/api/users/:id", async (req, res) => {
+app.delete("/api/users/:id", verifyManagerToken, async (req, res) => {
   const { id } = req.params;
   try {
     await userRepo.deactivate(id);

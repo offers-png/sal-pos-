@@ -126,6 +126,59 @@
       text-align: center;
       min-height: 1.25rem;
     }
+
+    .user-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .user-picker-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius);
+      border: 2px solid var(--border);
+      background: var(--card);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      color: var(--foreground);
+      transition: all 0.15s ease;
+    }
+
+    .user-picker-btn:hover {
+      border-color: var(--primary);
+    }
+
+    .user-picker-btn.selected {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+    }
+
+    .user-picker-avatar {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 50%;
+      background: var(--muted);
+      color: var(--foreground);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+    }
+
+    .user-picker-btn.selected .user-picker-avatar {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+    }
     
     .keypad {
       display: grid;
@@ -264,6 +317,7 @@
         </div>
         
         <div class="login-card-content">
+          <div id="userPicker" class="user-picker" style="display:none;"></div>
           <form class="login-form" onsubmit="return false;">
             <div class="form-group">
               <label class="label" for="pinDisplay">PIN Code</label>
@@ -319,6 +373,7 @@
           if (users.length > 0) {
             selectedUser = users[0];
             updateUserDisplay();
+            renderUserPicker();
           }
         }
       } catch (err) {
@@ -326,6 +381,41 @@
         users = [{ username: 'owner', display_name: 'Owner', role: 'owner' }];
         selectedUser = users[0];
       }
+    }
+
+    function renderUserPicker() {
+      const picker = document.getElementById('userPicker');
+      // Only one account on this PC — no need to make the cashier pick who they are.
+      if (users.length < 2) {
+        picker.style.display = 'none';
+        return;
+      }
+      picker.innerHTML = users.map((u, i) => {
+        const name = u.display_name || u.username;
+        const initial = name.trim().charAt(0).toUpperCase() || '?';
+        return `
+          <button type="button" class="user-picker-btn${i === 0 ? ' selected' : ''}" data-index="${i}">
+            <span class="user-picker-avatar">${initial}</span>
+            <span>${name}</span>
+          </button>
+        `;
+      }).join('');
+      picker.style.display = 'flex';
+
+      picker.querySelectorAll('.user-picker-btn').forEach(btn => {
+        btn.addEventListener('click', () => selectUser(parseInt(btn.dataset.index)));
+      });
+    }
+
+    function selectUser(index) {
+      selectedUser = users[index];
+      updateUserDisplay();
+      document.querySelectorAll('.user-picker-btn').forEach((btn, i) => {
+        btn.classList.toggle('selected', i === index);
+      });
+      // Switching who's logging in should start their PIN entry fresh
+      pinDisplay.value = "";
+      errorMsg.textContent = "";
     }
 
     function updateUserDisplay() {
