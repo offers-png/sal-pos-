@@ -416,6 +416,15 @@ const productRepo = {
     saveDb();
   },
 
+  async upsert(product) {
+    const existing = await this.getByBarcode(product.barcode);
+    if (existing) {
+      await this.update(product.barcode, product);
+    } else {
+      await this.create(product);
+    }
+  },
+
   async updateStock(barcode, quantityChange, reason, userId) {
     const product = await this.getByBarcode(barcode);
     if (!product) return null;
@@ -890,9 +899,11 @@ const idChecksRepo = {
   async log(checkData) {
     const db = await getDb();
     const { check_type, dob, age, verified, min_age_required, user_id, shift_id, sale_id, notes } = checkData;
-    db.run(`INSERT INTO id_checks (check_type, dob, age, verified, min_age_required, user_id, shift_id, sale_id, notes) 
+    // sql.js throws when binding `undefined` (unlike null) - the register never sends
+    // user_id/shift_id on this call, so every real ID check was failing to log.
+    db.run(`INSERT INTO id_checks (check_type, dob, age, verified, min_age_required, user_id, shift_id, sale_id, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [check_type, dob, age, verified ? 1 : 0, min_age_required || 21, user_id, shift_id, sale_id, notes]);
+      [check_type || 'unknown', dob || null, age != null ? age : null, verified ? 1 : 0, min_age_required || 21, user_id || 0, shift_id || 0, sale_id || null, notes || null]);
     saveDb();
     return true;
   },

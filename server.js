@@ -1065,9 +1065,9 @@ app.get("/api/reports/z-report/:shiftId", async (req, res) => {
 app.get("/api/products/export/csv", async (req, res) => {
   try {
     const products = await productRepo.getAll();
-    let csv = "barcode,name,price,cost,category,stock,taxable,ebt_eligible,age_restricted\n";
+    let csv = "barcode,name,price,cost,category,stock,taxable,ebt_eligible,age_restricted,min_age,reorder_point\n";
     for (const p of products) {
-      csv += `"${p.barcode||""}","${p.name||""}",${p.price||0},${p.cost||0},"${p.category||""}",${p.stock||0},${p.taxable?1:0},${p.ebt_eligible?1:0},${p.age_restricted?1:0}\n`;
+      csv += `"${p.barcode||""}","${p.name||""}",${p.price||0},${p.cost||0},"${p.category||""}",${p.stock||0},${p.taxable?1:0},${p.ebt_eligible?1:0},${p.age_restricted?1:0},${p.min_age||0},${p.reorder_point!=null?p.reorder_point:5}\n`;
     }
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", `attachment; filename="products-export-${new Date().toISOString().slice(0,10)}.csv"`);
@@ -1107,7 +1107,9 @@ app.post("/api/products/import/csv", async (req, res) => {
         stock: parseInt(row.stock) || 0,
         taxable: row.taxable === "1" || row.taxable === "true",
         ebt_eligible: row.ebt_eligible === "1" || row.ebt_eligible === "true",
-        age_restricted: row.age_restricted === "1" || row.age_restricted === "true"
+        age_restricted: row.age_restricted === "1" || row.age_restricted === "true",
+        min_age: parseInt(row.min_age) || 0,
+        reorder_point: row.reorder_point !== undefined && row.reorder_point !== "" ? parseInt(row.reorder_point) : 5
       };
       
       await productRepo.upsert(product);
