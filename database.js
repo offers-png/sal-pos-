@@ -2,12 +2,14 @@ const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 // Helper to format local date boundaries as SQL-compatible UTC strings
 // SQLite CURRENT_TIMESTAMP uses 'YYYY-MM-DD HH:MM:SS' format (no T, no Z)
 function formatLocalDayBoundsForSql(date) {
   let startOfDay, endOfDay;
   if (date) {
+    if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw Error('Invalid report date');
     // If date provided as YYYY-MM-DD string, parse it as local date
     const [year, month, day] = date.split('-').map(Number);
     startOfDay = new Date(year, month - 1, day, 0, 0, 0);
@@ -69,17 +71,64 @@ async function getDb() {
   return db;
 }
 
-function saveDb() {
-  if (db) {
-    const data = db.export();
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(dbPath, buffer);
+function atomicWrite(buffer) {
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+  const temporary = dbPath + '.' + crypto.randomUUID() + '.tmp';
+  try {
+    fs.writeFileSync(temporary, buffer, { flag: 'wx', mode: 0o600 });
+    const fd = fs.openSync(temporary, 'r+');
+    try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+    fs.renameSync(temporary, dbPath);
+  } finally {
+    if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
   }
 }
 
+function saveDb() {
+  if (!db) return;
+  try { atomicWrite(Buffer.from(db.export())); }
+  catch (error) {
+    if (fs.existsSync(dbPath)) { try { db.close(); } catch (_) {} db = new SQL.Database(fs.readFileSync(dbPath)); }
+    throw error;
+  }
+}
+
+// Callback is synchronous: no other request can observe a partial transaction.
+function transaction(callback) {
+  const snapshot = db.export();
+  db.run('BEGIN IMMEDIATE');
+  try {
+    const result = callback(db);
+    if (result && typeof result.then === 'function') throw Error('Transaction callback must be synchronous');
+    db.run('COMMIT');
+    saveDb();
+    return result;
+  } catch (error) {
+    try { db.close(); } catch (_) {}
+    db = new SQL.Database(snapshot);
+    throw error;
+  }
+}
+
+async function restoreDatabase(buffer) {
+  await getDb();
+  const candidate = new SQL.Database(buffer);
+  try {
+    if (candidate.exec('PRAGMA integrity_check')[0]?.values[0][0] !== 'ok') throw Error('Invalid database');
+    for (const table of ['products', 'sales', 'users', 'settings', 'shifts']) candidate.exec('SELECT * FROM ' + table + ' LIMIT 1');
+  } catch (error) { candidate.close(); throw Error('Backup is not a valid Sal POS database'); }
+  const previous = db;
+  const snapshot = previous.export();
+  fs.writeFileSync(dbPath + '.emergency-' + Date.now(), Buffer.from(snapshot));
+  db = candidate;
+  try { await initDatabase(); previous.close(); }
+  catch (error) { candidate.close(); db = previous; atomicWrite(Buffer.from(snapshot)); throw error; }
+}
+
 async function initDatabase() {
+  if (fs.existsSync(dbPath) && !fs.existsSync(dbPath + '.pre-1.0.36.db')) fs.copyFileSync(dbPath, dbPath + '.pre-1.0.36.db');
   const db = await getDb();
-  
+
   db.run(`
     CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -273,7 +322,7 @@ async function initDatabase() {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
-  
+
   const tableInfo = db.exec("PRAGMA table_info(daily_reports)");
   if (tableInfo.length > 0) {
     const columns = tableInfo[0].values.map(row => row[1]);
@@ -287,9 +336,19 @@ async function initDatabase() {
   try { db.run(`CREATE INDEX IF NOT EXISTS idx_sales_created_at ON sales(created_at)`); } catch(e) {}
   try { db.run(`CREATE INDEX IF NOT EXISTS idx_shifts_status ON shifts(status)`); } catch(e) {}
 
+  db.run('CREATE TABLE IF NOT EXISTS sync_outbox (sale_id TEXT PRIMARY KEY, payload TEXT NOT NULL, attempts INTEGER DEFAULT 0, last_error TEXT)');
+  const migrations = {
+    sales: { tenders: 'TEXT', request_hash: 'TEXT' },
+    returns: { request_hash: 'TEXT', refund_tax: 'REAL DEFAULT 0' },
+    products: { ebt_override: 'INTEGER' }
+  };
+  for (const [table, columns] of Object.entries(migrations)) {
+    const existing = db.exec('PRAGMA table_info(' + table + ')')[0].values.map(row => row[1]);
+    for (const [column, type] of Object.entries(columns)) if (!existing.includes(column)) db.run('ALTER TABLE ' + table + ' ADD COLUMN ' + column + ' ' + type);
+  }
   await initDefaultSettings();
   await initDefaultUser();
-  
+
   saveDb();
   console.log('SQLite database initialized successfully');
   return db;
@@ -318,15 +377,7 @@ async function initDefaultSettings() {
 }
 
 async function initDefaultUser() {
-  const db = await getDb();
-  const result = db.exec("SELECT id FROM users WHERE role = 'owner'");
-  
-  if (!result.length || !result[0].values.length) {
-    const hashedPin = bcrypt.hashSync('1234', 10);
-    db.run('INSERT INTO users (username, pin, display_name, role) VALUES (?, ?, ?, ?)',
-      ['owner', hashedPin, 'Store Owner', 'owner']);
-    console.log('Default owner user created (PIN: 1234)');
-  }
+  // First-run owner is created through the local setup form; no shared default PIN.
 }
 
 const productRepo = {
@@ -343,7 +394,7 @@ const productRepo = {
     if (stmt.step()) {
       const row = stmt.getAsObject();
       stmt.free();
-      return row;
+      return normalizeProduct(row);
     }
     stmt.free();
     return null;
@@ -356,7 +407,7 @@ const productRepo = {
     if (stmt.step()) {
       const row = stmt.getAsObject();
       stmt.free();
-      return row;
+      return normalizeProduct(row);
     }
     stmt.free();
     return null;
@@ -374,7 +425,7 @@ const productRepo = {
       product.cost || 0,
       product.category || 'Other / Misc',
       product.stock || 0,
-      product.taxable !== false ? 1 : 0,
+      product.taxable !== false && product.taxable !== 0 ? 1 : 0,
       product.age_restricted ? 1 : 0,
       product.min_age || 0,
       product.ebt_eligible ? 1 : 0,
@@ -383,12 +434,18 @@ const productRepo = {
     // saveDb() exports the database, which resets sql.js's last_insert_rowid()
     // tracking to 0 — must read it before saving, never after.
     const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    if (product.ebt_eligible !== undefined) db.run('UPDATE products SET ebt_override = ? WHERE id = ?', [product.ebt_eligible ? 1 : 0, newId]);
     saveDb();
     return newId;
   },
 
   async update(barcode, product) {
+    const existing = await this.getByBarcode(barcode);
+    if (!existing) throw Error('Product not found');
+    const incoming = Object.fromEntries(Object.entries(product).filter(([, value]) => value !== undefined));
+    product = { ...existing, ...incoming };
     const db = await getDb();
+    if (incoming.ebt_eligible !== undefined) db.run('UPDATE products SET ebt_override = ? WHERE barcode = ?', [incoming.ebt_eligible ? 1 : 0, barcode]);
     db.run(`
       UPDATE products
       SET name = ?, price = ?, cost = ?, category = ?, stock = ?,
@@ -400,7 +457,7 @@ const productRepo = {
       product.cost || 0,
       product.category || 'Other / Misc',
       product.stock || 0,
-      product.taxable !== false ? 1 : 0,
+      product.taxable !== false && product.taxable !== 0 ? 1 : 0,
       product.age_restricted ? 1 : 0,
       product.min_age || 0,
       product.ebt_eligible ? 1 : 0,
@@ -426,22 +483,23 @@ const productRepo = {
   },
 
   async updateStock(barcode, quantityChange, reason, userId) {
+    if (!Number.isSafeInteger(quantityChange) || Math.abs(quantityChange) > 100000) throw Error('Invalid stock adjustment');
     const product = await this.getByBarcode(barcode);
     if (!product) return null;
 
     const newStock = (product.stock || 0) + quantityChange;
     const db = await getDb();
     db.run('UPDATE products SET stock = ?, updated_at = CURRENT_TIMESTAMP WHERE barcode = ?', [newStock, String(barcode)]);
-    
+
     // Ensure all params have proper types - sql.js is strict
     const safeUserId = (userId != null && !isNaN(Number(userId))) ? Number(userId) : 0;
     const safeReason = String(reason || 'adjustment');
-    
+
     db.run(`
       INSERT INTO inventory_log (product_id, change_type, quantity_change, previous_stock, new_stock, reason, user_id)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [Number(product.id), quantityChange > 0 ? 'add' : 'subtract', Number(quantityChange), Number(product.stock || 0), Number(newStock), safeReason, safeUserId]);
-    
+
     saveDb();
     return newStock;
   },
@@ -498,7 +556,7 @@ const salesRepo = {
     // Use 0 instead of null for user_id and shift_id since sql.js has issues with null
     const userId = (sale.userId != null && !isNaN(Number(sale.userId))) ? Number(sale.userId) : 0;
     const shiftId = (sale.shiftId != null && !isNaN(Number(sale.shiftId))) ? Number(sale.shiftId) : 0;
-    
+
     const params = [saleId, items, subtotal, discount, tax, total, paymentType, itemCount, userId, shiftId];
     console.log("Creating sale with params:", params);
     db.run(`
@@ -535,8 +593,8 @@ const salesRepo = {
     const { endSql } = formatLocalDayBoundsForSql(endDate);
     const db = await getDb();
     const result = db.exec(`
-      SELECT * FROM sales 
-      WHERE created_at >= '${startSql}' AND created_at <= '${endSql}' 
+      SELECT * FROM sales
+      WHERE created_at >= '${startSql}' AND created_at <= '${endSql}'
       ORDER BY created_at DESC
     `);
     return result.length ? result[0].values.map(row => rowToSale(result[0].columns, row)) : [];
@@ -545,10 +603,10 @@ const salesRepo = {
   async getTodaySales() {
     // Use local time boundaries formatted for SQLite comparison
     const { startSql, endSql } = formatLocalDayBoundsForSql();
-    
+
     const db = await getDb();
     const result = db.exec(`
-      SELECT * FROM sales 
+      SELECT * FROM sales
       WHERE created_at >= '${startSql}' AND created_at <= '${endSql}' AND voided = 0
       ORDER BY created_at DESC
     `);
@@ -568,33 +626,11 @@ const salesRepo = {
   },
 
   async getDailySummary(date) {
-    // Use local time boundaries formatted for SQLite comparison
     const { startSql, endSql } = formatLocalDayBoundsForSql(date);
-    
     const db = await getDb();
-    const result = db.exec(`
-      SELECT 
-        COUNT(*) as transaction_count,
-        COALESCE(SUM(total), 0) as total_sales,
-        COALESCE(SUM(CASE WHEN payment_type = 'Cash' OR payment_type = 'EBT + Cash' THEN total ELSE 0 END), 0) as cash_total,
-        COALESCE(SUM(CASE WHEN payment_type = 'Debit Card' OR payment_type = 'EBT + Debit Card' THEN total ELSE 0 END), 0) as card_total,
-        COALESCE(SUM(CASE WHEN payment_type = 'EBT' OR payment_type LIKE 'EBT +%' THEN total ELSE 0 END), 0) as ebt_total,
-        COALESCE(SUM(CASE WHEN payment_type = 'Store Credit' THEN total ELSE 0 END), 0) as store_credit_total,
-        COALESCE(SUM(item_count), 0) as total_items,
-        COALESCE(SUM(discount), 0) as total_discounts,
-        COALESCE(SUM(tax), 0) as total_tax
-      FROM sales 
-      WHERE created_at >= '${startSql}' AND created_at <= '${endSql}' AND voided = 0
-    `);
-    if (result.length && result[0].values.length) {
-      const cols = result[0].columns;
-      const vals = result[0].values[0];
-      const obj = {};
-      cols.forEach((c, i) => obj[c] = vals[i]);
-      return obj;
-    }
-    return { transaction_count: 0, total_sales: 0, cash_total: 0, card_total: 0, ebt_total: 0, store_credit_total: 0, total_items: 0, total_discounts: 0, total_tax: 0 };
+    return require('./services/transactions').summarize(db, 'created_at >= ? AND created_at <= ?', [startSql, endSql]);
   }
+
 };
 
 const returnsRepo = {
@@ -743,6 +779,7 @@ const shiftRepo = {
   },
 
   async open(userId, startingCash) {
+    if (!Number.isFinite(startingCash) || startingCash < 0) throw Error('Invalid starting cash');
     const existingOpen = await this.getOpen();
     if (existingOpen) {
       throw new Error('A shift is already open. Please close it first.');
@@ -761,20 +798,13 @@ const shiftRepo = {
       throw new Error('Shift is not open or does not exist.');
     }
 
-    const sales = await salesRepo.getShiftSales(shiftId);
-    let totalSales = 0, cashSales = 0, cardSales = 0, ebtSales = 0;
-    for (const sale of sales) {
-      totalSales += sale.total;
-      if (sale.payment_type === 'Cash') cashSales += sale.total;
-      else if (sale.payment_type === 'Debit Card') cardSales += sale.total;
-      else if (sale.payment_type === 'EBT') ebtSales += sale.total;
-    }
-
-    // Guided cash reconciliation: what SHOULD be in the drawer, vs. what was counted.
-    const cashRefunds = await returnsRepo.getCashRefundsForShift(shiftId);
-    const startingCash = shift.starting_cash || 0;
-    const expectedCash = startingCash + cashSales - cashRefunds;
-    const safeEndingCash = Number(endingCash) || 0;
+    const summary = require('./services/transactions').summarize(await getDb(), 'shift_id = ?', [Number(shiftId)]);
+    const totalSales = summary.total_sales, cashSales = summary.cash_total, cardSales = summary.card_total, ebtSales = summary.ebt_total;
+    if (summary.unallocated_total) throw Error('This shift contains legacy split payments without tender amounts; reconcile them before closing.');
+    const sales = { length: summary.transaction_count };
+    const expectedCash = (shift.starting_cash || 0) + cashSales;
+    const safeEndingCash = Number(endingCash);
+    if (!Number.isFinite(safeEndingCash) || safeEndingCash < 0) throw Error('Invalid ending cash');
     const cashVariance = safeEndingCash - expectedCash;
 
     const db = await getDb();
@@ -847,9 +877,9 @@ const dailyReportsRepo = {
   async save(reportData) {
     const db = await getDb();
     const { report_date, total_sales, cash_sales, card_sales, ebt_sales, store_credit_sales, tax_collected, transaction_count, refund_total, report_data, created_by } = reportData;
-    db.run(`INSERT INTO daily_reports (report_date, total_sales, cash_sales, card_sales, ebt_sales, store_credit_sales, tax_collected, transaction_count, refund_total, report_data, created_by) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
-            ON CONFLICT(report_date) DO UPDATE SET 
+    db.run(`INSERT INTO daily_reports (report_date, total_sales, cash_sales, card_sales, ebt_sales, store_credit_sales, tax_collected, transaction_count, refund_total, report_data, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(report_date) DO UPDATE SET
             total_sales = ?, cash_sales = ?, card_sales = ?, ebt_sales = ?, store_credit_sales = ?, tax_collected = ?, transaction_count = ?, refund_total = ?, report_data = ?`,
       [report_date, total_sales, cash_sales, card_sales, ebt_sales, store_credit_sales || 0, tax_collected, transaction_count, refund_total, report_data, created_by,
        total_sales, cash_sales, card_sales, ebt_sales, store_credit_sales || 0, tax_collected, transaction_count, refund_total, report_data]);
@@ -925,7 +955,7 @@ const drawerLogRepo = {
   async log(logData) {
     const db = await getDb();
     const { reason, sale_amount, user_id, user_name, shift_id, sale_id } = logData;
-    db.run(`INSERT INTO drawer_log (reason, sale_amount, user_id, user_name, shift_id, sale_id) 
+    db.run(`INSERT INTO drawer_log (reason, sale_amount, user_id, user_name, shift_id, sale_id)
             VALUES (?, ?, ?, ?, ?, ?)`,
       [reason || 'Unknown', sale_amount || 0, user_id || 0, user_name || 'Unknown', shift_id || 0, sale_id || null]);
     saveDb();
@@ -947,8 +977,8 @@ const drawerLogRepo = {
   async getByDateRange(startDate, endDate) {
     const db = await getDb();
     const result = db.exec(`
-      SELECT * FROM drawer_log 
-      WHERE created_at >= '${startDate}' AND created_at <= '${endDate}' 
+      SELECT * FROM drawer_log
+      WHERE created_at >= '${startDate}' AND created_at <= '${endDate}'
       ORDER BY created_at DESC
     `);
     if (!result.length) return [];
@@ -968,10 +998,10 @@ const drawerLogRepo = {
     const formatForSql = (d) => d.toISOString().replace('T', ' ').replace('Z', '').slice(0, 19);
     const startSql = formatForSql(startOfDay);
     const endSql = formatForSql(endOfDay);
-    
+
     const result = db.exec(`
-      SELECT * FROM drawer_log 
-      WHERE created_at >= '${startSql}' AND created_at <= '${endSql}' 
+      SELECT * FROM drawer_log
+      WHERE created_at >= '${startSql}' AND created_at <= '${endSql}'
       ORDER BY created_at DESC
     `);
     if (!result.length) return [];
@@ -984,10 +1014,16 @@ const drawerLogRepo = {
   }
 };
 
+function normalizeProduct(obj) {
+  const categories = ['Drinks', 'Snacks', 'Food', 'Grocery', 'Frozen / Ice', 'Dairy', 'Cold Subs'];
+  obj.ebt_eligible = obj.ebt_override == null ? (obj.ebt_eligible === 1 || categories.includes(obj.category)) : !!obj.ebt_override;
+  return obj;
+}
+
 function rowToProduct(columns, row) {
   const obj = {};
   columns.forEach((c, i) => obj[c] = row[i]);
-  return obj;
+  return normalizeProduct(obj);
 }
 
 function rowToSale(columns, row) {
@@ -1015,6 +1051,8 @@ module.exports = {
   getDb,
   closeDatabase,
   saveDb,
+  transaction,
+  restoreDatabase,
   productRepo,
   salesRepo,
   returnsRepo,

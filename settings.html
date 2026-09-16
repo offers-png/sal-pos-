@@ -265,6 +265,9 @@
       gap: 0.375rem;
     }
   </style>
+<script src="/vendor/purify.js"></script>
+<script src="/services/browser.js"></script>
+<script src="/services/money.js"></script>
 </head>
 <body>
   <nav class="sidebar">
@@ -703,7 +706,7 @@
             </div>
             <div class="form-group">
               <label class="label">PIN (4+ digits)</label>
-              <input id="newPin" type="password" inputmode="numeric" class="input" placeholder="1234" minlength="4" required>
+              <input id="newPin" type="password" inputmode="numeric" class="input" placeholder="6–12 digits" minlength="6" maxlength="12" required>
             </div>
           </div>
           <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
@@ -751,7 +754,7 @@
           <input type="hidden" id="resetPinUserId">
           <div class="form-group">
             <label class="label">New PIN (4+ digits)</label>
-            <input id="resetPinValue" type="password" inputmode="numeric" class="input" minlength="4" required>
+            <input id="resetPinValue" type="password" inputmode="numeric" class="input" minlength="6" required>
           </div>
           <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
             <button type="button" id="cancelResetPinBtn" class="btn btn-outline" style="flex: 1;">Cancel</button>
@@ -823,13 +826,13 @@
       try {
         const res = await fetch("/api/status");
         const data = await res.json();
-        
-        document.getElementById("sheetsStatus").innerHTML = data.googleEnabled 
+
+        document.getElementById("sheetsStatus").innerHTML = SafeHtml.clean(data.googleEnabled
           ? '<span class="status-indicator"><span class="status-dot online"></span> Connected</span>'
-          : '<span class="status-indicator"><span class="status-dot offline"></span> Offline</span>';
-        
+          : '<span class="status-indicator"><span class="status-dot offline"></span> Offline</span>');
+
         document.getElementById("productsCount").textContent = data.sheetsProductCount || data.localProductCount || 0;
-        
+
         const eodRes = await fetch("/api/eod-today");
         const eodData = await eodRes.json();
         document.getElementById("salesToday").textContent = eodData.transactionCount || 0;
@@ -927,7 +930,7 @@
       const btn = document.getElementById("syncBtn");
       const originalText = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = "🔄 Syncing...";
+      btn.innerHTML = SafeHtml.clean("🔄 Syncing...");
       showToast("Syncing with Google Sheets...");
       try {
         const res = await fetch("/api/products/sync-from-sheets", { method: "POST" });
@@ -942,7 +945,7 @@
         showToast("Sync failed: " + err.message, true);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = originalText;
+        btn.innerHTML = SafeHtml.clean(originalText);
         await loadStatus();
       }
     });
@@ -963,13 +966,13 @@
           const c = data.counts || {};
           const grand = data.grandTotal || 0;
           const txCount = data.transactionCount || 0;
-          
+
           const padLeft = (str, len) => String(str).padStart(len);
           const padRight = (str, len) => String(str).padEnd(len);
           const formatMoney = (n) => "$" + Number(n || 0).toFixed(2);
           const formatRow = (label, amount, count) => padRight(label, 12) + padLeft(count, 6) + padLeft(formatMoney(amount), 12);
           const line = "-".repeat(30);
-          
+
           const reportText = [
             '    My Store',
             ' ' + new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
@@ -988,9 +991,9 @@
             '',
             '     Thank you!'
           ].join('\n');
-          
+
           const reportHtml = '<html><head><style>body{font-family:monospace;font-size:12px;width:280px;margin:0;padding:8px;}</style></head><body><pre>' + reportText + '</pre></body></html>';
-          
+
           if (window.electronAPI && window.electronAPI.printReceipt) {
             await window.electronAPI.printReceipt({ html: reportHtml });
             showToast("Test EOD printed to receipt printer!");
@@ -1001,7 +1004,7 @@
             printWindow.print();
             showToast("Test EOD print dialog opened!");
           }
-          
+
           // Save to report history
           try {
             await fetch("/api/daily-reports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
@@ -1097,7 +1100,7 @@
 
     async function loadUsers() {
       const container = document.getElementById("usersListContainer");
-      container.innerHTML = "Loading...";
+      container.innerHTML = SafeHtml.clean("Loading...");
       try {
         const res = await fetch("/api/users");
         const data = await res.json();
@@ -1105,12 +1108,12 @@
         cachedUsers = data.users || [];
 
         if (cachedUsers.length === 0) {
-          container.innerHTML = '<p style="color:#888;">No users yet.</p>';
+          container.innerHTML = SafeHtml.clean('<p style="color:#888;">No users yet.</p>');
           return;
         }
 
         const roleColors = { owner: '#9b59b6', manager: '#3498db', cashier: '#2ecc71' };
-        container.innerHTML = cachedUsers.map(u => `
+        container.innerHTML = SafeHtml.clean(cachedUsers.map(u => `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border);${u.active ? '' : 'opacity:0.5;'}">
             <div>
               <div style="font-weight:600;">${u.display_name || u.username}${u.active ? '' : ' (inactive)'}</div>
@@ -1125,7 +1128,7 @@
               ${u.active ? `<button class="btn btn-outline btn-sm deactivate-user-btn" data-id="${u.id}" style="color:#e74c3c;border-color:#e74c3c;">Deactivate</button>` : ''}
             </div>
           </div>
-        `).join('');
+        `).join(''));
 
         container.querySelectorAll('.edit-user-btn').forEach(btn => {
           btn.addEventListener('click', () => openEditUserModal(btn.dataset.id));
@@ -1137,7 +1140,7 @@
           btn.addEventListener('click', () => deactivateUser(btn.dataset.id));
         });
       } catch (err) {
-        container.innerHTML = '<p style="color:#e74c3c;">Error loading users: ' + err.message + '</p>';
+        container.innerHTML = SafeHtml.clean('<p style="color:#e74c3c;">Error loading users: ' + err.message + '</p>');
       }
     }
 
@@ -1157,7 +1160,7 @@
       const role = document.getElementById("newRole").value;
       const pin = document.getElementById("newPin").value.trim();
 
-      if (!username || pin.length < 4) {
+      if (!username || pin.length < 12) {
         showToast("Username and a 4+ digit PIN are required", true);
         return;
       }
@@ -1234,8 +1237,8 @@
       e.preventDefault();
       const id = document.getElementById("resetPinUserId").value;
       const newPin = document.getElementById("resetPinValue").value.trim();
-      if (newPin.length < 4) {
-        showToast("PIN must be at least 4 digits", true);
+      if (newPin.length < 12) {
+        showToast("PIN must contain 6–12 digits", true);
         return;
       }
 
@@ -1288,12 +1291,12 @@
 
       if (!window.electronAPI || !window.electronAPI.getPrinters) {
         nonElectronNotice.style.display = 'block';
-        select.innerHTML = '<option value="">Not available</option>';
+        select.innerHTML = SafeHtml.clean('<option value="">Not available</option>');
         select.disabled = true;
         return;
       }
 
-      select.innerHTML = '<option value="">Loading printers...</option>';
+      select.innerHTML = SafeHtml.clean('<option value="">Loading printers...</option>');
       try {
         const result = await window.electronAPI.getPrinters();
         if (!result.ok) throw new Error(result.error || 'Failed to list printers');
@@ -1302,14 +1305,14 @@
         const current = result.currentPrinter;
 
         if (printers.length === 0) {
-          select.innerHTML = '<option value="">No printers found — install one in Windows first</option>';
+          select.innerHTML = SafeHtml.clean('<option value="">No printers found — install one in Windows first</option>');
           status.textContent = 'No printers detected on this PC yet. Plug in your printer and install its Windows driver, then click Refresh.';
           return;
         }
 
-        select.innerHTML = printers.map(p =>
+        select.innerHTML = SafeHtml.clean(printers.map(p =>
           `<option value="${String(p.name).replace(/"/g, '&quot;')}">${p.name}${p.isDefault ? ' (Windows default)' : ''}</option>`
-        ).join('');
+        ).join(''));
 
         if (current && printers.some(p => p.name === current)) {
           select.value = current;
@@ -1320,7 +1323,7 @@
           status.textContent = 'No printer chosen yet — pick one and click "Use This Printer".';
         }
       } catch (err) {
-        select.innerHTML = '<option value="">Error loading printers</option>';
+        select.innerHTML = SafeHtml.clean('<option value="">Error loading printers</option>');
         status.textContent = 'Error: ' + err.message;
       }
     }
@@ -1393,7 +1396,7 @@
       document.body.className = mode;
       localStorage.setItem('sal-pos-theme', mode);
       updateThemeDisplay(mode);
-      
+
       // Broadcast theme change via IPC to all windows
       if (window.electronAPI && window.electronAPI.setTheme) {
         window.electronAPI.setTheme(mode);
@@ -1404,12 +1407,12 @@
       const lightBtn = document.getElementById('lightModeBtn');
       const darkBtn = document.getElementById('darkModeBtn');
       const currentTheme = document.getElementById('currentTheme');
-      
+
       lightBtn.classList.remove('btn-primary');
       lightBtn.classList.add('btn-outline');
       darkBtn.classList.remove('btn-primary');
       darkBtn.classList.add('btn-outline');
-      
+
       if (mode === 'dark') {
         darkBtn.classList.remove('btn-outline');
         darkBtn.classList.add('btn-primary');

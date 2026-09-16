@@ -236,6 +236,9 @@
       color: white;
     }
   </style>
+<script src="/vendor/purify.js"></script>
+<script src="/services/browser.js"></script>
+<script src="/services/money.js"></script>
 </head>
 <body>
   <div class="container">
@@ -309,7 +312,7 @@
         <p>Ready to scan items</p>
       </div>
     `;
-    
+
     function updateCart(cartData) {
       const cartItems = document.getElementById('cartItems');
       const subtotalEl = document.getElementById('subtotal');
@@ -317,7 +320,7 @@
       const totalEl = document.getElementById('total');
 
       if (!cartData || !cartData.items || cartData.items.length === 0) {
-        cartItems.innerHTML = emptyCartHTML;
+        cartItems.innerHTML = SafeHtml.clean(SafeHtml.clean(emptyCartHTML));
         subtotalEl.textContent = '$0.00';
         taxEl.textContent = '$0.00';
         totalEl.textContent = '$0.00';
@@ -336,7 +339,7 @@
         `;
       });
 
-      cartItems.innerHTML = html;
+      cartItems.innerHTML = SafeHtml.clean(SafeHtml.clean(html));
       subtotalEl.textContent = formatPrice(cartData.subtotal || 0);
       taxEl.textContent = formatPrice(cartData.tax || 0);
       totalEl.textContent = formatPrice(cartData.total || 0);
@@ -417,7 +420,7 @@
         setTimeout(initCustomerDisplay, 500);
       }
     }
-    
+
     document.addEventListener('DOMContentLoaded', initCustomerDisplay);
 
     setTimeout(() => {

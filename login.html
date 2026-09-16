@@ -14,7 +14,7 @@
       background: linear-gradient(135deg, var(--background) 0%, hsl(160, 30%, 95%) 100%);
       padding: 1rem;
     }
-    
+
     .login-wrapper {
       width: 100%;
       max-width: 400px;
@@ -22,11 +22,11 @@
       flex-direction: column;
       gap: 1.5rem;
     }
-    
+
     .login-header {
       text-align: center;
     }
-    
+
     .login-logo {
       width: 4rem;
       height: 4rem;
@@ -38,67 +38,67 @@
       margin: 0 auto 1rem;
       box-shadow: 0 4px 14px var(--primary-shadow);
     }
-    
+
     .login-logo svg {
       width: 2rem;
       height: 2rem;
       color: white;
     }
-    
+
     .login-title {
       font-size: 1.875rem;
       font-weight: 700;
       margin-bottom: 0.5rem;
       color: var(--foreground);
     }
-    
+
     .login-subtitle {
       color: var(--muted-foreground);
       font-size: 0.875rem;
     }
-    
+
     .login-card {
       background: var(--card);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-lg);
       overflow: hidden;
     }
-    
+
     .login-card-header {
       padding: 1.5rem 1.5rem 0;
     }
-    
+
     .login-card-title {
       font-size: 1.25rem;
       font-weight: 600;
       margin-bottom: 0.25rem;
     }
-    
+
     .login-card-description {
       color: var(--muted-foreground);
       font-size: 0.875rem;
     }
-    
+
     .login-card-content {
       padding: 1.5rem;
     }
-    
+
     .login-form {
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
-    
+
     .form-group {
       display: flex;
       flex-direction: column;
       gap: 0.375rem;
     }
-    
+
     .input-icon-wrapper {
       position: relative;
     }
-    
+
     .input-icon {
       position: absolute;
       left: 0.875rem;
@@ -108,18 +108,18 @@
       width: 1rem;
       height: 1rem;
     }
-    
+
     .input-with-icon {
       padding-left: 2.5rem;
     }
-    
+
     #pinDisplay {
       font-size: 1.5rem;
       text-align: center;
       letter-spacing: 0.5rem;
       padding: 0.875rem;
     }
-    
+
     .error-message {
       color: var(--destructive);
       font-size: 0.875rem;
@@ -179,14 +179,14 @@
       background: rgba(255, 255, 255, 0.25);
       color: white;
     }
-    
+
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 0.75rem;
       margin: 1rem 0;
     }
-    
+
     .key {
       padding: 1.25rem;
       font-size: 1.25rem;
@@ -198,27 +198,27 @@
       transition: all 0.15s ease;
       font-family: inherit;
     }
-    
+
     .key:hover {
       background: var(--muted);
       transform: scale(1.02);
     }
-    
+
     .key:active {
       transform: scale(0.98);
     }
-    
+
     .key.clear {
       background: var(--destructive-light);
       color: var(--destructive);
       border-color: transparent;
     }
-    
+
     .key.clear:hover {
       background: var(--destructive);
       color: white;
     }
-    
+
     .enter-btn {
       width: 100%;
       padding: 1rem;
@@ -232,26 +232,26 @@
       transition: all 0.2s ease;
       box-shadow: 0 4px 14px var(--primary-shadow);
     }
-    
+
     .enter-btn:hover {
       background: hsl(160, 84%, 35%);
       transform: translateY(-1px);
     }
-    
+
     .enter-btn:active {
       transform: translateY(0);
     }
-    
+
     .login-card-footer {
       padding: 1rem 1.5rem 1.5rem;
       text-align: center;
     }
-    
+
     .footer-divider {
       position: relative;
       margin-bottom: 1rem;
     }
-    
+
     .footer-divider::before {
       content: '';
       position: absolute;
@@ -261,7 +261,7 @@
       height: 1px;
       background: var(--border);
     }
-    
+
     .footer-divider span {
       position: relative;
       background: var(--card);
@@ -271,7 +271,7 @@
       color: var(--muted-foreground);
       letter-spacing: 0.05em;
     }
-    
+
     .status-indicator {
       display: flex;
       align-items: center;
@@ -280,7 +280,7 @@
       font-size: 0.875rem;
       color: var(--muted-foreground);
     }
-    
+
     .status-dot {
       width: 0.5rem;
       height: 0.5rem;
@@ -288,12 +288,15 @@
       border-radius: 50%;
       animation: pulse 2s infinite;
     }
-    
+
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
   </style>
+<script src="/vendor/purify.js"></script>
+<script src="/services/browser.js"></script>
+<script src="/services/money.js"></script>
 </head>
 <body>
   <div class="login-container">
@@ -309,23 +312,23 @@
         <h1 class="login-title">My Store</h1>
         <p class="login-subtitle">Enter your PIN to access the terminal</p>
       </div>
-      
+
       <div class="login-card">
         <div class="login-card-header">
           <h2 class="login-card-title">Sign In</h2>
-          <p class="login-card-description">Welcome back. Enter your 4-digit PIN.</p>
+          <p class="login-card-description">Welcome back. Enter your PIN.</p>
         </div>
-        
+
         <div class="login-card-content">
           <div id="userPicker" class="user-picker" style="display:none;"></div>
-          <form class="login-form" onsubmit="return false;">
+          <form class="login-form">
             <div class="form-group">
               <label class="label" for="pinDisplay">PIN Code</label>
               <input id="pinDisplay" type="password" class="input" placeholder="****" readonly maxlength="4">
             </div>
-            
+
             <div id="errorMsg" class="error-message"></div>
-            
+
             <div class="keypad">
               <button type="button" class="key">1</button>
               <button type="button" class="key">2</button>
@@ -340,11 +343,11 @@
               <button type="button" class="key">0</button>
               <button type="button" class="key" style="visibility: hidden;"></button>
             </div>
-            
+
             <button type="button" class="enter-btn" id="enterBtn">Access Terminal</button>
           </form>
         </div>
-        
+
         <div class="login-card-footer">
           <div class="footer-divider">
             <span>System Status</span>
@@ -366,7 +369,7 @@
 
     async function loadUsers() {
       try {
-        const res = await fetch('/api/users');
+        const res = await fetch('/api/auth/accounts');
         const data = await res.json();
         if (data.success && data.users) {
           users = data.users.filter(u => u.active !== 0);
@@ -390,7 +393,7 @@
         picker.style.display = 'none';
         return;
       }
-      picker.innerHTML = users.map((u, i) => {
+      picker.innerHTML = SafeHtml.clean(users.map((u, i) => {
         const name = u.display_name || u.username;
         const initial = name.trim().charAt(0).toUpperCase() || '?';
         return `
@@ -399,7 +402,7 @@
             <span>${name}</span>
           </button>
         `;
-      }).join('');
+      }).join(''));
       picker.style.display = 'flex';
 
       picker.querySelectorAll('.user-picker-btn').forEach(btn => {
@@ -431,7 +434,7 @@
           pinDisplay.value = "";
           errorMsg.textContent = "";
         } else if (btn.textContent.trim()) {
-          if (pinDisplay.value.length < 6) {
+          if (pinDisplay.value.length < 12) {
             pinDisplay.value += btn.textContent;
           }
         }
@@ -473,7 +476,7 @@
     });
 
     document.addEventListener("keydown", (e) => {
-      if (e.key >= "0" && e.key <= "9" && pinDisplay.value.length < 6) {
+      if (e.key >= "0" && e.key <= "9" && pinDisplay.value.length < 12) {
         pinDisplay.value += e.key;
       } else if (e.key === "Backspace") {
         pinDisplay.value = pinDisplay.value.slice(0, -1);
@@ -482,6 +485,7 @@
       }
     });
 
+    document.querySelector('.login-form').addEventListener('submit', e => e.preventDefault());
     loadUsers();
 
     const savedTheme = localStorage.getItem('sal-pos-theme') || 'light';
