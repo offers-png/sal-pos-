@@ -268,6 +268,7 @@
 <script src="/vendor/purify.js"></script>
 <script src="/services/browser.js"></script>
 <script src="/services/money.js"></script>
+<script src="/services/eodReportsService.js"></script>
 </head>
 <body>
   <nav class="sidebar">
@@ -489,8 +490,8 @@
               </div>
             </div>
             <div class="system-info-item">
-              <div class="system-info-label">Google Sheets</div>
-              <div class="system-info-value" id="sheetsStatus">Checking...</div>
+              <div class="system-info-label">Local storage</div>
+              <div class="system-info-value" id="storageStatus">Checking...</div>
             </div>
             <div class="system-info-item">
               <div class="system-info-label">Products Count</div>
@@ -573,16 +574,13 @@
             <div id="restoreStatus" style="margin-top:0.5rem;font-size:0.85rem;"></div>
           </div>
 
-          <!-- GOOGLE SHEETS (OPTIONAL) -->
-          <div style="border-top:1px solid #eee;padding-top:1rem;margin-top:0.5rem;">
-            <label style="font-weight:600;display:block;margin-bottom:0.5rem;">Google Sheets Sync <span style="font-weight:400;color:#888;font-size:0.85rem;">(Optional)</span></label>
-            <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">For an extra cloud backup layer. Place your google-credentials.json file in the app folder to enable.</p>
-            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-              <button id="syncBtn" class="btn btn-outline">🔄 Sync with Google Sheets</button>
-              <button id="refreshBtn" class="btn btn-outline">↻ Refresh Products</button>
-            </div>
-            <div id="sheetsStatusMsg" style="margin-top:0.5rem;font-size:0.85rem;color:#666;"></div>
-          </div>
+          <p>Products, inventory, employees and receipts are saved in this computer's database. No cloud account is required.</p>
+          <button id="refreshBtn" class="btn btn-outline">Refresh local data</button>
+          <h3>Customer screen marketing</h3>
+          <p>Connect a second monitor in Windows Extend mode. Choose your store's promotional images below. Images remain on this PC across app updates.</p>
+          <button id="addMarketingBtn" class="btn btn-outline">Add marketing images</button>
+          <button id="showCustomerBtn" class="btn btn-outline">Open customer screen</button>
+          <div id="marketingList"></div>
 
         </div>
       </div>
@@ -789,7 +787,7 @@
             </div>
             <div class="system-info-item full-width" style="grid-column: span 2;">
               <div class="system-info-label">Description</div>
-              <div class="system-info-value">A modern point-of-sale system designed for any retail store. Features barcode scanning, cart management, multiple payment methods, and Google Sheets integration for product and sales data.</div>
+              <div class="system-info-value">A modern point-of-sale system designed for any retail store. Features barcode scanning, cart management, multiple payment methods, and local database storage for product and sales data.</div>
             </div>
           </div>
         </div>
@@ -822,16 +820,37 @@
       });
     });
 
+    async function loadMarketing() {
+      const list = document.getElementById('marketingList');
+      if (!window.electronAPI?.listMarketing) { list.textContent = 'Manage marketing images in the Windows desktop app.'; return; }
+      try {
+        const images = await window.electronAPI.listMarketing();
+        list.replaceChildren();
+        if (!images.length) list.textContent = 'No images yet. Add your store promotions above.';
+        for (const image of images) {
+          const row = document.createElement('div');
+          const preview = document.createElement('img'); preview.src = image.url; preview.alt = image.name; preview.style.cssText = 'width:100px;height:70px;object-fit:contain;vertical-align:middle;margin:8px';
+          const button = document.createElement('button'); button.textContent = 'Remove'; button.className = 'btn btn-outline';
+          button.addEventListener('click', async () => { try { await window.electronAPI.removeMarketing(image.name); await loadMarketing(); } catch (e) { showToast(e.message, true); } });
+          row.append(preview, button); list.append(row);
+        }
+      } catch (e) { list.textContent = e.message; }
+    }
+    document.getElementById('addMarketingBtn').addEventListener('click', async () => {
+      try { if (!window.electronAPI?.addMarketing) throw Error('Open the Windows desktop app.'); await window.electronAPI.addMarketing(); await loadMarketing(); } catch (e) { showToast(e.message, true); }
+    });
+    document.getElementById('showCustomerBtn').addEventListener('click', async () => {
+      try { if (!window.electronAPI?.showCustomerScreen) throw Error('Open the Windows desktop app.'); await window.electronAPI.showCustomerScreen(); } catch (e) { showToast(e.message, true); }
+    });
+    loadMarketing();
+
     async function loadStatus() {
       try {
         const res = await fetch("/api/status");
         const data = await res.json();
 
-        document.getElementById("sheetsStatus").innerHTML = SafeHtml.clean(data.googleEnabled
-          ? '<span class="status-indicator"><span class="status-dot online"></span> Connected</span>'
-          : '<span class="status-indicator"><span class="status-dot offline"></span> Offline</span>');
-
-        document.getElementById("productsCount").textContent = data.sheetsProductCount || data.localProductCount || 0;
+        document.getElementById("storageStatus").textContent = data.success ? "Local database ready" : "Unavailable";
+        document.getElementById("productsCount").textContent = data.productCount || 0;
 
         const eodRes = await fetch("/api/eod-today");
         const eodData = await eodRes.json();
@@ -910,7 +929,10 @@
       statusEl.textContent = "Restoring...";
       const reader = new FileReader();
       reader.onload = async (e) => {
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(e.target.result)));
+        const bytes = new Uint8Array(e.target.result);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i += 32768) binary += String.fromCharCode(...bytes.subarray(i, i + 32768));
+        const base64 = btoa(binary);
         const res = await fetch("/api/backup/restore", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ dbBase64: base64 }) });
         const data = await res.json();
         if (data.success) {
@@ -926,30 +948,6 @@
       reader.readAsArrayBuffer(file);
     });
 
-    document.getElementById("syncBtn").addEventListener("click", async () => {
-      const btn = document.getElementById("syncBtn");
-      const originalText = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = SafeHtml.clean("🔄 Syncing...");
-      showToast("Syncing with Google Sheets...");
-      try {
-        const res = await fetch("/api/products/sync-from-sheets", { method: "POST" });
-        const data = await res.json();
-        if (data.success) {
-          showToast(`Synced ${data.synced || 0} new, ${data.updated || 0} updated products from Sheets`);
-        } else {
-          showToast(data.error || "Sync failed — check Google Sheets is connected", true);
-        }
-      } catch (err) {
-        console.error("Error syncing from Sheets:", err);
-        showToast("Sync failed: " + err.message, true);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = SafeHtml.clean(originalText);
-        await loadStatus();
-      }
-    });
-
     document.getElementById("refreshBtn").addEventListener("click", async () => {
       showToast("Refreshing products...");
       await loadStatus();
@@ -962,37 +960,7 @@
         const res = await fetch("/api/eod-today");
         const data = await res.json();
         if (data.success) {
-          const t = data.totals || {};
-          const c = data.counts || {};
-          const grand = data.grandTotal || 0;
-          const txCount = data.transactionCount || 0;
-
-          const padLeft = (str, len) => String(str).padStart(len);
-          const padRight = (str, len) => String(str).padEnd(len);
-          const formatMoney = (n) => "$" + Number(n || 0).toFixed(2);
-          const formatRow = (label, amount, count) => padRight(label, 12) + padLeft(count, 6) + padLeft(formatMoney(amount), 12);
-          const line = "-".repeat(30);
-
-          const reportText = [
-            '    My Store',
-            ' ' + new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
-            '  *** End of Day ***',
-            '   (Test Print)',
-            '',
-            line,
-            padRight('Type', 12) + padLeft('#Trn', 6) + padLeft('Amount', 12),
-            line,
-            formatRow('Cash', t["Cash"] || 0, c["Cash"] || 0),
-            formatRow('Debit', t["Debit"] || 0, c["Debit"] || 0),
-            formatRow('EBT', t["EBT"] || 0, c["EBT"] || 0),
-            line,
-            formatRow('TOTAL', grand, txCount),
-            line,
-            '',
-            '     Thank you!'
-          ].join('\n');
-
-          const reportHtml = '<html><head><style>body{font-family:monospace;font-size:12px;width:280px;margin:0;padding:8px;}</style></head><body><pre>' + reportText + '</pre></body></html>';
+          const reportHtml = EodReportsService.buildPrintHtml(data);
 
           if (window.electronAPI && window.electronAPI.printReceipt) {
             await window.electronAPI.printReceipt({ html: reportHtml });

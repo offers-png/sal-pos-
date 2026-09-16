@@ -1,6 +1,6 @@
 # Sal POS
 
-Electron desktop register with an Express API and a local sql.js database. Version 1.0.36 repairs sale persistence, refunds, tender reporting, access control, product synchronization, and backup restore.
+Electron desktop register with an Express API and a local sql.js database. Version 1.0.37 repairs sale persistence, refunds, tender reporting, access control, local product storage, and backup restore.
 
 ## Development
 
@@ -49,14 +49,20 @@ New sales store exact tenders. Daily and shift reports deduct refunds and use th
 
 Older combined payments did not store separate amounts. Reports mark them as **unallocated legacy tenders**, never both cash and EBT. An open shift containing them cannot be automatically closed; reconcile using the backup and original terminal records. Old saved daily reports remain historical snapshots. Refund allocation for legacy lines without stored totals is proportional to their original line prices.
 
-## Google Sheets
+## Local store data
 
-Set `PRODUCTS_SPREADSHEET_ID` and `SALES_SPREADSHEET_ID`. Supply service-account credentials using `GOOGLE_APPLICATION_CREDENTIALS` (file path) or `GOOGLE_APPLICATION_CREDENTIALS_JSON`. Keep credentials outside the repository and app bundle. Both sheets use `Sheet1`.
+Products, inventory, employees, sales, returns and store settings are stored in the local database. No Google account, credentials or spreadsheet is used. Each new installation starts with an empty catalog; add products or import your own CSV in Settings. Existing databases are preserved.
 
-Product sync updates supplied name, price, and category without resetting stock, cost, reorder point, tax, age, or EBT overrides. Sales enter a persistent outbox within their database transaction. When configured, exports retry every minute and at startup; existing sale IDs are checked before appending. SQLite remains authoritative. Sheets is a gross-sales log; local reports include refunds.
+Use Settings to configure business name, phone, receipt footer and tax rate, add employees, choose a Windows printer, and manage customer-screen marketing images. Use Windows Extend mode for a second screen. USB barcode scanners should use keyboard/HID mode with an Enter suffix. Product screens provide search, stock editing, reorder thresholds and a low-stock filter; receipt history supports reprinting past sales.
+
+Back up the database to an external drive regularly. Marketing images live separately in the user-data marketing-images folder; copy that folder too when moving computers. Separate PCs have independent databases; this is not a shared multi-register server.
+
+The Windows installer bundles the runtime. Supported targets are Windows 10/11 x64 with compatible Windows printer drivers; obsolete Windows versions and every device model cannot be guaranteed. Electron requires [Windows 10 or newer](https://www.electronjs.org/blog/windows-7-to-8-1-deprecation-notice). Internet is only needed for optional application updates.
+
+Automatic end-of-day printing requires the register page to remain open at 11:59 PM and an authorized session. Failed attempts can retry during that minute; Print EOD provides a manual retry afterward. Reports are saved before printing and the completion marker is set only when printing succeeds.
 
 ## Verification
 
 `npm test` covers HTTP authorization, CSRF/Host checks, static-file isolation, sale retries, invalid amounts, refund limits, concurrent returns, split tenders, product sync preservation, rollback, restore, browser checkout failure/retry, double-click prevention, and HTML sanitization. `npm run check` parses source and inline scripts. CI runs both on Windows.
 
-Physical printers, scanners, cash drawers, live Sheets credentials, and external terminals need deployment-specific checks. The software suite does not validate those devices.
+Physical printers, scanners, cash drawers, and external terminals need deployment-specific checks. The software suite does not validate those devices.

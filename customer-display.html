@@ -244,10 +244,10 @@
   <div class="container">
     <div class="cart-section">
       <div class="store-header">
-        <div class="store-logo">&#9752;</div>
+        <div class="store-logo">&#128722;</div>
         <div class="store-info">
-          <h1>Sal POS</h1>
-          <p>Your Neighborhood Store</p>
+          <h1 id="customerStoreName">My Store</h1>
+          <p id="customerStorePhone"></p>
         </div>
       </div>
 
@@ -288,7 +288,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
         <h2>Marketing Display</h2>
-        <p>Add images to marketing-images folder</p>
+        <p>Add promotions in Settings → Customer screen marketing</p>
       </div>
       <img class="marketing-image" id="marketingImage" style="display: none;" alt="Marketing">
       <div class="welcome-message" id="welcomeMessage">Welcome!</div>
@@ -313,7 +313,12 @@
       </div>
     `;
 
+    function applyStoreBranding(store) {
+      document.getElementById('customerStoreName').textContent = store?.name || 'My Store';
+      document.getElementById('customerStorePhone').textContent = store?.phone || '';
+    }
     function updateCart(cartData) {
+      if (cartData.store) applyStoreBranding(cartData.store);
       const cartItems = document.getElementById('cartItems');
       const subtotalEl = document.getElementById('subtotal');
       const taxEl = document.getElementById('tax');
@@ -355,6 +360,7 @@
       imgEl.style.opacity = '0';
 
       setTimeout(() => {
+        if (!marketingImages.length) return;
         imgEl.src = marketingImages[currentImageIndex];
         imgEl.style.opacity = '1';
       }, 300);
@@ -364,6 +370,9 @@
     }
 
     function startImageRotation(images) {
+      if (imageRotationInterval) clearInterval(imageRotationInterval);
+      imageRotationInterval = null;
+      marketingImages = images || [];
       if (!images || images.length === 0) {
         document.getElementById('marketingPlaceholder').style.display = 'flex';
         document.getElementById('marketingImage').style.display = 'none';
@@ -392,6 +401,7 @@
 
     function initCustomerDisplay() {
       if (window.electronAPI) {
+        window.electronAPI.onStoreBranding?.(applyStoreBranding);
         if (window.electronAPI.onCartUpdate) {
           window.electronAPI.onCartUpdate((data) => {
             console.log('Customer display received cart update:', data);

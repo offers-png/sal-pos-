@@ -1,3 +1,11 @@
+# 1.0.37 — Local convenience-store setup
+
+- Remove Google Sheets integration, credential discovery, sync controls and the Google API dependency. Products and sales persist locally without an account or Internet connection.
+- Start new stores with an empty catalog; preserve existing store databases and support CSV import and database backup/restore.
+- Add local marketing-image management and safe second-monitor startup. Marketing images survive app updates.
+- Apply store branding to customer displays and daily reports; fix local report dates, Settings product counts, failed product-save feedback, large backup uploads, and end-of-day print retries.
+- Remove external font loading and stale release metadata.
+
 # 1.0.36
 
 - Await saved sales before clearing the cart; preserve retry IDs across reloads and show receipt IDs/tenders.

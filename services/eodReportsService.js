@@ -136,7 +136,8 @@ const EodReportsService = {
     return [
       '',
       '========================================',
-      '         SHAMROCK MARKET',
+      '         ' + (data.store?.store_name || 'My Store'),
+      data.store?.store_phone || '',
       '         End of Day Report',
       '========================================',
       '',
@@ -174,7 +175,7 @@ const EodReportsService = {
         </style>
       </head>
       <body>
-        <pre>${lines.join('\n')}</pre>
+        <pre>${lines.join('\n').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</pre>
       </body>
       </html>
     `;

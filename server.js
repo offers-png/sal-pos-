@@ -2,7 +2,6 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const bcrypt = require("bcryptjs");
-const { google } = require("googleapis");
 
 const {
   initDatabase,
@@ -19,248 +18,6 @@ const {
   saveDb,
   dbPath
 } = require("./database");
-
-const PRODUCTS_SPREADSHEET_ID = process.env.PRODUCTS_SPREADSHEET_ID;
-const SALES_SPREADSHEET_ID = process.env.SALES_SPREADSHEET_ID;
-const PRODUCTS_SHEET = "Sheet1";
-const SALES_SHEET = "Sheet1";
-
-let sheetsApi = null;
-
-async function initGoogleSheets() {
-  try {
-    let credentials = null;
-    let credSource = null;
-
-    // Method 1: Try environment variable JSON first (for Replit)
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-      console.log("Using Google credentials from GOOGLE_APPLICATION_CREDENTIALS_JSON env var");
-      credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-      credSource = "env_json";
-    } else {
-      // Method 2: Try keyFile paths (for Windows POS)
-      const possiblePaths = [
-        process.env.GOOGLE_APPLICATION_CREDENTIALS,
-
-        path.join(process.env.SAL_RESOURCES_DIR || __dirname, "google-credentials.json"),
-        path.join(__dirname, "google-credentials.json"),
-        path.join(process.resourcesPath || __dirname, "google-credentials.json")
-      ].filter(Boolean);
-
-      for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-          console.log("Using Google credentials from file:", p);
-          credentials = JSON.parse(fs.readFileSync(p, "utf-8"));
-          credSource = "file";
-          break;
-        }
-      }
-    }
-
-    if (!credentials) {
-      console.log("Google credentials not found - Sheets sync disabled");
-      console.log("Place google-credentials.json in the app folder or set GOOGLE_APPLICATION_CREDENTIALS_JSON env var");
-      return null;
-    }
-
-    const auth = new google.auth.GoogleAuth({
-      credentials,
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"]
-    });
-
-    sheetsApi = google.sheets({ version: "v4", auth });
-    console.log("Google Sheets API initialized successfully from:", credSource);
-    return sheetsApi;
-  } catch (err) {
-    console.error("Failed to initialize Google Sheets:", err.message);
-    console.error("Full error:", err);
-    return null;
-  }
-}
-
-async function syncProductToSheets(product) {
-  if (!sheetsApi || !PRODUCTS_SPREADSHEET_ID) return;
-  try {
-    const existingData = await sheetsApi.spreadsheets.values.get({
-      spreadsheetId: PRODUCTS_SPREADSHEET_ID,
-      range: `${PRODUCTS_SHEET}!A:A`
-    });
-
-    const rows = existingData.data.values || [];
-    let rowIndex = -1;
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i][0] === product.barcode) {
-        rowIndex = i + 1;
-        break;
-      }
-    }
-
-    const rowData = [
-      product.barcode,
-      product.name,
-      product.price,
-      product.category || ""
-    ];
-
-    if (rowIndex > 0) {
-      await sheetsApi.spreadsheets.values.update({
-        spreadsheetId: PRODUCTS_SPREADSHEET_ID,
-        range: `${PRODUCTS_SHEET}!A${rowIndex}:D${rowIndex}`,
-        valueInputOption: "RAW",
-        resource: { values: [rowData] }
-      });
-      console.log(`Updated product in Sheets: ${product.barcode}`);
-    } else {
-      await sheetsApi.spreadsheets.values.append({
-        spreadsheetId: PRODUCTS_SPREADSHEET_ID,
-        range: `${PRODUCTS_SHEET}!A:D`,
-        valueInputOption: "RAW",
-        insertDataOption: "INSERT_ROWS",
-        resource: { values: [rowData] }
-      });
-      console.log(`Added product to Sheets: ${product.barcode}`);
-    }
-  } catch (err) {
-    console.error("Error syncing product to Sheets:", err.message);
-  }
-}
-
-let flushingOutbox = false;
-async function flushSalesOutbox() {
-  if (flushingOutbox || !sheetsApi || !SALES_SPREADSHEET_ID) return;
-  flushingOutbox = true;
-  try {
-    const pending = transactions.rows(await getDb(), 'SELECT * FROM sync_outbox ORDER BY rowid LIMIT 100');
-    if (!pending.length) return;
-    const existing = await sheetsApi.spreadsheets.values.get({ spreadsheetId: SALES_SPREADSHEET_ID, range: `${SALES_SHEET}!B:B` });
-    const ids = new Set((existing.data.values || []).flat().map(String));
-    for (const entry of pending) {
-      try {
-        const sale = JSON.parse(entry.payload);
-        if (!ids.has(sale.saleId)) {
-          await sheetsApi.spreadsheets.values.append({ spreadsheetId: SALES_SPREADSHEET_ID, range: `${SALES_SHEET}!A:H`, valueInputOption: 'RAW', insertDataOption: 'INSERT_ROWS', resource: { values: [[sale.timestamp, sale.saleId, sale.paymentType, sale.subtotal, sale.discount, sale.tax, sale.total, sale.itemCount]] } });
-          ids.add(sale.saleId);
-        }
-        const db = await getDb(); db.run('DELETE FROM sync_outbox WHERE sale_id = ?', [entry.sale_id]); saveDb();
-      } catch (error) {
-        const db = await getDb(); db.run('UPDATE sync_outbox SET attempts = attempts + 1, last_error = ? WHERE sale_id = ?', [error.message, entry.sale_id]); saveDb();
-        break;
-      }
-    }
-  } catch (error) { console.warn('Sheets sync pending:', error.message); }
-  finally { flushingOutbox = false; }
-}
-
-async function deleteProductFromSheets(barcode) {
-  if (!sheetsApi || !PRODUCTS_SPREADSHEET_ID) return;
-  try {
-    // First get the spreadsheet ID (needed for batchUpdate)
-    const existingData = await sheetsApi.spreadsheets.values.get({
-      spreadsheetId: PRODUCTS_SPREADSHEET_ID,
-      range: `${PRODUCTS_SHEET}!A:A`
-    });
-
-    const rows = existingData.data.values || [];
-    let rowIndex = -1;
-    for (let i = 0; i < rows.length; i++) {
-      if (rows[i][0] === barcode) {
-        rowIndex = i; // 0-based index
-        break;
-      }
-    }
-
-    if (rowIndex === -1) return;
-
-    // Get the sheet ID for batchUpdate
-    const spreadsheet = await sheetsApi.spreadsheets.get({ spreadsheetId: PRODUCTS_SPREADSHEET_ID });
-    const sheet = spreadsheet.data.sheets.find(s => s.properties.title === PRODUCTS_SHEET);
-    const sheetId = sheet ? sheet.properties.sheetId : 0;
-
-    // Delete the actual row so no blank rows are left behind
-    await sheetsApi.spreadsheets.batchUpdate({
-      spreadsheetId: PRODUCTS_SPREADSHEET_ID,
-      resource: {
-        requests: [{
-          deleteDimension: {
-            range: {
-              sheetId,
-              dimension: 'ROWS',
-              startIndex: rowIndex,
-              endIndex: rowIndex + 1
-            }
-          }
-        }]
-      }
-    });
-    console.log(`Deleted product row from Sheets: ${barcode}`);
-  } catch (err) {
-    console.error("Error deleting product from Sheets:", err.message);
-  }
-}
-
-async function syncProductsFromSheets() {
-  if (!sheetsApi || !PRODUCTS_SPREADSHEET_ID) {
-    return { success: false, error: "Google Sheets not connected" };
-  }
-  try {
-    console.log("Starting sync from Google Sheets...");
-    const response = await sheetsApi.spreadsheets.values.get({
-      spreadsheetId: PRODUCTS_SPREADSHEET_ID,
-      range: `${PRODUCTS_SHEET}!A:D`
-    });
-
-    const rows = response.data.values || [];
-    if (rows.length === 0) {
-      return { success: true, synced: 0, message: "No products in Sheets" };
-    }
-
-    let synced = 0;
-    let updated = 0;
-    let skipped = 0;
-
-    for (const row of rows) {
-      const [barcode, name, price, category] = row;
-      if (!barcode || !name) {
-        skipped++;
-        continue;
-      }
-      // Skip header row (e.g. "barcode","name","price","category")
-      if (String(barcode).toLowerCase().trim() === 'barcode') {
-        skipped++;
-        continue;
-      }
-
-      const productData = {
-        barcode: String(barcode).trim(),
-        name: String(name).trim(),
-        price: parseFloat(price) || 0,
-        category: category || "Other / Misc"
-      };
-
-      try {
-        const existing = await productRepo.getByBarcode(productData.barcode);
-        if (existing) {
-          await productRepo.update(productData.barcode, productData);
-          updated++;
-        } else {
-          await productRepo.create(productData);
-          synced++;
-        }
-      } catch (err) {
-        console.error(`Error syncing product ${barcode}:`, err.message);
-        skipped++;
-      }
-    }
-
-    console.log(`Sync complete: ${synced} new, ${updated} updated, ${skipped} skipped`);
-    return { success: true, synced, updated, skipped, total: rows.length };
-  } catch (err) {
-    console.error("Error syncing from Sheets:", err.message);
-    return { success: false, error: err.message };
-  }
-}
-
-if (process.env.SAL_DISABLE_SHEETS !== "true") initGoogleSheets();
 
 const app = express();
 
@@ -319,7 +76,7 @@ const publicFiles = new Set(['index.html', 'login.html', 'products.html', 'setti
 app.get('/marketing-images/:name', (req, res) => {
   const name = req.params.name;
   if (name !== path.basename(name) || !/\.(png|jpe?g|gif|webp|bmp)$/i.test(name)) return res.status(404).end();
-  res.sendFile(path.join(resourcesDir, 'marketing-images', name));
+  res.sendFile(path.join(process.env.SAL_MARKETING_DIR || path.join(path.dirname(dbPath), 'marketing-images'), name));
 });
 app.get('/vendor/purify.js', (req, res) => res.sendFile(require.resolve('dompurify/dist/purify.min.js')));
 app.use((req, res, next) => {
@@ -373,16 +130,6 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-app.post("/api/products/sync-from-sheets", async (req, res) => {
-  try {
-    const result = await syncProductsFromSheets();
-    res.json(result);
-  } catch (err) {
-    console.error("Error syncing from Sheets:", err.message);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 app.post("/api/products", async (req, res) => {
   const { barcode, name, price, cost, category, stock, taxable, age_restricted, min_age, ebt_eligible, reorder_point } = req.body || {};
 
@@ -400,9 +147,8 @@ app.post("/api/products", async (req, res) => {
       await productRepo.create(productData);
     }
 
-    syncProductToSheets(productData);
 
-    res.json({ success: true, message: existing ? "Product updated" : "Product created", saved_to: "sqlite+sheets" });
+    res.json({ success: true, message: existing ? "Product updated" : "Product created", saved_to: "sqlite" });
   } catch (err) {
     console.error("Error saving product:", err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -425,9 +171,8 @@ app.put("/api/products/:barcode", async (req, res) => {
 
     const productData = { name, price, cost, category, stock, taxable, age_restricted, min_age, ebt_eligible, reorder_point };
     await productRepo.update(barcode, productData);
-    syncProductToSheets({ barcode, ...productData });
 
-    res.json({ success: true, message: "Product updated", saved_to: "sqlite+sheets" });
+    res.json({ success: true, message: "Product updated", saved_to: "sqlite" });
   } catch (err) {
     console.error("Error updating product:", err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -451,8 +196,7 @@ app.delete("/api/products/:barcode", async (req, res) => {
 
   try {
     await productRepo.delete(barcode);
-    deleteProductFromSheets(barcode);
-    res.json({ success: true, deleted_from: "sqlite+sheets" });
+    res.json({ success: true, deleted_from: "sqlite" });
   } catch (err) {
     console.error("Error deleting product:", err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -484,8 +228,7 @@ app.post("/api/products/update-stock", async (req, res) => {
 app.post('/api/sales', async (req, res) => {
   try {
     const result = await transactions.sale(req.body, req.user.id);
-    if (!result.duplicate) void flushSalesOutbox();
-    res.json({ success: true, ...result, saved_to: 'sqlite', sheets_sync: 'queued' });
+    res.json({ success: true, ...result, saved_to: 'sqlite' });
   } catch (error) { res.status(400).json({ success: false, error: error.message }); }
 });
 
@@ -587,6 +330,7 @@ app.get("/api/eod-today", async (req, res) => {
 
     res.json({
       success: true,
+      store: await settingsRepo.getAll(),
       totals,
       counts,
       grandTotal: summary.total_sales || 0,
@@ -835,7 +579,7 @@ app.post("/api/settings", async (req, res) => {
 });
 
 app.get("/api/reports/daily/:date?", async (req, res) => {
-  const date = req.params.date || new Date().toISOString().slice(0, 10);
+  const date = req.params.date || new Date().toLocaleDateString('en-CA');
   try {
     const summary = await salesRepo.getDailySummary(date);
     res.json({ success: true, date, summary });
@@ -894,7 +638,7 @@ app.get("/api/products/export/csv", async (req, res) => {
     const products = await productRepo.getAll();
     let csv = "barcode,name,price,cost,category,stock,taxable,ebt_eligible,age_restricted,min_age,reorder_point\n";
     for (const p of products) {
-      csv += `"${p.barcode||""}","${p.name||""}",${p.price||0},${p.cost||0},"${p.category||""}",${p.stock||0},${p.taxable?1:0},${p.ebt_eligible?1:0},${p.age_restricted?1:0},${p.min_age||0},${p.reorder_point!=null?p.reorder_point:5}\n`;
+      csv += [p.barcode, p.name, p.price, p.cost, p.category, p.stock, p.taxable ? 1 : 0, p.ebt_eligible ? 1 : 0, p.age_restricted ? 1 : 0, p.min_age, p.reorder_point ?? 5].map(require('./services/csv').cell).join(',') + '\n';
     }
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", `attachment; filename="products-export-${new Date().toISOString().slice(0,10)}.csv"`);
@@ -910,20 +654,22 @@ app.post("/api/products/import/csv", async (req, res) => {
     const { csvData } = req.body;
     if (!csvData) return res.status(400).json({ success: false, error: "No CSV data provided" });
 
-    const lines = csvData.split("\n").filter(l => l.trim());
-    const headers = lines[0].toLowerCase().split(",").map(h => h.replace(/"/g, "").trim());
+    const lines = require("./services/csv").parse(csvData);
+    if (lines.length < 2) throw Error("CSV must contain a header and products");
+    const headers = lines[0].map(h => h.toLowerCase().trim());
+    if (!["barcode", "name", "price"].every(h => headers.includes(h))) throw Error("CSV requires barcode, name and price columns");
 
     let imported = 0;
     let skipped = 0;
 
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].match(/(".*?"|[^,]+)/g) || [];
+      const values = lines[i];
       const row = {};
       headers.forEach((h, idx) => {
-        row[h] = (values[idx] || "").replace(/"/g, "").trim();
+        row[h] = (values[idx] || "").trim();
       });
 
-      if (!row.name) { skipped++; continue; }
+      if (!row.name || !row.barcode || !row.price || !Number.isFinite(Number(row.price)) || Number(row.price) < 0) { skipped++; continue; }
 
       const product = {
         barcode: row.barcode || "",
@@ -939,6 +685,7 @@ app.post("/api/products/import/csv", async (req, res) => {
         reorder_point: row.reorder_point !== undefined && row.reorder_point !== "" ? parseInt(row.reorder_point) : 5
       };
 
+      if (![product.cost, product.price].every(v => Number.isFinite(v) && v >= 0 && v <= 1000000) || ![product.stock, product.min_age, product.reorder_point].every(Number.isSafeInteger) || product.min_age < 0 || product.reorder_point < 0) { skipped++; continue; }
       await productRepo.upsert(product);
       imported++;
     }
@@ -1186,17 +933,6 @@ app.get("/", (req, res) => {
 async function start() {
   await initDatabase();
 
-  const products = await productRepo.getAll();
-  if (products.length === 0) {
-    const localProducts = loadLocalProducts();
-    if (localProducts.length > 0) {
-      await productRepo.importBulk(localProducts);
-      console.log(`Auto-migrated ${localProducts.length} products from products.json`);
-    }
-  }
-
-  const timer = setInterval(flushSalesOutbox, 60000); timer.unref();
-  void flushSalesOutbox();
   const PORT = 5000;
   return app.listen(PORT, "127.0.0.1", async () => {
     const allProducts = await productRepo.getAll();
@@ -1204,22 +940,7 @@ async function start() {
     console.log(`Database: SQLite (${dbPath})`);
     console.log(`Products loaded: ${allProducts.length}`);
 
-    // Auto-sync products from Google Sheets on startup
-    if (sheetsApi) {
-      console.log("Auto-syncing products from Google Sheets...");
-      try {
-        const result = await syncProductsFromSheets();
-        if (result.success) {
-          console.log(`Sheets sync complete: ${result.synced} new, ${result.updated} updated, ${result.skipped} skipped`);
-        } else {
-          console.log("Sheets sync skipped:", result.error || "No connection");
-        }
-      } catch (err) {
-        console.log("Sheets sync error (non-fatal):", err.message);
-      }
-    } else {
-      console.log("Google Sheets not connected - skipping auto-sync");
-    }
+
   });
 }
 

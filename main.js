@@ -146,14 +146,8 @@ function setupPaths() {
     process.env.SAL_RESOURCES_DIR = __dirname;
   }
 
-  const seedDb = app.isPackaged
-    ? path.join(process.resourcesPath, 'sal-pos.db')
-    : path.join(__dirname, 'sal-pos.db');
-
-  if (!fs.existsSync(process.env.SAL_DB_PATH) && fs.existsSync(seedDb)) {
-    console.log('Copying seed database to userData...');
-    fs.copyFileSync(seedDb, process.env.SAL_DB_PATH);
-  }
+  process.env.SAL_MARKETING_DIR = path.join(userData, 'marketing-images');
+  fs.mkdirSync(process.env.SAL_MARKETING_DIR, { recursive: true });
 
   console.log('Database path:', process.env.SAL_DB_PATH);
   console.log('SQL.js directory:', process.env.SAL_SQLJS_DIR);
@@ -207,9 +201,7 @@ function createWindow() {
 }
 
 function getMarketingImages() {
-  const marketingDir = app.isPackaged
-    ? path.join(process.resourcesPath, 'marketing-images')
-    : path.join(__dirname, 'marketing-images');
+  const marketingDir = process.env.SAL_MARKETING_DIR;
 
   try {
     if (!fs.existsSync(marketingDir)) {
@@ -236,10 +228,12 @@ function getMarketingImages() {
 }
 
 function createCustomerDisplay() {
+  if (customerWindow && !customerWindow.isDestroyed()) { customerWindow.show(); return; }
   const displays = screen.getAllDisplays();
+  if (displays.length < 2) throw Error('Connect a second monitor and choose Extend in Windows display settings.');
   console.log('Available displays:', displays.length);
 
-  let externalDisplay = displays.find(display => display.bounds.x !== 0 || display.bounds.y !== 0);
+  let externalDisplay = displays.find(display => display.id !== screen.getDisplayMatching(mainWindow.getBounds()).id);
 
   if (!externalDisplay && displays.length > 1) {
     externalDisplay = displays[1];
@@ -271,7 +265,10 @@ function createCustomerDisplay() {
     customerWindow = null;
   });
 
-  customerWindow.webContents.on('did-finish-load', () => {
+  customerWindow.webContents.on('did-finish-load', async () => {
+    const settings = await require('./database').settingsRepo.getAll();
+    if (!customerWindow || customerWindow.isDestroyed()) return;
+    customerWindow.webContents.send('store-branding', { name: settings.store_name, phone: settings.store_phone });
     const images = getMarketingImages();
     customerWindow.webContents.send('marketing-images', images);
   });
@@ -305,7 +302,7 @@ app.whenReady().then(async () => {
     console.log('Server is responding, creating window...');
     createWindow();
     setTimeout(() => {
-      createCustomerDisplay();
+      if (screen.getAllDisplays().length > 1) createCustomerDisplay();
     }, 1000);
   } else {
     console.error('Server failed to respond after multiple attempts');
@@ -387,7 +384,7 @@ ipcMain.handle = (channel, handler) => registerHandle(channel, async (event, ...
     const response = await fetch(source.origin + '/api/auth/me', { headers: { Cookie: cookies.map(c => c.name + '=' + c.value).join('; ') } });
     const session = await response.json();
     if (!response.ok || session.mustChangePin) throw Error('Sign in first');
-    if (channel === 'set-printer' && !['owner', 'manager'].includes(session.user.role)) throw Error('Manager required');
+    if (['set-printer', 'add-marketing', 'remove-marketing'].includes(channel) && !['owner', 'manager'].includes(session.user.role)) throw Error('Manager required');
   }
   return handler(event, ...args);
 });
@@ -407,7 +404,7 @@ ipcMain.handle('print-receipt', async (event, payload) => {
     return { ok: true };
   } catch (err) {
     console.error('Print error:', err.message);
-    return { ok: false, error: err.message };
+    throw err;
   }
 });
 
@@ -468,7 +465,7 @@ ipcMain.handle('test-print', async () => {
   try {
     const { printReceipt } = require('./printer');
     await printReceipt(mainWindow, {
-      store: { name: 'Hardware Setup Test' },
+      store: { name: await require('./database').settingsRepo.get('store_name'), phone: await require('./database').settingsRepo.get('store_phone') },
       items: [{ name: 'Test Item', qty: 1, price: 1.00, total: 1.00 }],
       subtotal: 1.00,
       tax: 0,
@@ -547,3 +544,24 @@ ipcMain.handle('sync-theme', async (event, theme) => {
   currentTheme = theme;
   return { ok: true };
 });
+
+function refreshMarketing() {
+  if (customerWindow && !customerWindow.isDestroyed()) customerWindow.webContents.send('marketing-images', getMarketingImages());
+}
+ipcMain.handle('list-marketing', () => getMarketingImages().map(url => ({ name: decodeURIComponent(url.split('/').pop()), url })));
+ipcMain.handle('add-marketing', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, { title: 'Add store marketing images', properties: ['openFile', 'multiSelections'], filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'] }] });
+  if (result.canceled) return { added: 0 };
+  const sources = result.filePaths.map(source => {
+    const ext = path.extname(source).toLowerCase();
+    if (!['.png','.jpg','.jpeg','.gif','.webp','.bmp'].includes(ext) || fs.statSync(source).size > 20 * 1024 * 1024) throw Error('Choose image files smaller than 20 MB.');
+    return { source, ext };
+  });
+  for (const { source, ext } of sources) fs.copyFileSync(source, path.join(process.env.SAL_MARKETING_DIR, path.basename(source, ext).replace(/[^a-zA-Z0-9_-]/g, '_') + '-' + require('crypto').randomUUID() + ext));
+  refreshMarketing(); return { added: sources.length };
+});
+ipcMain.handle('remove-marketing', (_, name) => {
+  if (typeof name !== 'string' || name !== path.basename(name) || !/\.(png|jpe?g|gif|webp|bmp)$/i.test(name)) throw Error('Invalid image');
+  fs.unlinkSync(path.join(process.env.SAL_MARKETING_DIR, name)); refreshMarketing(); return { ok: true };
+});
+ipcMain.handle('show-customer-screen', () => { createCustomerDisplay(); return { ok: true }; });

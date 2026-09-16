@@ -1,1 +1,3 @@
-Place your marketing images (JPG, PNG, GIF) in this folder. The customer display will rotate through them automatically every 5 seconds.
+Store marketing images are managed from Settings in the desktop app.
+They are saved under the Windows user-data folder, not inside the installer.
+Connect a second monitor in Windows Extend mode to show the customer screen.
