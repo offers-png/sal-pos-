@@ -19,6 +19,36 @@ function page(name, fetchHandler) {
   return { dom, w, run };
 }
 const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
+
+test('daily print failure keeps retry available and uses configured store branding', async () => {
+  const { dom, w, run } = page('index.html', async url => {
+    if (url === '/api/eod-today') return reply({ success: true, store: { store_name: 'Corner <Market>', store_phone: '555-0100' }, totals: {}, counts: {} });
+    return reply({ success: true, products: [], settings: {}, reports: [] });
+  });
+  try {
+    await new Promise(r => setTimeout(r, 20));
+    let fail = true, printed = '';
+    w.electronAPI = { printReceipt: async payload => { if (fail) throw Error('Printer offline'); printed = payload.html; return { ok: true }; } };
+    assert.equal(await run('autoGenerateAndPrintEod()'), false);
+    assert.equal(w.localStorage.getItem('lastAutoPrintDate'), null);
+    fail = false;
+    assert.equal(await run('autoGenerateAndPrintEod()'), true);
+    assert.ok(w.localStorage.getItem('lastAutoPrintDate'));
+    assert.match(printed, /Corner &lt;Market&gt;/);
+    assert.match(printed, /555-0100/);
+  } finally { dom.window.close(); }
+});
+
+test('settings shows local product count and has no cloud sync controls', async () => {
+  const { dom, w } = page('settings.html', async url => reply(url === '/api/status' ? { success: true, productCount: 42 } : { success: true, settings: {}, users: [], transactionCount: 0 }));
+  try {
+    await new Promise(r => setTimeout(r, 50));
+    assert.equal(w.document.getElementById('productsCount').textContent, '42');
+    assert.equal(w.document.getElementById('storageStatus').textContent, 'Local database ready');
+    assert.equal(w.document.getElementById('syncBtn'), null);
+    assert.ok(w.document.getElementById('addMarketingBtn'));
+  } finally { dom.window.close(); }
+});
 test('register preserves failed checkout, retries same key, shows stored receipt ID', async () => {
   const requests = [];
   let fail = true;

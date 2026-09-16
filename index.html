@@ -2651,9 +2651,11 @@
       syncCustomerDisplay(subtotal, tax, total);
     }
 
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function syncCustomerDisplay(subtotal, tax, total) {
       if (window.electronAPI && window.electronAPI.updateCustomerCart) {
         window.electronAPI.updateCustomerCart({
+          store: getStoreInfo(),
           items: cart.map(item => ({
             name: item.name,
             qty: item.qty,
@@ -3009,25 +3011,26 @@
         return;
       }
 
-      editingProduct.name = newName;
-      editingProduct.price = newPrice;
-      editingProduct.category = newCategory;
-      rebuildBarcodeIndex();
+      const update = { ...editingProduct, name: newName, price: newPrice, category: newCategory };
 
       try {
         const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(editingProduct)
+          body: JSON.stringify({ barcode: update.barcode, name: update.name, price: update.price, category: update.category })
         });
         const data = await res.json();
         if (data.success) {
-          showToast("Product updated in Google Sheets!");
+          Object.assign(editingProduct, update);
+          rebuildBarcodeIndex();
+          showToast("Product saved to the local database.");
         } else {
-          showToast("Updated locally only", true);
+          showToast("Product update failed. Please retry.", true);
+          return;
         }
       } catch (e) {
-        showToast("Updated locally only", true);
+        showToast("Product update failed. Please retry.", true);
+          return;
       }
 
       if (activeCategory) {
@@ -3041,6 +3044,11 @@
       if (!editingProduct) return;
 
       if (confirm(`Delete "${editingProduct.name}"?`)) {
+        try {
+          const response = await fetch('/api/products/' + encodeURIComponent(editingProduct.barcode), { method: 'DELETE' });
+          const result = await response.json();
+          if (!response.ok || !result.success) throw Error(result.error || 'Delete failed');
+        } catch (error) { showToast(error.message, true); return; }
         const idx = PRODUCTS.indexOf(editingProduct);
         if (idx > -1) {
           PRODUCTS.splice(idx, 1);
@@ -3138,7 +3146,7 @@
 
     function generateReceipt(finalCart, subtotal, discountAmount, tax, total, paymentType, tenderedAmount, change) {
       let receiptHtml = `
-        <h3>My Store</h3>
+        <h3>${escapeHtml(STORE_SETTINGS.store_name || "My Store")}</h3><p>${escapeHtml(STORE_SETTINGS.store_phone || "")}</p>
         <p style="text-align: center;">Phone: </p>
         <p style="text-align: center;">Transaction: #${Date.now().toString().slice(-6)}</p>
         <p style="text-align: center;">Date: ${new Date().toLocaleString()}</p>
@@ -3485,8 +3493,6 @@
       }
 
       const product = { name, price: priceVal, barcode, category };
-      PRODUCTS.push(product);
-      rebuildBarcodeIndex();
 
       try {
         const res = await fetch("/api/products", {
@@ -3496,12 +3502,16 @@
         });
         const data = await res.json();
         if (data.success) {
-          showToast("Saved to Google Sheets (local backup kept).");
+          PRODUCTS.push(product);
+          rebuildBarcodeIndex();
+          showToast("Product saved to the local database.");
         } else {
-          showToast("Google Sheets failed – saved locally only.", true);
+          showToast(data.error || "Product could not be saved. Please retry.", true);
+          return;
         }
       } catch (e) {
-        showToast("Google Sheets failed – saved locally only.", true);
+        showToast("Product could not be saved. Please retry.", true);
+        return;
       }
 
       addNameInput.value = "";
@@ -3671,7 +3681,7 @@
         });
       } else {
         const testReceipt = `
-          <h3>My Store</h3>
+          <h3>${escapeHtml(STORE_SETTINGS.store_name || "My Store")}</h3><p>${escapeHtml(STORE_SETTINGS.store_phone || "")}</p>
           <p style="text-align: center;">*** TEST PRINT ***</p>
           <p style="text-align: center;">${new Date().toLocaleString()}</p>
           <div class="receipt-line"></div>
@@ -3894,7 +3904,8 @@
         };
 
         const reportText = [
-          '    My Store',
+          '    ' + (data.store?.store_name || 'My Store'),
+            data.store?.store_phone || '',
           ' ' + reportDate + ' ' + reportTime,
           '  *** End of Day ***',
           '',
@@ -3921,14 +3932,14 @@
             </style>
           </head>
           <body>
-            <pre>${reportText}</pre>
+            <pre>${reportText.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</pre>
           </body>
           </html>
         `;
 
         if (window.electronAPI && window.electronAPI.printReceipt) {
           await window.electronAPI.printReceipt({ html: reportHtml });
-          showToast("Report sent to POS-80C printer");
+          showToast("Report sent to the selected printer");
         } else {
           const printWindow = window.open("", "", "height=600,width=400");
           printWindow.document.write(reportHtml);
@@ -3951,107 +3962,35 @@
       }
     }
 
-    // Track which date we last auto-printed for (prevents duplicate prints)
     let lastAutoPrintDate = localStorage.getItem('lastAutoPrintDate') || '';
-
+    let eodPrinting = false;
+    async function autoGenerateAndPrintEod() {
+      if (eodPrinting) return false;
+      eodPrinting = true;
+      try {
+        const data = await EodReportsService.fetchTodayReport();
+        if (!data.success) throw Error(data.error || 'Unable to load daily report');
+        const saved = await EodReportsService.saveReport();
+        const result = await saved.json();
+        if (!saved.ok || !result.success) throw Error(result.error || 'Unable to save daily report');
+        if (!window.electronAPI?.printReceipt) throw Error('Automatic printing requires the desktop app');
+        const printed = await window.electronAPI.printReceipt({ html: EodReportsService.buildPrintHtml(data) });
+        if (printed?.ok === false) throw Error(printed.error || 'Print failed');
+        lastAutoPrintDate = new Date().toLocaleDateString('en-CA');
+        localStorage.setItem('lastAutoPrintDate', lastAutoPrintDate);
+        return true;
+      } catch (error) {
+        showToast('Daily report not printed: ' + error.message + '. Use Print EOD to retry.', true);
+        return false;
+      } finally { eodPrinting = false; }
+    }
     function setupAutoPrintTimer() {
       setInterval(() => {
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
-
-        // Trigger at 11:59 PM (any second during that minute) if we haven't printed today
-        if (now.getHours() === 23 && now.getMinutes() === 59 && lastAutoPrintDate !== todayStr) {
-          console.log("Auto-print triggered at 11:59 PM for date: " + todayStr);
-          lastAutoPrintDate = todayStr;
-          localStorage.setItem('lastAutoPrintDate', todayStr);
-          autoGenerateAndPrintEod();
-        }
-      }, 1000);
+        if (now.getHours() === 23 && now.getMinutes() === 59 && lastAutoPrintDate !== now.toLocaleDateString('en-CA')) void autoGenerateAndPrintEod();
+      }, 15000);
     }
-
-    async function autoGenerateAndPrintEod() {
-      try {
-        const data = await EodReportsService.fetchTodayReport();
-        if (data.success) {
-          const t = data.totals || {};
-          const c = data.counts || {};
-          const grand = data.grandTotal || 0;
-          const txCount = data.transactionCount || 0;
-
-          // Helper to pad strings for fixed-width columns (32 char thermal paper)
-          const padLeft = (str, len) => String(str).padStart(len);
-          const padRight = (str, len) => String(str).padEnd(len);
-          const formatMoney = (amt) => '$' + (amt || 0).toFixed(2);
-
-          // Build fixed-width text report (32 chars to fit 80mm paper)
-          const line = '-'.repeat(30);
-          const dblLine = '='.repeat(30);
-
-          const formatRow = (type, count, amount) => {
-            return padRight(type, 12) + padLeft(count, 6) + padLeft(formatMoney(amount), 12);
-          };
-
-          const reportText = [
-            '    My Store',
-            ' ' + new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
-            '  *** End of Day ***',
-            '   (Auto 11:59 PM)',
-            '',
-            line,
-            padRight('Type', 12) + padLeft('#Trn', 6) + padLeft('Amount', 12),
-            line,
-            formatRow('Cash', c["Cash"] || 0, t["Cash"] || 0),
-            formatRow('Debit', c["Debit Card"] || 0, t["Debit Card"] || 0),
-            formatRow('EBT', c["EBT"] || 0, t["EBT"] || 0),
-            formatRow('StoreCred', c["Store Credit"] || 0, t["Store Credit"] || 0),
-            dblLine,
-            formatRow('TOTAL', txCount, grand),
-            '',
-            ''
-          ].join('\n');
-
-          const reportHtml = `
-            <html>
-            <head>
-              <title>End of Day Report</title>
-              <style>
-                body { margin: 0; padding: 5px; }
-                pre { font-family: 'Courier New', Courier, monospace; font-size: 10px; margin: 0; white-space: pre; color: #000; }
-              </style>
-            </head>
-            <body>
-              <pre>${reportText}</pre>
-            </body>
-            </html>
-          `;
-
-          if (window.electronAPI && window.electronAPI.printReceipt) {
-            await window.electronAPI.printReceipt({ html: reportHtml });
-            console.log("Auto-printed End of Day report to POS-80C at 11:59 PM");
-          } else {
-            const printWindow = window.open("", "", "height=600,width=400");
-            printWindow.document.write(reportHtml);
-            printWindow.document.close();
-            printWindow.print();
-            console.log("Auto-printed End of Day report at 11:59 PM");
-          }
-
-          // Save the daily report to database for history
-          try {
-            await EodReportsService.saveReport();
-            console.log("Saved EOD report to database");
-          } catch (saveErr) {
-            console.error("Failed to save EOD report:", saveErr);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to auto-print EOD report:", err);
-      }
-    }
-
-    // Start the auto-print timer - checks every second for 11:59 PM
     setupAutoPrintTimer();
-    console.log("Auto-print timer started - will print EOD at 11:59 PM");
 
     function initInputHandlers() {
       document.querySelectorAll('input, select, textarea').forEach(input => {

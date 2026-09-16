@@ -529,6 +529,9 @@
     <div class="report-card" style="margin-top: 1.5rem;">
       <div class="report-card-header">
         <h3 class="report-card-title">Sales History</h3>
+        <p>Recent 500 sales. Enter any older receipt ID to retrieve and reprint it.</p>
+        <input id="receiptLookupId" class="input" placeholder="Receipt ID" aria-label="Receipt ID">
+        <button id="receiptLookupPrint" class="btn btn-outline">Reprint receipt by ID</button>
         <p class="report-card-description">All recorded transactions.</p>
       </div>
       <div class="report-card-content" style="max-height: 400px; overflow-y: auto;">
@@ -609,7 +612,28 @@
     }
 
     document.getElementById("refreshBtn").addEventListener("click", () => {
-      loadReports();
+      let reprinting = false;
+    async function reprintSale(id) {
+      if (reprinting || !id) return;
+      reprinting = true;
+      try {
+        if (!window.electronAPI?.printReceipt) throw Error('Receipt printing requires the Windows desktop app.');
+        const [receiptResponse, settingsResponse] = await Promise.all([fetch('/api/sales/' + encodeURIComponent(id)), fetch('/api/settings')]);
+        const receipt = await receiptResponse.json(), settings = await settingsResponse.json();
+        if (!receipt.success || !settings.success) throw Error(receipt.error || settings.error || 'Receipt unavailable');
+        const sale = receipt.sale, store = settings.settings;
+        await window.electronAPI.printReceipt({ ...sale, taxAmount: sale.tax, store: { name: store.store_name, phone: store.store_phone }, footer: 'REPRINT' + (sale.voided ? ' — VOIDED SALE' : '') + ' · ' + (store.receipt_footer || '') });
+        showToast('Receipt reprinted.');
+      } catch (e) { showToast(e.message, true); }
+      finally { reprinting = false; }
+    }
+    document.getElementById('receiptLookupPrint').addEventListener('click', () => reprintSale(document.getElementById('receiptLookupId').value.trim()));
+    document.getElementById('salesHistoryBody').addEventListener('click', event => {
+      const button = event.target.closest('[data-reprint-id]');
+      if (button) void reprintSale(decodeURIComponent(button.dataset.reprintId));
+    });
+
+    loadReports();
       loadSalesHistory();
     });
 
@@ -645,7 +669,7 @@
               return `
                 <tr style="border-bottom: 1px solid var(--border);">
                   <td style="padding: 0.75rem 0.5rem;">${dateStr} ${timeStr}</td>
-                  <td style="padding: 0.75rem 0.5rem; font-family: monospace; font-size: 0.75rem;">${saleIdDisplay}</td>
+                  <td style="padding: 0.75rem 0.5rem; font-family: monospace; font-size: 0.75rem;">${saleIdDisplay} <button class="btn btn-outline" data-reprint-id="${encodeURIComponent(sale.saleId || "")}">Reprint</button></td>
                   <td style="padding: 0.75rem 0.5rem;">${paymentDisplay}</td>
                   <td style="text-align: right; padding: 0.75rem 0.5rem;">${itemsDisplay}</td>
                   <td style="text-align: right; padding: 0.75rem 0.5rem; font-weight: 600; color: var(--primary);">$${totalDisplay}</td>

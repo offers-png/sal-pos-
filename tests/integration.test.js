@@ -6,7 +6,6 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'sal-pos-test-'));
 process.env.SAL_DB_PATH = path.join(directory, 'test.db');
-process.env.SAL_DISABLE_SHEETS = 'true';
 const database = require('../database');
 const transactions = require('../services/transactions');
 const money = require('../services/money');
@@ -29,6 +28,27 @@ before(async () => {
   await database.productRepo.create({ barcode: 'B', name: 'Product B', price: 60, stock: 100, taxable: false, ebt_eligible: true });
 });
 after(async () => { await new Promise(resolve => server.close(resolve)); database.closeDatabase(); fs.rmSync(directory, { recursive: true, force: true }); });
+
+test('local catalog, branding and low-stock status survive reopening the database', async () => {
+  const created = await request('/api/products', { barcode: 'LOCAL', name: 'Local product', price: 2.5, stock: 2, reorder_point: 3 });
+  assert.equal(created.data.saved_to, 'sqlite');
+  assert.equal((await request('/api/settings', { store_name: 'Corner <Market>', store_phone: '555-0100' })).data.success, true);
+  database.closeDatabase();
+  assert.equal((await database.productRepo.getByBarcode('LOCAL')).price, 2.5);
+  assert.ok((await request('/api/products/low-stock')).data.products.some(p => p.barcode === 'LOCAL'));
+  assert.equal((await request('/api/eod-today')).data.store.store_phone, '555-0100');
+  assert.equal((await request('/api/status')).data.productCount, 3);
+  const removed = await fetch(url + '/api/products/sync-from-sheets', { method: 'POST', headers: { Cookie: ownerCookie } });
+  assert.equal(removed.status, 404);
+});
+
+test('daily report default uses the local store date around UTC midnight', async () => {
+  const ActualDate = Date, previousTZ = process.env.TZ;
+  process.env.TZ = 'America/New_York';
+  global.Date = class extends ActualDate { constructor(...args) { super(...(args.length ? args : ['2026-09-17T00:30:00Z'])); } };
+  try { assert.equal((await request('/api/reports/daily')).data.date, '2026-09-16'); }
+  finally { global.Date = ActualDate; if (previousTZ === undefined) delete process.env.TZ; else process.env.TZ = previousTZ; }
+});
 test('anonymous clients cannot read sensitive data or mutate products/users/backups', async () => {
   for (const route of ['/api/products', '/api/users', '/api/backup/download', '/api/settings']) assert.equal((await request(route, undefined, null)).status, 401);
   assert.equal((await request('/api/users', { username: 'evil', pin: '123456', role: 'owner' }, null)).status, 401);
@@ -153,12 +173,12 @@ test('explicit non-EBT flag overrides an eligible category on every product read
   assert.equal((await database.productRepo.getAll()).find(p => p.barcode === 'EXCEPTION').ebt_eligible, false);
   assert.equal((await request('/api/sales', saleBody({ items: [{ barcode: 'EXCEPTION', qty: 1 }], total: 1, paymentType: 'EBT' }))).status, 400);
 });
-test('sale and export outbox commit together and survive database reload', async () => {
+test('local sale survives database reload without cloud services', async () => {
   const body = saleBody();
   assert.equal((await request('/api/sales', body)).status, 200);
   database.closeDatabase();
   const db = await database.getDb();
-  assert.equal(transactions.rows(db, 'SELECT sale_id FROM sync_outbox WHERE sale_id = ?', [body.idempotencyKey]).length, 1);
+  assert.equal(transactions.rows(db, 'SELECT sale_id FROM sales WHERE sale_id = ?', [body.idempotencyKey]).length, 1);
   assert.equal((await request('/api/sales', body)).data.duplicate, true);
 });
 test('default PIN is gated, logout revokes cookies, last owner cannot be removed', async () => {

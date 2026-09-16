@@ -336,7 +336,6 @@ async function initDatabase() {
   try { db.run(`CREATE INDEX IF NOT EXISTS idx_sales_created_at ON sales(created_at)`); } catch(e) {}
   try { db.run(`CREATE INDEX IF NOT EXISTS idx_shifts_status ON shifts(status)`); } catch(e) {}
 
-  db.run('CREATE TABLE IF NOT EXISTS sync_outbox (sale_id TEXT PRIMARY KEY, payload TEXT NOT NULL, attempts INTEGER DEFAULT 0, last_error TEXT)');
   const migrations = {
     sales: { tenders: 'TEXT', request_hash: 'TEXT' },
     returns: { request_hash: 'TEXT', refund_tax: 'REAL DEFAULT 0' },

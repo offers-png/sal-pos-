@@ -19,8 +19,7 @@ function getPrinterName() {
 }
 
 // Resolves which printer to actually send jobs to: explicit user choice first,
-// then whatever the OS reports as its default printer, then a last-resort
-// legacy name so nothing crashes on a totally unconfigured machine.
+// then whatever the OS reports as its default printer.
 async function resolvePrinterName() {
   if (configuredPrinterName) return configuredPrinterName;
   try {
@@ -30,7 +29,7 @@ async function resolvePrinterName() {
   } catch (e) {
     console.warn('Could not auto-detect a default printer:', e.message);
   }
-  return 'POS-80';
+  throw Error('No Windows printer found. Install its driver and select it in Settings → Hardware.');
 }
 
 const ESC = 0x1B;
@@ -141,7 +140,9 @@ function generateReceiptHTML(payload) {
   } = payload || {};
 
   const fmt = (n) => Number(n || 0).toFixed(2);
-  const timestamp = new Date().toLocaleString();
+  const originalTime = payload.createdAt || payload.timestamp;
+  const parsedTime = originalTime ? new Date(/^\d{4}-\d\d-\d\d \d\d:/.test(originalTime) ? originalTime.replace(' ', 'T') + 'Z' : originalTime) : new Date();
+  const timestamp = Number.isNaN(parsedTime.getTime()) ? new Date().toLocaleString() : parsedTime.toLocaleString();
   const isSplitEbt = !!secondPaymentType;
 
   let itemsHTML = '';

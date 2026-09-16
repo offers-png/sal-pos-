@@ -50,7 +50,6 @@ async function sale(body, userId) {
   return database().transaction(db => {
     db.run('INSERT INTO sales (sale_id, items, subtotal, discount, tax, total, payment_type, item_count, user_id, shift_id, tenders, request_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [saleId, JSON.stringify(calculated.items), calculated.subtotal, calculated.discount, calculated.tax, calculated.total, calculated.paymentType, calculated.itemCount, userId, shift?.id || 0, JSON.stringify(calculated.tenders), fingerprint]);
     for (const item of calculated.items) stock(db, item, -item.qty, 'sale', userId);
-    db.run('INSERT INTO sync_outbox (sale_id, payload) VALUES (?, ?)', [saleId, JSON.stringify({ saleId, ...calculated, timestamp: new Date().toISOString() })]);
     return { saleId, ...calculated, duplicate: false };
   });
 }

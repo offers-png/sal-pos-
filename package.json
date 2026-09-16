@@ -1,6 +1,6 @@
 {
   "name": "sal-pos",
-  "version": "1.0.36",
+  "version": "1.0.37",
   "description": "Sal POS POS Desktop App",
   "author": "Sal POS",
   "main": "main.js",
@@ -38,10 +38,6 @@
       {
         "from": "node_modules/sql.js/dist/sql-wasm.wasm",
         "to": "sql-wasm.wasm"
-      },
-      {
-        "from": "marketing-images",
-        "to": "marketing-images"
       }
     ],
     "win": {
@@ -80,7 +76,6 @@
     "dompurify": "^3.4.15",
     "electron-updater": "^6.8.9",
     "express": "^4.22.3",
-    "googleapis": "^181.0.0",
     "sql.js": "^1.14.2"
   },
   "devDependencies": {
