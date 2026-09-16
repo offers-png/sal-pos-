@@ -248,6 +248,22 @@
         grid-template-columns: 1fr;
       }
     }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-grid .full-width {
+      grid-column: span 2;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
   </style>
 </head>
 <body>
@@ -317,6 +333,8 @@
     <div class="settings-tabs">
       <button class="settings-tab active" data-tab="general">General</button>
       <button class="settings-tab" data-tab="system">System</button>
+      <button class="settings-tab" data-tab="hardware">Hardware</button>
+      <button class="settings-tab" data-tab="users">Users</button>
       <button class="settings-tab" data-tab="about">About</button>
     </div>
 
@@ -346,6 +364,10 @@
             <div class="form-group full-width">
               <label class="label">Phone Number</label>
               <input type="text" class="input" value="" id="storePhone">
+            </div>
+            <div class="form-group full-width">
+              <label class="label">Receipt Footer Message</label>
+              <input type="text" class="input" placeholder="Thank you for shopping with us!" id="receiptFooter">
             </div>
           </div>
         </div>
@@ -476,6 +498,10 @@
               <div class="system-info-value" id="salesToday">--</div>
             </div>
           </div>
+          <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;">
+            <button id="testAutoPrintBtn" class="btn btn-outline">🧾 Print End-of-Day Report</button>
+            <p style="font-size:0.8rem;color:#888;margin-top:0.5rem;">Prints today's sales totals to the receipt printer and saves it to report history.</p>
+          </div>
         </div>
       </div>
 
@@ -498,7 +524,7 @@
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;">Auto-Backup Folder (USB / External Drive)</label>
             <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">Set a folder path (e.g. E:\MyBackups or D:\POS-Backup). Your data will be backed up here automatically every day.</p>
             <div style="display:flex;gap:0.5rem;align-items:center;">
-              <input type="text" id="backupPathInput" class="form-input" placeholder="e.g. E:\MyBackups" style="flex:1;" />
+              <input type="text" id="backupPathInput" class="input" placeholder="e.g. E:\MyBackups" style="flex:1;" />
               <button id="saveBackupPathBtn" class="btn btn-primary">Save Path</button>
               <button id="backupNowBtn" class="btn btn-outline">Backup Now</button>
             </div>
@@ -556,6 +582,182 @@
           </div>
 
         </div>
+      </div>
+    </div>
+
+    <div id="hardware" class="settings-section">
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"/>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <rect width="12" height="8" x="6" y="14"/>
+            </svg>
+            Receipt Printer
+          </h3>
+          <p class="settings-card-description">Works with any receipt printer you install on this PC — Epson, Star, Bixolon, or any other brand. Just install its Windows driver first (so it shows up below), then pick it here.</p>
+        </div>
+        <div class="settings-card-content">
+          <div id="hardwareNonElectron" style="display:none;background:rgba(230,162,60,0.12);border:1px solid #e6a23c;border-radius:8px;padding:0.75rem;margin-bottom:1rem;font-size:0.85rem;">
+            Printer selection is only available in the Sal POS desktop app (this looks like a browser tab).
+          </div>
+          <div style="margin-bottom:1.25rem;">
+            <label style="font-weight:600;display:block;margin-bottom:0.5rem;">Select Printer</label>
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+              <select id="printerSelect" class="input" style="flex:1;min-width:220px;">
+                <option value="">Loading printers...</option>
+              </select>
+              <button id="refreshPrintersBtn" class="btn btn-outline">↻ Refresh</button>
+              <button id="savePrinterBtn" class="btn btn-primary">Use This Printer</button>
+            </div>
+            <div id="printerStatus" style="margin-top:0.5rem;font-size:0.85rem;color:#666;"></div>
+          </div>
+          <div>
+            <button id="testPrintBtn" class="btn btn-outline">🖶️ Send Test Print</button>
+            <p style="font-size:0.8rem;color:#888;margin-top:0.5rem;">Prints a small test receipt to confirm the selected printer actually works.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="14" x="2" y="5" rx="2"/>
+              <line x1="2" x2="22" y1="10" y2="10"/>
+            </svg>
+            Barcode Scanner
+          </h3>
+          <p class="settings-card-description">No setup needed — any USB or Bluetooth scanner works out of the box, as long as it's in "keyboard wedge" / "HID" mode, which is the default on virtually every scanner sold.</p>
+        </div>
+        <div class="settings-card-content">
+          <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">Click the box below, then scan any barcode to confirm your scanner is working.</p>
+          <input type="text" id="scannerTestInput" class="input" placeholder="Click here, then scan a barcode..." style="max-width:320px;" />
+          <div id="scannerTestStatus" style="margin-top:0.5rem;font-size:0.85rem;color:#666;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="users" class="settings-section">
+      <div class="settings-card" id="usersPinGateCard">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Manage Users
+          </h3>
+          <p class="settings-card-description">Owner or manager PIN required — this controls who can access the register and what they can do.</p>
+        </div>
+        <div class="settings-card-content">
+          <div style="display:flex;gap:0.5rem;align-items:center;max-width:320px;">
+            <input type="password" id="usersPinInput" class="input" placeholder="Enter manager PIN" style="flex:1;" />
+            <button id="usersPinUnlockBtn" class="btn btn-primary">Unlock</button>
+          </div>
+          <div id="usersPinError" style="margin-top:0.5rem;font-size:0.85rem;color:#e74c3c;"></div>
+        </div>
+      </div>
+
+      <div class="settings-card" id="usersManageCard" style="display:none;">
+        <div class="settings-card-header">
+          <h3 class="settings-card-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Employees
+          </h3>
+          <p class="settings-card-description">Add cashiers/managers so they can log in with their own PIN.</p>
+        </div>
+        <div class="settings-card-content">
+          <div style="margin-bottom:1rem;">
+            <button id="addUserBtn" class="btn btn-primary">+ Add User</button>
+          </div>
+          <div id="usersListContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="addUserModal" class="modal">
+      <div class="modal-content">
+        <button class="modal-close" id="closeAddUserModal">&times;</button>
+        <h2 style="margin-bottom: 0.5rem;">Add User</h2>
+        <p style="color: var(--muted-foreground); margin-bottom: 1.5rem;">Create a login for a new employee.</p>
+        <form id="addUserForm">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="label">Username</label>
+              <input id="newUsername" type="text" class="input" placeholder="e.g. jsmith" required>
+            </div>
+            <div class="form-group full-width">
+              <label class="label">Display Name</label>
+              <input id="newDisplayName" type="text" class="input" placeholder="e.g. John Smith">
+            </div>
+            <div class="form-group">
+              <label class="label">Role</label>
+              <select id="newRole" class="input">
+                <option value="cashier">Cashier</option>
+                <option value="manager">Manager</option>
+                <option value="owner">Owner</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="label">PIN (4+ digits)</label>
+              <input id="newPin" type="password" inputmode="numeric" class="input" placeholder="1234" minlength="4" required>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" id="cancelAddUserBtn" class="btn btn-outline" style="flex: 1;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Create User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="editUserModal" class="modal">
+      <div class="modal-content">
+        <button class="modal-close" id="closeEditUserModal">&times;</button>
+        <h2 style="margin-bottom: 0.5rem;">Edit User</h2>
+        <form id="editUserForm">
+          <input type="hidden" id="editUserId">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="label">Display Name</label>
+              <input id="editDisplayName" type="text" class="input" required>
+            </div>
+            <div class="form-group full-width">
+              <label class="label">Role</label>
+              <select id="editRole" class="input">
+                <option value="cashier">Cashier</option>
+                <option value="manager">Manager</option>
+                <option value="owner">Owner</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" id="cancelEditUserBtn" class="btn btn-outline" style="flex: 1;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="resetPinModal" class="modal">
+      <div class="modal-content">
+        <button class="modal-close" id="closeResetPinModal">&times;</button>
+        <h2 style="margin-bottom: 0.5rem;">Reset PIN</h2>
+        <p style="color: var(--muted-foreground); margin-bottom: 1.5rem;" id="resetPinForName"></p>
+        <form id="resetPinForm">
+          <input type="hidden" id="resetPinUserId">
+          <div class="form-group">
+            <label class="label">New PIN (4+ digits)</label>
+            <input id="resetPinValue" type="password" inputmode="numeric" class="input" minlength="4" required>
+          </div>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" id="cancelResetPinBtn" class="btn btn-outline" style="flex: 1;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Reset PIN</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -722,9 +924,27 @@
     });
 
     document.getElementById("syncBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("syncBtn");
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = "🔄 Syncing...";
       showToast("Syncing with Google Sheets...");
-      await loadStatus();
-      showToast("Sync complete!");
+      try {
+        const res = await fetch("/api/products/sync-from-sheets", { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Synced ${data.synced || 0} new, ${data.updated || 0} updated products from Sheets`);
+        } else {
+          showToast(data.error || "Sync failed — check Google Sheets is connected", true);
+        }
+      } catch (err) {
+        console.error("Error syncing from Sheets:", err);
+        showToast("Sync failed: " + err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        await loadStatus();
+      }
     });
 
     document.getElementById("refreshBtn").addEventListener("click", async () => {
@@ -798,9 +1018,374 @@
       }
     });
 
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      showToast("Settings saved!");
+    // ===== Store Branding (name/phone/receipt footer) =====
+    async function loadStoreSettings() {
+      try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (!data.success) return;
+        const s = data.settings || {};
+        if (s.store_name != null) document.getElementById("storeName").value = s.store_name;
+        if (s.store_phone != null) document.getElementById("storePhone").value = s.store_phone;
+        if (s.receipt_footer != null) document.getElementById("receiptFooter").value = s.receipt_footer;
+      } catch (err) {
+        console.error("Failed to load store settings:", err);
+      }
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+      const store_name = document.getElementById("storeName").value.trim() || "My Store";
+      const store_phone = document.getElementById("storePhone").value.trim();
+      const receipt_footer = document.getElementById("receiptFooter").value.trim() || "Thank you for shopping with us!";
+
+      try {
+        const res = await fetch("/api/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ store_name, store_phone, receipt_footer })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Settings saved!");
+        } else {
+          showToast(data.error || "Failed to save settings", true);
+        }
+      } catch (err) {
+        showToast("Failed to save settings: " + err.message, true);
+      }
     });
+
+    loadStoreSettings();
+
+    // ===== Users Management (PIN-gated) =====
+    let usersManagerToken = null;
+    let cachedUsers = [];
+
+    document.getElementById("usersPinUnlockBtn").addEventListener("click", async () => {
+      const pinInput = document.getElementById("usersPinInput");
+      const errorEl = document.getElementById("usersPinError");
+      const pin = pinInput.value.trim();
+      if (!pin) {
+        errorEl.textContent = "Enter a PIN";
+        return;
+      }
+      errorEl.textContent = "";
+      try {
+        const res = await fetch("/api/auth/verify-manager-pin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin })
+        });
+        const data = await res.json();
+        if (data.success && data.authorized && data.accessToken) {
+          usersManagerToken = data.accessToken;
+          document.getElementById("usersPinGateCard").style.display = "none";
+          document.getElementById("usersManageCard").style.display = "block";
+          await loadUsers();
+        } else {
+          errorEl.textContent = "Invalid PIN or not an owner/manager account";
+          pinInput.value = "";
+        }
+      } catch (err) {
+        errorEl.textContent = "Verification failed: " + err.message;
+      }
+    });
+
+    document.getElementById("usersPinInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") document.getElementById("usersPinUnlockBtn").click();
+    });
+
+    async function loadUsers() {
+      const container = document.getElementById("usersListContainer");
+      container.innerHTML = "Loading...";
+      try {
+        const res = await fetch("/api/users");
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || "Failed to load users");
+        cachedUsers = data.users || [];
+
+        if (cachedUsers.length === 0) {
+          container.innerHTML = '<p style="color:#888;">No users yet.</p>';
+          return;
+        }
+
+        const roleColors = { owner: '#9b59b6', manager: '#3498db', cashier: '#2ecc71' };
+        container.innerHTML = cachedUsers.map(u => `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border);${u.active ? '' : 'opacity:0.5;'}">
+            <div>
+              <div style="font-weight:600;">${u.display_name || u.username}${u.active ? '' : ' (inactive)'}</div>
+              <div style="font-size:0.8rem;color:#888;">
+                @${u.username} ·
+                <span style="color:${roleColors[u.role] || '#888'};font-weight:600;text-transform:capitalize;">${u.role}</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:0.4rem;">
+              <button class="btn btn-outline btn-sm edit-user-btn" data-id="${u.id}">Edit</button>
+              <button class="btn btn-outline btn-sm reset-pin-btn" data-id="${u.id}" data-name="${(u.display_name || u.username).replace(/"/g, '&quot;')}">Reset PIN</button>
+              ${u.active ? `<button class="btn btn-outline btn-sm deactivate-user-btn" data-id="${u.id}" style="color:#e74c3c;border-color:#e74c3c;">Deactivate</button>` : ''}
+            </div>
+          </div>
+        `).join('');
+
+        container.querySelectorAll('.edit-user-btn').forEach(btn => {
+          btn.addEventListener('click', () => openEditUserModal(btn.dataset.id));
+        });
+        container.querySelectorAll('.reset-pin-btn').forEach(btn => {
+          btn.addEventListener('click', () => openResetPinModal(btn.dataset.id, btn.dataset.name));
+        });
+        container.querySelectorAll('.deactivate-user-btn').forEach(btn => {
+          btn.addEventListener('click', () => deactivateUser(btn.dataset.id));
+        });
+      } catch (err) {
+        container.innerHTML = '<p style="color:#e74c3c;">Error loading users: ' + err.message + '</p>';
+      }
+    }
+
+    // ----- Add User -----
+    const addUserModal = document.getElementById("addUserModal");
+    document.getElementById("addUserBtn").addEventListener("click", () => {
+      document.getElementById("addUserForm").reset();
+      addUserModal.style.display = "flex";
+    });
+    document.getElementById("closeAddUserModal").addEventListener("click", () => addUserModal.style.display = "none");
+    document.getElementById("cancelAddUserBtn").addEventListener("click", () => addUserModal.style.display = "none");
+
+    document.getElementById("addUserForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("newUsername").value.trim();
+      const displayName = document.getElementById("newDisplayName").value.trim();
+      const role = document.getElementById("newRole").value;
+      const pin = document.getElementById("newPin").value.trim();
+
+      if (!username || pin.length < 4) {
+        showToast("Username and a 4+ digit PIN are required", true);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Manager-Token": usersManagerToken },
+          body: JSON.stringify({ username, displayName, role, pin })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("User created!");
+          addUserModal.style.display = "none";
+          await loadUsers();
+        } else {
+          showToast(data.error || "Failed to create user", true);
+        }
+      } catch (err) {
+        showToast("Error creating user: " + err.message, true);
+      }
+    });
+
+    // ----- Edit User -----
+    const editUserModal = document.getElementById("editUserModal");
+    function openEditUserModal(id) {
+      const user = cachedUsers.find(u => String(u.id) === String(id));
+      if (!user) return;
+      document.getElementById("editUserId").value = user.id;
+      document.getElementById("editDisplayName").value = user.display_name || "";
+      document.getElementById("editRole").value = user.role;
+      editUserModal.style.display = "flex";
+    }
+    document.getElementById("closeEditUserModal").addEventListener("click", () => editUserModal.style.display = "none");
+    document.getElementById("cancelEditUserBtn").addEventListener("click", () => editUserModal.style.display = "none");
+
+    document.getElementById("editUserForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("editUserId").value;
+      const displayName = document.getElementById("editDisplayName").value.trim();
+      const role = document.getElementById("editRole").value;
+
+      try {
+        const res = await fetch("/api/users/" + encodeURIComponent(id), {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "X-Manager-Token": usersManagerToken },
+          body: JSON.stringify({ displayName, role })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("User updated!");
+          editUserModal.style.display = "none";
+          await loadUsers();
+        } else {
+          showToast(data.error || "Failed to update user", true);
+        }
+      } catch (err) {
+        showToast("Error updating user: " + err.message, true);
+      }
+    });
+
+    // ----- Reset PIN -----
+    const resetPinModal = document.getElementById("resetPinModal");
+    function openResetPinModal(id, name) {
+      document.getElementById("resetPinUserId").value = id;
+      document.getElementById("resetPinForName").textContent = "Set a new PIN for " + name;
+      document.getElementById("resetPinValue").value = "";
+      resetPinModal.style.display = "flex";
+    }
+    document.getElementById("closeResetPinModal").addEventListener("click", () => resetPinModal.style.display = "none");
+    document.getElementById("cancelResetPinBtn").addEventListener("click", () => resetPinModal.style.display = "none");
+
+    document.getElementById("resetPinForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("resetPinUserId").value;
+      const newPin = document.getElementById("resetPinValue").value.trim();
+      if (newPin.length < 4) {
+        showToast("PIN must be at least 4 digits", true);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/users/" + encodeURIComponent(id) + "/pin", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "X-Manager-Token": usersManagerToken },
+          body: JSON.stringify({ newPin })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("PIN reset!");
+          resetPinModal.style.display = "none";
+        } else {
+          showToast(data.error || "Failed to reset PIN", true);
+        }
+      } catch (err) {
+        showToast("Error resetting PIN: " + err.message, true);
+      }
+    });
+
+    // ----- Deactivate -----
+    async function deactivateUser(id) {
+      const user = cachedUsers.find(u => String(u.id) === String(id));
+      if (!user) return;
+      if (!confirm(`Deactivate ${user.display_name || user.username}? They won't be able to log in anymore.`)) return;
+
+      try {
+        const res = await fetch("/api/users/" + encodeURIComponent(id), {
+          method: "DELETE",
+          headers: { "X-Manager-Token": usersManagerToken }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("User deactivated");
+          await loadUsers();
+        } else {
+          showToast(data.error || "Failed to deactivate user", true);
+        }
+      } catch (err) {
+        showToast("Error deactivating user: " + err.message, true);
+      }
+    }
+
+    // ===== Hardware Setup Wizard (Printer & Scanner) =====
+    async function loadPrinters() {
+      const select = document.getElementById('printerSelect');
+      const status = document.getElementById('printerStatus');
+      const nonElectronNotice = document.getElementById('hardwareNonElectron');
+
+      if (!window.electronAPI || !window.electronAPI.getPrinters) {
+        nonElectronNotice.style.display = 'block';
+        select.innerHTML = '<option value="">Not available</option>';
+        select.disabled = true;
+        return;
+      }
+
+      select.innerHTML = '<option value="">Loading printers...</option>';
+      try {
+        const result = await window.electronAPI.getPrinters();
+        if (!result.ok) throw new Error(result.error || 'Failed to list printers');
+
+        const printers = result.printers || [];
+        const current = result.currentPrinter;
+
+        if (printers.length === 0) {
+          select.innerHTML = '<option value="">No printers found — install one in Windows first</option>';
+          status.textContent = 'No printers detected on this PC yet. Plug in your printer and install its Windows driver, then click Refresh.';
+          return;
+        }
+
+        select.innerHTML = printers.map(p =>
+          `<option value="${String(p.name).replace(/"/g, '&quot;')}">${p.name}${p.isDefault ? ' (Windows default)' : ''}</option>`
+        ).join('');
+
+        if (current && printers.some(p => p.name === current)) {
+          select.value = current;
+          status.textContent = `Currently using: ${current}`;
+        } else if (current) {
+          status.textContent = `Saved printer "${current}" was not found on this PC — pick one below.`;
+        } else {
+          status.textContent = 'No printer chosen yet — pick one and click "Use This Printer".';
+        }
+      } catch (err) {
+        select.innerHTML = '<option value="">Error loading printers</option>';
+        status.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    document.getElementById('refreshPrintersBtn').addEventListener('click', loadPrinters);
+
+    document.getElementById('savePrinterBtn').addEventListener('click', async () => {
+      const select = document.getElementById('printerSelect');
+      const status = document.getElementById('printerStatus');
+      if (!select.value) return showToast('Pick a printer first', true);
+      if (!window.electronAPI || !window.electronAPI.setPrinter) {
+        return showToast('Only available in the desktop app', true);
+      }
+      const result = await window.electronAPI.setPrinter(select.value);
+      if (result.ok) {
+        status.textContent = `Currently using: ${select.value}`;
+        showToast('Printer saved!');
+      } else {
+        showToast('Failed to save printer: ' + result.error, true);
+      }
+    });
+
+    document.getElementById('testPrintBtn').addEventListener('click', async () => {
+      if (!window.electronAPI || !window.electronAPI.testPrint) {
+        return showToast('Only available in the desktop app', true);
+      }
+      showToast('Sending test print...');
+      const result = await window.electronAPI.testPrint();
+      if (result.ok) {
+        showToast('Test print sent!');
+      } else {
+        showToast('Test print failed: ' + result.error, true);
+      }
+    });
+
+    document.getElementById('scannerTestInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = e.target.value.trim();
+        const status = document.getElementById('scannerTestStatus');
+        if (val) {
+          status.style.color = 'green';
+          status.textContent = `✅ Scanner working — read: ${val}`;
+        }
+        e.target.value = '';
+      }
+    });
+
+    // Load the printer list the first time the Hardware tab is opened
+    let hardwareTabLoaded = false;
+    document.querySelector('.settings-tab[data-tab="hardware"]').addEventListener('click', () => {
+      if (!hardwareTabLoaded) {
+        hardwareTabLoaded = true;
+        loadPrinters();
+      }
+    });
+
+    // Deep-link support: settings.html?tab=hardware opens straight to the wizard
+    if (new URLSearchParams(location.search).get('tab') === 'hardware') {
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+      document.querySelector('.settings-tab[data-tab="hardware"]').classList.add('active');
+      document.getElementById('hardware').classList.add('active');
+      hardwareTabLoaded = true;
+      loadPrinters();
+    }
 
     loadStatus();
 

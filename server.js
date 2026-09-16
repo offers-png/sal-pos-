@@ -5,10 +5,11 @@ const bcrypt = require("bcryptjs");
 const { google } = require("googleapis");
 
 const { 
-  initDatabase, 
-  productRepo, 
-  salesRepo, 
-  userRepo, 
+  initDatabase,
+  productRepo,
+  salesRepo,
+  returnsRepo,
+  userRepo,
   shiftRepo, 
   settingsRepo,
   dailyReportsRepo,
@@ -337,27 +338,61 @@ app.post("/api/products/sync-from-sheets", async (req, res) => {
 });
 
 app.post("/api/products", async (req, res) => {
-  const { barcode, name, price, cost, category, stock, taxable, age_restricted, min_age } = req.body || {};
-  
+  const { barcode, name, price, cost, category, stock, taxable, age_restricted, min_age, ebt_eligible, reorder_point } = req.body || {};
+
   if (!barcode || !name || typeof price !== "number") {
     return res.status(400).json({ success: false, error: "Invalid product data" });
   }
 
   try {
     const existing = await productRepo.getByBarcode(barcode);
-    const productData = { barcode, name, price, cost, category, stock, taxable, age_restricted, min_age };
-    
+    const productData = { barcode, name, price, cost, category, stock, taxable, age_restricted, min_age, ebt_eligible, reorder_point };
+
     if (existing) {
       await productRepo.update(barcode, productData);
     } else {
       await productRepo.create(productData);
     }
-    
+
     syncProductToSheets(productData);
-    
+
     res.json({ success: true, message: existing ? "Product updated" : "Product created", saved_to: "sqlite+sheets" });
   } catch (err) {
     console.error("Error saving product:", err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put("/api/products/:barcode", async (req, res) => {
+  const { barcode } = req.params;
+  const { name, price, cost, category, stock, taxable, age_restricted, min_age, ebt_eligible, reorder_point } = req.body || {};
+
+  if (!name || typeof price !== "number") {
+    return res.status(400).json({ success: false, error: "Invalid product data" });
+  }
+
+  try {
+    const existing = await productRepo.getByBarcode(barcode);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: "Product not found" });
+    }
+
+    const productData = { name, price, cost, category, stock, taxable, age_restricted, min_age, ebt_eligible, reorder_point };
+    await productRepo.update(barcode, productData);
+    syncProductToSheets({ barcode, ...productData });
+
+    res.json({ success: true, message: "Product updated", saved_to: "sqlite+sheets" });
+  } catch (err) {
+    console.error("Error updating product:", err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get("/api/products/low-stock", async (req, res) => {
+  try {
+    const products = await productRepo.getLowStock();
+    res.json({ success: true, products });
+  } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -488,6 +523,139 @@ app.post("/api/sales/:saleId/void", async (req, res) => {
   try {
     await salesRepo.voidSale(saleId, reason, userId);
     res.json({ success: true, message: "Sale voided" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Keyed by barcode+name so items without a barcode (custom/manual entries) still match correctly
+function returnItemKey(item) {
+  return (item.barcode || '') + '::' + item.name;
+}
+
+async function getAlreadyReturnedMap(saleId) {
+  const priorReturns = await returnsRepo.getBySaleId(saleId);
+  const alreadyReturned = {};
+  for (const ret of priorReturns) {
+    for (const it of ret.items || []) {
+      const key = returnItemKey(it);
+      alreadyReturned[key] = (alreadyReturned[key] || 0) + (it.qty || 0);
+    }
+  }
+  return alreadyReturned;
+}
+
+app.get("/api/sales/:saleId", async (req, res) => {
+  const { saleId } = req.params;
+  try {
+    const sale = await salesRepo.getById(saleId);
+    if (!sale) {
+      return res.status(404).json({ success: false, error: "Sale not found" });
+    }
+
+    const items = JSON.parse(sale.items || '[]');
+    const alreadyReturned = await getAlreadyReturnedMap(saleId);
+
+    res.json({
+      success: true,
+      sale: {
+        saleId: sale.sale_id,
+        items,
+        alreadyReturned,
+        subtotal: sale.subtotal,
+        discount: sale.discount,
+        tax: sale.tax,
+        total: sale.total,
+        paymentType: sale.payment_type,
+        voided: sale.voided === 1,
+        createdAt: sale.created_at
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post("/api/sales/:saleId/return", async (req, res) => {
+  const { saleId } = req.params;
+  const { items, refundMethod, reason, userId } = req.body || {};
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ success: false, error: "No items to return" });
+  }
+
+  try {
+    const sale = await salesRepo.getById(saleId);
+    if (!sale) {
+      return res.status(404).json({ success: false, error: "Sale not found" });
+    }
+    if (sale.voided) {
+      return res.status(400).json({ success: false, error: "Cannot return items from a voided sale" });
+    }
+
+    const saleItems = JSON.parse(sale.items || '[]');
+    const alreadyReturned = await getAlreadyReturnedMap(saleId);
+
+    let refundAmount = 0;
+    const validatedItems = [];
+
+    for (const reqItem of items) {
+      const key = returnItemKey(reqItem);
+      const originalItem = saleItems.find(si => returnItemKey(si) === key);
+      if (!originalItem) {
+        return res.status(400).json({ success: false, error: `Item "${reqItem.name}" was not part of this sale` });
+      }
+
+      const purchasedQty = originalItem.qty || 1;
+      const returnedSoFar = alreadyReturned[key] || 0;
+      const remaining = purchasedQty - returnedSoFar;
+      const qty = Number(reqItem.qty) || 0;
+
+      if (qty <= 0) continue;
+      if (qty > remaining) {
+        return res.status(400).json({ success: false, error: `Cannot return ${qty} of "${originalItem.name}" — only ${remaining} eligible` });
+      }
+
+      const price = Number(originalItem.price) || 0;
+      refundAmount += qty * price;
+      validatedItems.push({ barcode: originalItem.barcode || '', name: originalItem.name, qty, price });
+    }
+
+    if (validatedItems.length === 0) {
+      return res.status(400).json({ success: false, error: "No valid items to return" });
+    }
+
+    const currentShift = await shiftRepo.getOpen();
+    const returnId = "RET-" + Date.now().toString();
+
+    await returnsRepo.create({
+      returnId,
+      originalSaleId: saleId,
+      items: validatedItems,
+      refundAmount,
+      refundMethod: refundMethod || 'Cash',
+      reason: reason || '',
+      userId,
+      shiftId: currentShift ? currentShift.id : null
+    });
+
+    for (const item of validatedItems) {
+      if (item.barcode) {
+        await productRepo.updateStock(item.barcode, item.qty, 'return', userId);
+      }
+    }
+
+    res.json({ success: true, returnId, refundAmount });
+  } catch (err) {
+    console.error("Error processing return:", err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get("/api/returns", async (req, res) => {
+  try {
+    const returns = await returnsRepo.getRecent(100);
+    res.json({ success: true, returns });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -701,7 +869,7 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-app.post("/api/users", async (req, res) => {
+app.post("/api/users", verifyManagerToken, async (req, res) => {
   const { username, pin, displayName, role } = req.body;
   if (!username || !pin) {
     return res.status(400).json({ success: false, error: "Username and PIN required" });
@@ -715,7 +883,7 @@ app.post("/api/users", async (req, res) => {
   }
 });
 
-app.put("/api/users/:id", async (req, res) => {
+app.put("/api/users/:id", verifyManagerToken, async (req, res) => {
   const { id } = req.params;
   const { displayName, role } = req.body;
   try {
@@ -726,7 +894,7 @@ app.put("/api/users/:id", async (req, res) => {
   }
 });
 
-app.put("/api/users/:id/pin", async (req, res) => {
+app.put("/api/users/:id/pin", verifyManagerToken, async (req, res) => {
   const { id } = req.params;
   const { newPin } = req.body;
   if (!newPin || newPin.length < 4) {
@@ -740,7 +908,7 @@ app.put("/api/users/:id/pin", async (req, res) => {
   }
 });
 
-app.delete("/api/users/:id", async (req, res) => {
+app.delete("/api/users/:id", verifyManagerToken, async (req, res) => {
   const { id } = req.params;
   try {
     await userRepo.deactivate(id);
@@ -897,9 +1065,9 @@ app.get("/api/reports/z-report/:shiftId", async (req, res) => {
 app.get("/api/products/export/csv", async (req, res) => {
   try {
     const products = await productRepo.getAll();
-    let csv = "barcode,name,price,cost,category,stock,taxable,ebt_eligible,age_restricted\n";
+    let csv = "barcode,name,price,cost,category,stock,taxable,ebt_eligible,age_restricted,min_age,reorder_point\n";
     for (const p of products) {
-      csv += `"${p.barcode||""}","${p.name||""}",${p.price||0},${p.cost||0},"${p.category||""}",${p.stock||0},${p.taxable?1:0},${p.ebt_eligible?1:0},${p.age_restricted?1:0}\n`;
+      csv += `"${p.barcode||""}","${p.name||""}",${p.price||0},${p.cost||0},"${p.category||""}",${p.stock||0},${p.taxable?1:0},${p.ebt_eligible?1:0},${p.age_restricted?1:0},${p.min_age||0},${p.reorder_point!=null?p.reorder_point:5}\n`;
     }
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", `attachment; filename="products-export-${new Date().toISOString().slice(0,10)}.csv"`);
@@ -939,7 +1107,9 @@ app.post("/api/products/import/csv", async (req, res) => {
         stock: parseInt(row.stock) || 0,
         taxable: row.taxable === "1" || row.taxable === "true",
         ebt_eligible: row.ebt_eligible === "1" || row.ebt_eligible === "true",
-        age_restricted: row.age_restricted === "1" || row.age_restricted === "true"
+        age_restricted: row.age_restricted === "1" || row.age_restricted === "true",
+        min_age: parseInt(row.min_age) || 0,
+        reorder_point: row.reorder_point !== undefined && row.reorder_point !== "" ? parseInt(row.reorder_point) : 5
       };
       
       await productRepo.upsert(product);

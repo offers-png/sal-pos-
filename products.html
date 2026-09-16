@@ -229,7 +229,16 @@
         <h1 class="page-title">Products</h1>
         <p class="page-description">Manage your product inventory and pricing.</p>
       </div>
-      <div style="display: flex; gap: 0.5rem;">
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <button id="lowStockToggleBtn" class="btn btn-outline" style="color: #e6a23c; border-color: #e6a23c; position: relative;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>
+            <line x1="12" x2="12" y1="9" y2="13"/>
+            <line x1="12" x2="12.01" y1="17" y2="17"/>
+          </svg>
+          Low Stock
+          <span id="lowStockCount" style="display:none;background:#e74c3c;color:white;border-radius:999px;padding:0.05rem 0.4rem;font-size:0.7rem;margin-left:0.35rem;">0</span>
+        </button>
         <button id="syncFromSheetsBtn" class="btn btn-outline" style="color: var(--text-primary); border-color: var(--border-color);">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -279,6 +288,7 @@
             <th>Product Name</th>
             <th>Category</th>
             <th>Price</th>
+            <th style="width: 140px;">Stock</th>
             <th style="width: 100px; text-align: right;">Actions</th>
           </tr>
         </thead>
@@ -316,9 +326,42 @@
             <label class="label">Barcode</label>
             <input id="productBarcode" type="text" class="input" placeholder="Scan or enter barcode">
           </div>
+          <div class="form-group">
+            <label class="label">Starting Stock</label>
+            <input id="productStock" type="number" step="1" min="0" class="input" placeholder="0" value="0">
+          </div>
+          <div class="form-group">
+            <label class="label">Reorder Point</label>
+            <input id="productReorderPoint" type="number" step="1" min="0" class="input" placeholder="5" value="5">
+          </div>
           <div class="form-group full-width">
             <label class="label">Category</label>
             <select id="productCategory" class="input"></select>
+          </div>
+          <div class="form-group">
+            <label class="label">Taxable</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;padding-top:0.4rem;">
+              <input type="checkbox" id="productTaxable" checked style="width:1.1rem;height:1.1rem;">
+              <span style="font-size:0.8rem;color:var(--muted-foreground);">Apply sales tax</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label">EBT / SNAP Eligible</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;padding-top:0.4rem;">
+              <input type="checkbox" id="productEbtEligible" style="width:1.1rem;height:1.1rem;">
+              <span style="font-size:0.8rem;color:var(--muted-foreground);">Payable with EBT</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label">Age Restricted</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;padding-top:0.4rem;">
+              <input type="checkbox" id="productAgeRestricted" style="width:1.1rem;height:1.1rem;">
+              <span style="font-size:0.8rem;color:var(--muted-foreground);">Requires ID check</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label">Minimum Age</label>
+            <input id="productMinAge" type="number" step="1" min="0" class="input" placeholder="21" value="21">
           </div>
         </div>
         <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
@@ -350,9 +393,42 @@
             <label class="label">Barcode</label>
             <input id="editProductBarcodeDisplay" type="text" class="input" disabled style="background: var(--muted);">
           </div>
+          <div class="form-group">
+            <label class="label">Stock on Hand</label>
+            <input id="editProductStock" type="number" step="1" min="0" class="input" required>
+          </div>
+          <div class="form-group">
+            <label class="label">Reorder Point</label>
+            <input id="editProductReorderPoint" type="number" step="1" min="0" class="input" required>
+          </div>
           <div class="form-group full-width">
             <label class="label">Category</label>
             <select id="editProductCategory" class="input"></select>
+          </div>
+          <div class="form-group">
+            <label class="label">Taxable</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;padding-top:0.4rem;">
+              <input type="checkbox" id="editProductTaxable" style="width:1.1rem;height:1.1rem;">
+              <span style="font-size:0.8rem;color:var(--muted-foreground);">Apply sales tax</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label">EBT / SNAP Eligible</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;padding-top:0.4rem;">
+              <input type="checkbox" id="editProductEbtEligible" style="width:1.1rem;height:1.1rem;">
+              <span style="font-size:0.8rem;color:var(--muted-foreground);">Payable with EBT</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label">Age Restricted</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;padding-top:0.4rem;">
+              <input type="checkbox" id="editProductAgeRestricted" style="width:1.1rem;height:1.1rem;">
+              <span style="font-size:0.8rem;color:var(--muted-foreground);">Requires ID check</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="label">Minimum Age</label>
+            <input id="editProductMinAge" type="number" step="1" min="0" class="input" placeholder="21">
           </div>
         </div>
         <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
@@ -435,8 +511,15 @@
             name: p.name,
             price: Number(p.price) || 0,
             barcode: p.barcode || "",
-            category: p.category || "Other / Misc"
+            category: p.category || "Other / Misc",
+            stock: Number(p.stock) || 0,
+            reorderPoint: Number(p.reorder_point != null ? p.reorder_point : 5),
+            taxable: p.taxable !== 0 && p.taxable !== false,
+            ebtEligible: !!p.ebt_eligible,
+            ageRestricted: !!p.age_restricted,
+            minAge: Number(p.min_age) || 21
           }));
+          updateLowStockCount();
           renderProducts();
         }
       } catch (err) {
@@ -445,20 +528,35 @@
       }
     }
 
+    let lowStockOnly = false;
+
+    function updateLowStockCount() {
+      const count = products.filter(p => p.stock <= p.reorderPoint).length;
+      const badge = document.getElementById("lowStockCount");
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+
     function renderProducts() {
       const searchTerm = searchInput.value.toLowerCase();
       const categoryTerm = categoryFilter.value;
 
       const filtered = products.filter(p => {
-        const matchesSearch = p.name.toLowerCase().includes(searchTerm) || 
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm) ||
                              p.barcode.toLowerCase().includes(searchTerm);
         const matchesCategory = !categoryTerm || p.category === categoryTerm;
-        return matchesSearch && matchesCategory;
+        const matchesStock = !lowStockOnly || p.stock <= p.reorderPoint;
+        return matchesSearch && matchesCategory && matchesStock;
       });
 
       productsTableBody.innerHTML = "";
-      
+
       filtered.forEach(product => {
+        const isLowStock = product.stock <= product.reorderPoint;
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>
@@ -469,6 +567,14 @@
           </td>
           <td><span class="badge badge-secondary">${product.category}</span></td>
           <td><strong style="color: var(--primary);">$${product.price.toFixed(2)}</strong></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.35rem;">
+              <button class="action-btn restock-down-btn" title="Remove 1" ${product.barcode ? '' : 'disabled'} style="padding:0.2rem 0.5rem;">−</button>
+              <span style="min-width:2rem;text-align:center;font-weight:600;${isLowStock ? 'color:#e74c3c;' : ''}">${product.stock}</span>
+              <button class="action-btn restock-up-btn" title="Add 1" ${product.barcode ? '' : 'disabled'} style="padding:0.2rem 0.5rem;">+</button>
+              ${isLowStock ? `<span class="badge" style="background:#e74c3c;color:white;font-size:0.65rem;margin-left:0.25rem;" title="At or below reorder point (${product.reorderPoint})">LOW</span>` : ''}
+            </div>
+          </td>
           <td>
             <div class="action-buttons" style="justify-content: flex-end;">
               <button class="action-btn edit-btn" title="Edit">
@@ -486,15 +592,51 @@
             </div>
           </td>
         `;
-        
+
         tr.querySelector('.edit-btn').addEventListener('click', () => openEditModal(product));
         tr.querySelector('.delete-btn').addEventListener('click', () => deleteProduct(product.barcode));
-        
+        tr.querySelector('.restock-up-btn').addEventListener('click', () => adjustStock(product, 1));
+        tr.querySelector('.restock-down-btn').addEventListener('click', () => adjustStock(product, -1));
+
         productsTableBody.appendChild(tr);
       });
 
       productCount.textContent = `Showing ${filtered.length} of ${products.length} products`;
     }
+
+    async function adjustStock(product, delta) {
+      if (!product.barcode) return;
+      if (delta < 0 && product.stock <= 0) {
+        showToast("Stock is already at 0", true);
+        return;
+      }
+      try {
+        const res = await fetch("/api/products/update-stock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ barcode: product.barcode, quantity: delta, reason: "manual_adjustment" })
+        });
+        const data = await res.json();
+        if (data.success) {
+          product.stock = data.newStock;
+          updateLowStockCount();
+          renderProducts();
+        } else {
+          showToast(data.error || "Failed to adjust stock", true);
+        }
+      } catch (err) {
+        console.error("Error adjusting stock:", err);
+        showToast("Error adjusting stock", true);
+      }
+    }
+
+    document.getElementById("lowStockToggleBtn").addEventListener("click", () => {
+      lowStockOnly = !lowStockOnly;
+      const btn = document.getElementById("lowStockToggleBtn");
+      btn.style.background = lowStockOnly ? "#e6a23c" : "";
+      btn.style.color = lowStockOnly ? "white" : "#e6a23c";
+      renderProducts();
+    });
 
     function openEditModal(product) {
       console.log('Opening edit modal for:', product);
@@ -513,7 +655,13 @@
       nameInput.value = product.name;
       priceInput.value = product.price;
       document.getElementById("editProductBarcodeDisplay").value = product.barcode;
-      
+      document.getElementById("editProductStock").value = product.stock;
+      document.getElementById("editProductReorderPoint").value = product.reorderPoint;
+      document.getElementById("editProductTaxable").checked = product.taxable;
+      document.getElementById("editProductEbtEligible").checked = product.ebtEligible;
+      document.getElementById("editProductAgeRestricted").checked = product.ageRestricted;
+      document.getElementById("editProductMinAge").value = product.minAge;
+
       const productCategory = product.category || "Other / Misc";
       
       let found = false;
@@ -599,6 +747,12 @@
       const price = parseFloat(document.getElementById("productPrice").value);
       const barcode = document.getElementById("productBarcode").value.trim() || Date.now().toString();
       const category = document.getElementById("productCategory").value;
+      const stock = parseInt(document.getElementById("productStock").value) || 0;
+      const reorder_point = parseInt(document.getElementById("productReorderPoint").value) || 0;
+      const taxable = document.getElementById("productTaxable").checked;
+      const ebt_eligible = document.getElementById("productEbtEligible").checked;
+      const age_restricted = document.getElementById("productAgeRestricted").checked;
+      const min_age = parseInt(document.getElementById("productMinAge").value) || 0;
 
       if (!name || isNaN(price) || price <= 0) {
         showToast("Please enter valid product details", true);
@@ -609,7 +763,7 @@
         const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, price, barcode, category })
+          body: JSON.stringify({ name, price, barcode, category, stock, reorder_point, taxable, ebt_eligible, age_restricted, min_age })
         });
         const data = await res.json();
         if (data.success) {
@@ -631,6 +785,12 @@
       const name = document.getElementById("editProductName").value.trim();
       const price = parseFloat(document.getElementById("editProductPrice").value);
       const category = document.getElementById("editProductCategory").value;
+      const stock = parseInt(document.getElementById("editProductStock").value) || 0;
+      const reorder_point = parseInt(document.getElementById("editProductReorderPoint").value) || 0;
+      const taxable = document.getElementById("editProductTaxable").checked;
+      const ebt_eligible = document.getElementById("editProductEbtEligible").checked;
+      const age_restricted = document.getElementById("editProductAgeRestricted").checked;
+      const min_age = parseInt(document.getElementById("editProductMinAge").value) || 0;
 
       if (!name || isNaN(price) || price <= 0) {
         showToast("Please enter valid product details", true);
@@ -641,7 +801,7 @@
         const res = await fetch("/api/products/" + encodeURIComponent(barcode), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, price, category })
+          body: JSON.stringify({ name, price, category, stock, reorder_point, taxable, ebt_eligible, age_restricted, min_age })
         });
         const data = await res.json();
         if (data.success) {

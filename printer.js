@@ -4,7 +4,33 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const printerName = process.env.SAL_PRINTER_NAME || "POS-80";
+// The active printer is chosen at runtime (via the Hardware Setup wizard in
+// Settings) and persisted in the settings table, not hardcoded to one model.
+// SAL_PRINTER_NAME is kept only as an optional override for advanced/headless setups.
+let configuredPrinterName = process.env.SAL_PRINTER_NAME || null;
+
+function setPrinterName(name) {
+  configuredPrinterName = name || null;
+}
+
+function getPrinterName() {
+  return configuredPrinterName;
+}
+
+// Resolves which printer to actually send jobs to: explicit user choice first,
+// then whatever the OS reports as its default printer, then a last-resort
+// legacy name so nothing crashes on a totally unconfigured machine.
+async function resolvePrinterName() {
+  if (configuredPrinterName) return configuredPrinterName;
+  try {
+    const printers = await getAvailablePrinters();
+    const preferred = printers.find(p => p.isDefault) || printers[0];
+    if (preferred) return preferred.name;
+  } catch (e) {
+    console.warn('Could not auto-detect a default printer:', e.message);
+  }
+  return 'POS-80';
+}
 
 const ESC = 0x1B;
 const GS = 0x1D;
@@ -44,7 +70,7 @@ function textToBuffer(text) {
 function generateReceiptText(payload) {
   const {
     store, items, subtotal, discount,
-    taxRate, taxAmount, total, paymentType, saleId,
+    taxRate, taxAmount, total, paymentType, saleId, footer,
     ebtAmount, nonEbtAmount, ebtDiscount, nonEbtTax, secondPaymentType
   } = payload || {};
 
@@ -151,7 +177,7 @@ function generateReceiptText(payload) {
   }
 
   lines.push('');
-  lines.push(center('Thank you for shopping!'));
+  lines.push(center(footer || 'Thank you for shopping!'));
 
   if (saleId) {
     lines.push(center('Receipt: ' + saleId));
@@ -170,37 +196,38 @@ function generateReceiptText(payload) {
   return lines.join('\n');
 }
 
-function printReceiptRaw(payload, includeCut = true, includeDrawer = true) {
+async function printReceiptRaw(payload, includeCut = true, includeDrawer = true) {
+  if (!nativePrinterAvailable) {
+    throw new Error('Native printer module not available');
+  }
+
+  const targetPrinter = await resolvePrinterName();
+  const receiptText = generateReceiptText(payload);
+  console.log('Printing receipt to:', targetPrinter);
+
+  const buffers = [
+    CMD.INIT,
+    textToBuffer(receiptText)
+  ];
+
+  if (includeDrawer) {
+    buffers.push(CMD.OPEN_DRAWER);
+  }
+
+  if (includeCut) {
+    // ESC d 6 — advance 6 lines past print head before cutting.
+    // Prevents last lines being eaten by the cutter.
+    buffers.push(CMD.FEED_6_LINES);
+    buffers.push(CMD.CUT_PAPER);
+  }
+
+  const finalBuffer = Buffer.concat(buffers);
+
   return new Promise((resolve, reject) => {
-    if (!nativePrinterAvailable) {
-      return reject(new Error('Native printer module not available'));
-    }
-
-    const receiptText = generateReceiptText(payload);
-    console.log('Printing receipt to:', printerName);
-
-    const buffers = [
-      CMD.INIT,
-      textToBuffer(receiptText)
-    ];
-
-    if (includeDrawer) {
-      buffers.push(CMD.OPEN_DRAWER);
-    }
-
-    if (includeCut) {
-      // ESC d 6 — advance 6 lines past print head before cutting.
-      // Prevents last lines being eaten by the cutter.
-      buffers.push(CMD.FEED_6_LINES);
-      buffers.push(CMD.CUT_PAPER);
-    }
-
-    const finalBuffer = Buffer.concat(buffers);
-
     nativePrinter.printDirect({
       data: finalBuffer,
       type: 'RAW',
-      printer: printerName,
+      printer: targetPrinter,
       success: (jobId) => {
         console.log('Receipt printed successfully, Job ID:', jobId);
         resolve();
@@ -213,13 +240,15 @@ function printReceiptRaw(payload, includeCut = true, includeDrawer = true) {
   });
 }
 
-function openCashDrawerWindows() {
-  return new Promise((resolve) => {
-    if (process.platform !== 'win32') {
-      console.warn('Windows drawer fallback only works on Windows');
-      return resolve();
-    }
+async function openCashDrawerWindows() {
+  if (process.platform !== 'win32') {
+    console.warn('Windows drawer fallback only works on Windows');
+    return;
+  }
 
+  const targetPrinter = await resolvePrinterName();
+
+  return new Promise((resolve) => {
     try {
       const tempDir = os.tmpdir();
       const dataFile = path.join(tempDir, 'drawer_cmd.bin');
@@ -264,7 +293,7 @@ public class RawPrinter {
 }
 '@
 $bytes = [System.IO.File]::ReadAllBytes('${dataFile.replace(/\\/g, '\\\\')}')
-[RawPrinter]::SendRaw('${printerName}', $bytes)
+[RawPrinter]::SendRaw('${targetPrinter}', $bytes)
 `;
       fs.writeFileSync(scriptFile, psScript, 'utf8');
       
@@ -288,21 +317,22 @@ $bytes = [System.IO.File]::ReadAllBytes('${dataFile.replace(/\\/g, '\\\\')}')
   });
 }
 
-function openCashDrawerRaw() {
-  return new Promise((resolve, reject) => {
-    if (!nativePrinterAvailable) {
-      console.warn('Native printer not available - trying Windows fallback');
-      return openCashDrawerWindows().then(resolve);
-    }
+async function openCashDrawerRaw() {
+  if (!nativePrinterAvailable) {
+    console.warn('Native printer not available - trying Windows fallback');
+    return openCashDrawerWindows();
+  }
 
-    console.log('Opening cash drawer via raw ESC/POS command');
+  const targetPrinter = await resolvePrinterName();
+  console.log('Opening cash drawer via raw ESC/POS command');
 
-    const drawerCommand = Buffer.concat([CMD.INIT, CMD.OPEN_DRAWER]);
+  const drawerCommand = Buffer.concat([CMD.INIT, CMD.OPEN_DRAWER]);
 
+  return new Promise((resolve) => {
     nativePrinter.printDirect({
       data: drawerCommand,
       type: 'RAW',
-      printer: printerName,
+      printer: targetPrinter,
       success: (jobId) => {
         console.log('Cash drawer opened, Job ID:', jobId);
         resolve();
@@ -318,7 +348,7 @@ function openCashDrawerRaw() {
 function generateReceiptHTML(payload) {
   const {
     store, items, subtotal, discount,
-    taxRate, taxAmount, total, paymentType, saleId,
+    taxRate, taxAmount, total, paymentType, saleId, footer,
     ebtAmount, nonEbtAmount, ebtDiscount, nonEbtTax, secondPaymentType
   } = payload || {};
 
@@ -437,7 +467,7 @@ function generateReceiptHTML(payload) {
   </div>
   ${splitTotalsHTML}
   <div class="footer">
-    Thank you for shopping!
+    ${footer || 'Thank you for shopping!'}
     ${saleId ? `<div class="sale-id">Receipt: ${saleId}</div>` : ''}
   </div>
 </body>
@@ -445,9 +475,11 @@ function generateReceiptHTML(payload) {
   `;
 }
 
-function printReceiptWindows(mainWindow, payload) {
+async function printReceiptWindows(mainWindow, payload) {
+  const targetPrinter = await resolvePrinterName();
+
   return new Promise((resolve, reject) => {
-    console.log(`Printing receipt via Windows driver to: ${printerName}`);
+    console.log(`Printing receipt via Windows driver to: ${targetPrinter}`);
 
     const receiptWindow = new BrowserWindow({
       show: false,
@@ -465,7 +497,7 @@ function printReceiptWindows(mainWindow, payload) {
     receiptWindow.webContents.on('did-finish-load', () => {
       const options = {
         silent: true,
-        deviceName: printerName,
+        deviceName: targetPrinter,
         printBackground: true
       };
 
@@ -526,9 +558,11 @@ async function printReceipt(mainWindow, payload, openDrawer = true) {
   }
 }
 
-function printCustomHTML(mainWindow, htmlContent) {
+async function printCustomHTML(mainWindow, htmlContent) {
+  const targetPrinter = await resolvePrinterName();
+
   return new Promise((resolve, reject) => {
-    console.log(`Printing custom HTML to: ${printerName}`);
+    console.log(`Printing custom HTML to: ${targetPrinter}`);
 
     const printWindow = new BrowserWindow({
       show: false,
@@ -545,7 +579,7 @@ function printCustomHTML(mainWindow, htmlContent) {
     printWindow.webContents.on('did-finish-load', () => {
       const options = {
         silent: true,
-        deviceName: printerName,
+        deviceName: targetPrinter,
         printBackground: true
       };
 
@@ -603,11 +637,13 @@ function getAvailablePrinters() {
   });
 }
 
-module.exports = { 
-  printReceipt, 
+module.exports = {
+  printReceipt,
   openCashDrawer,
   getAvailablePrinters,
-  printerName,
+  setPrinterName,
+  getPrinterName,
+  resolvePrinterName,
   nativePrinterAvailable,
   CMD
 };

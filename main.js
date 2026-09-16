@@ -288,6 +288,20 @@ app.whenReady().then(async () => {
   
   const serverReady = await waitForServer('http://localhost:5000/api/products');
   if (serverReady) {
+    // Apply the printer picked in the Hardware Setup wizard (Settings), if any.
+    // Falls back to auto-detecting the OS default printer when nothing is saved.
+    try {
+      const res = await fetch('http://localhost:5000/api/settings');
+      const data = await res.json();
+      const savedPrinter = data?.settings?.printer_name;
+      if (savedPrinter) {
+        require('./printer').setPrinterName(savedPrinter);
+        console.log('Loaded saved printer:', savedPrinter);
+      }
+    } catch (err) {
+      console.warn('Could not load saved printer setting:', err.message);
+    }
+
     console.log('Server is responding, creating window...');
     createWindow();
     setTimeout(() => {
@@ -404,11 +418,50 @@ ipcMain.handle('open-drawer', async () => {
 
 ipcMain.handle('get-printers', async () => {
   try {
-    const { getAvailablePrinters, printerName } = require('./printer');
+    const { getAvailablePrinters, getPrinterName } = require('./printer');
     const printers = await getAvailablePrinters();
-    return { ok: true, printers, currentPrinter: printerName };
+    return { ok: true, printers, currentPrinter: getPrinterName() };
   } catch (err) {
     console.error('Get printers error:', err.message);
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('set-printer', async (event, printerName) => {
+  try {
+    const { setPrinterName } = require('./printer');
+    setPrinterName(printerName);
+
+    // Persist so the choice survives an app restart.
+    await fetch('http://localhost:5000/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ printer_name: printerName })
+    });
+
+    return { ok: true };
+  } catch (err) {
+    console.error('Set printer error:', err.message);
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('test-print', async () => {
+  try {
+    const { printReceipt } = require('./printer');
+    await printReceipt(mainWindow, {
+      store: { name: 'Hardware Setup Test' },
+      items: [{ name: 'Test Item', qty: 1, price: 1.00, total: 1.00 }],
+      subtotal: 1.00,
+      tax: 0,
+      taxAmount: 0,
+      total: 1.00,
+      paymentType: 'Test Print',
+      saleId: 'TEST-' + Date.now()
+    }, false);
+    return { ok: true };
+  } catch (err) {
+    console.error('Test print error:', err.message);
     return { ok: false, error: err.message };
   }
 });

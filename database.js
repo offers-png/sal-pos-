@@ -93,6 +93,7 @@ async function initDatabase() {
       age_restricted INTEGER DEFAULT 0,
       min_age INTEGER DEFAULT 0,
       ebt_eligible INTEGER DEFAULT 0,
+      reorder_point INTEGER DEFAULT 5,
       active INTEGER DEFAULT 1,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -104,6 +105,9 @@ async function initDatabase() {
     const columns = productsTableInfo[0].values.map(row => row[1]);
     if (!columns.includes('ebt_eligible')) {
       try { db.run(`ALTER TABLE products ADD COLUMN ebt_eligible INTEGER DEFAULT 0`); } catch(e) {}
+    }
+    if (!columns.includes('reorder_point')) {
+      try { db.run(`ALTER TABLE products ADD COLUMN reorder_point INTEGER DEFAULT 5`); } catch(e) {}
     }
   }
 
@@ -163,10 +167,40 @@ async function initDatabase() {
       cash_sales REAL DEFAULT 0,
       card_sales REAL DEFAULT 0,
       ebt_sales REAL DEFAULT 0,
+      expected_cash REAL,
+      cash_variance REAL,
       notes TEXT,
       status TEXT DEFAULT 'open'
     )
   `);
+
+  const shiftsTableInfo = db.exec("PRAGMA table_info(shifts)");
+  if (shiftsTableInfo.length > 0) {
+    const columns = shiftsTableInfo[0].values.map(row => row[1]);
+    if (!columns.includes('expected_cash')) {
+      try { db.run(`ALTER TABLE shifts ADD COLUMN expected_cash REAL`); } catch(e) {}
+    }
+    if (!columns.includes('cash_variance')) {
+      try { db.run(`ALTER TABLE shifts ADD COLUMN cash_variance REAL`); } catch(e) {}
+    }
+  }
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS returns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      return_id TEXT UNIQUE NOT NULL,
+      original_sale_id TEXT NOT NULL,
+      items TEXT NOT NULL,
+      refund_amount REAL NOT NULL DEFAULT 0,
+      refund_method TEXT NOT NULL DEFAULT 'Cash',
+      reason TEXT,
+      user_id INTEGER,
+      shift_id INTEGER,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  try { db.run(`CREATE INDEX IF NOT EXISTS idx_returns_sale_id ON returns(original_sale_id)`); } catch(e) {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS inventory_log (
@@ -265,6 +299,7 @@ async function initDefaultSettings() {
   const db = await getDb();
   const defaults = [
     { key: 'store_name', value: 'My Store' },
+    { key: 'store_phone', value: '' },
     { key: 'tax_rate', value: '0.0825' },
     { key: 'receipt_header', value: 'Welcome to My Store!' },
     { key: 'receipt_footer', value: 'Thank you for shopping with us!' },
@@ -330,8 +365,8 @@ const productRepo = {
   async create(product) {
     const db = await getDb();
     db.run(`
-      INSERT INTO products (barcode, name, price, cost, category, stock, taxable, age_restricted, min_age)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products (barcode, name, price, cost, category, stock, taxable, age_restricted, min_age, ebt_eligible, reorder_point)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       product.barcode,
       product.name,
@@ -341,18 +376,23 @@ const productRepo = {
       product.stock || 0,
       product.taxable !== false ? 1 : 0,
       product.age_restricted ? 1 : 0,
-      product.min_age || 0
+      product.min_age || 0,
+      product.ebt_eligible ? 1 : 0,
+      product.reorder_point != null ? Number(product.reorder_point) : 5
     ]);
+    // saveDb() exports the database, which resets sql.js's last_insert_rowid()
+    // tracking to 0 — must read it before saving, never after.
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
     saveDb();
-    return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    return newId;
   },
 
   async update(barcode, product) {
     const db = await getDb();
     db.run(`
-      UPDATE products 
-      SET name = ?, price = ?, cost = ?, category = ?, stock = ?, 
-          taxable = ?, age_restricted = ?, min_age = ?, updated_at = CURRENT_TIMESTAMP
+      UPDATE products
+      SET name = ?, price = ?, cost = ?, category = ?, stock = ?,
+          taxable = ?, age_restricted = ?, min_age = ?, ebt_eligible = ?, reorder_point = ?, updated_at = CURRENT_TIMESTAMP
       WHERE barcode = ?
     `, [
       product.name,
@@ -363,6 +403,8 @@ const productRepo = {
       product.taxable !== false ? 1 : 0,
       product.age_restricted ? 1 : 0,
       product.min_age || 0,
+      product.ebt_eligible ? 1 : 0,
+      product.reorder_point != null ? Number(product.reorder_point) : 5,
       barcode
     ]);
     saveDb();
@@ -372,6 +414,15 @@ const productRepo = {
     const db = await getDb();
     db.run('UPDATE products SET active = 0 WHERE barcode = ?', [barcode]);
     saveDb();
+  },
+
+  async upsert(product) {
+    const existing = await this.getByBarcode(product.barcode);
+    if (existing) {
+      await this.update(product.barcode, product);
+    } else {
+      await this.create(product);
+    }
   },
 
   async updateStock(barcode, quantityChange, reason, userId) {
@@ -399,6 +450,12 @@ const productRepo = {
     const db = await getDb();
     const result = db.exec('SELECT DISTINCT category FROM products WHERE active = 1 ORDER BY category');
     return result.length ? result[0].values.map(r => r[0]) : [];
+  },
+
+  async getLowStock() {
+    const db = await getDb();
+    const result = db.exec('SELECT * FROM products WHERE active = 1 AND stock <= reorder_point ORDER BY stock ASC');
+    return result.length ? result[0].values.map(row => rowToProduct(result[0].columns, row)) : [];
   },
 
   async importBulk(products) {
@@ -448,8 +505,9 @@ const salesRepo = {
       INSERT INTO sales (sale_id, items, subtotal, discount, tax, total, payment_type, item_count, user_id, shift_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, params);
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
     saveDb();
-    return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    return newId;
   },
 
   async getById(saleId) {
@@ -539,6 +597,63 @@ const salesRepo = {
   }
 };
 
+const returnsRepo = {
+  async create({ returnId, originalSaleId, items, refundAmount, refundMethod, reason, userId, shiftId }) {
+    const db = await getDb();
+    const safeUserId = (userId != null && !isNaN(Number(userId))) ? Number(userId) : 0;
+    const safeShiftId = (shiftId != null && !isNaN(Number(shiftId))) ? Number(shiftId) : 0;
+    db.run(`
+      INSERT INTO returns (return_id, original_sale_id, items, refund_amount, refund_method, reason, user_id, shift_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      String(returnId),
+      String(originalSaleId),
+      JSON.stringify(items || []),
+      Number(refundAmount) || 0,
+      String(refundMethod || 'Cash'),
+      String(reason || ''),
+      safeUserId,
+      safeShiftId
+    ]);
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    saveDb();
+    return newId;
+  },
+
+  async getBySaleId(saleId) {
+    const db = await getDb();
+    const stmt = db.prepare('SELECT * FROM returns WHERE original_sale_id = ? ORDER BY created_at DESC');
+    stmt.bind([saleId]);
+    const rows = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      row.items = JSON.parse(row.items || '[]');
+      rows.push(row);
+    }
+    stmt.free();
+    return rows;
+  },
+
+  async getRecent(limit = 50) {
+    const db = await getDb();
+    const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 50;
+    const result = db.exec(`SELECT * FROM returns ORDER BY created_at DESC LIMIT ${safeLimit}`);
+    if (!result.length) return [];
+    return result[0].values.map(row => {
+      const obj = {};
+      result[0].columns.forEach((c, i) => obj[c] = row[i]);
+      obj.items = JSON.parse(obj.items || '[]');
+      return obj;
+    });
+  },
+
+  async getCashRefundsForShift(shiftId) {
+    const db = await getDb();
+    const result = db.exec(`SELECT COALESCE(SUM(refund_amount), 0) as total FROM returns WHERE shift_id = ${Number(shiftId) || 0} AND refund_method = 'Cash'`);
+    return result.length ? (result[0].values[0][0] || 0) : 0;
+  }
+};
+
 const userRepo = {
   async getAll() {
     const db = await getDb();
@@ -591,8 +706,9 @@ const userRepo = {
     const hashedPin = bcrypt.hashSync(user.pin, 10);
     db.run('INSERT INTO users (username, pin, display_name, role) VALUES (?, ?, ?, ?)',
       [user.username, hashedPin, user.displayName || user.username, user.role || 'cashier']);
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
     saveDb();
-    return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    return newId;
   },
 
   async updatePin(id, newPin) {
@@ -634,8 +750,9 @@ const shiftRepo = {
     const db = await getDb();
     db.run("INSERT INTO shifts (opened_by, starting_cash, status) VALUES (?, ?, 'open')",
       [userId, startingCash || 0]);
+    const newId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
     saveDb();
-    return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+    return newId;
   },
 
   async close(shiftId, userId, endingCash, notes) {
@@ -653,23 +770,35 @@ const shiftRepo = {
       else if (sale.payment_type === 'EBT') ebtSales += sale.total;
     }
 
+    // Guided cash reconciliation: what SHOULD be in the drawer, vs. what was counted.
+    const cashRefunds = await returnsRepo.getCashRefundsForShift(shiftId);
+    const startingCash = shift.starting_cash || 0;
+    const expectedCash = startingCash + cashSales - cashRefunds;
+    const safeEndingCash = Number(endingCash) || 0;
+    const cashVariance = safeEndingCash - expectedCash;
+
     const db = await getDb();
     db.run(`
-      UPDATE shifts 
-      SET closed_by = ?, closed_at = CURRENT_TIMESTAMP, ending_cash = ?, 
+      UPDATE shifts
+      SET closed_by = ?, closed_at = CURRENT_TIMESTAMP, ending_cash = ?,
           total_sales = ?, total_transactions = ?, cash_sales = ?, card_sales = ?, ebt_sales = ?,
+          expected_cash = ?, cash_variance = ?,
           notes = ?, status = 'closed'
       WHERE id = ?
-    `, [userId, endingCash, totalSales, sales.length, cashSales, cardSales, ebtSales, notes, shiftId]);
+    `, [userId, safeEndingCash, totalSales, sales.length, cashSales, cardSales, ebtSales, expectedCash, cashVariance, notes, shiftId]);
     saveDb();
   },
 
   async getById(id) {
     const db = await getDb();
-    const result = db.exec(`SELECT * FROM shifts WHERE id = ${id}`);
-    if (result.length && result[0].values.length) {
-      return rowToShift(result[0].columns, result[0].values[0]);
+    const stmt = db.prepare('SELECT * FROM shifts WHERE id = ?');
+    stmt.bind([Number(id) || 0]);
+    if (stmt.step()) {
+      const row = stmt.getAsObject();
+      stmt.free();
+      return row;
     }
+    stmt.free();
     return null;
   },
 
@@ -770,9 +899,11 @@ const idChecksRepo = {
   async log(checkData) {
     const db = await getDb();
     const { check_type, dob, age, verified, min_age_required, user_id, shift_id, sale_id, notes } = checkData;
-    db.run(`INSERT INTO id_checks (check_type, dob, age, verified, min_age_required, user_id, shift_id, sale_id, notes) 
+    // sql.js throws when binding `undefined` (unlike null) - the register never sends
+    // user_id/shift_id on this call, so every real ID check was failing to log.
+    db.run(`INSERT INTO id_checks (check_type, dob, age, verified, min_age_required, user_id, shift_id, sale_id, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [check_type, dob, age, verified ? 1 : 0, min_age_required || 21, user_id, shift_id, sale_id, notes]);
+      [check_type || 'unknown', dob || null, age != null ? age : null, verified ? 1 : 0, min_age_required || 21, user_id || 0, shift_id || 0, sale_id || null, notes || null]);
     saveDb();
     return true;
   },
@@ -886,6 +1017,7 @@ module.exports = {
   saveDb,
   productRepo,
   salesRepo,
+  returnsRepo,
   userRepo,
   shiftRepo,
   settingsRepo,
