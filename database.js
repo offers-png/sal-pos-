@@ -126,7 +126,8 @@ async function restoreDatabase(buffer) {
 }
 
 async function initDatabase() {
-  if (fs.existsSync(dbPath) && !fs.existsSync(dbPath + '.pre-1.0.36.db')) fs.copyFileSync(dbPath, dbPath + '.pre-1.0.36.db');
+  const upgradeBackup = dbPath + '.pre-' + require('./package.json').version + '.db';
+  if (fs.existsSync(dbPath) && !fs.existsSync(upgradeBackup)) fs.copyFileSync(dbPath, upgradeBackup);
   const db = await getDb();
 
   db.run(`

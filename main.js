@@ -6,26 +6,20 @@ const { autoUpdater } = require('electron-updater');
 let mainWindow;
 let customerWindow;
 let currentTheme = 'light';
+let cartItemCount = 0;
+let updateReady = false;
 
 autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = true;
+autoUpdater.autoInstallOnAppQuit = false;
 
 function isAutoUpdateConfigured() {
-  try {
-    const pkg = require('./package.json');
-    const publish = pkg.build?.publish;
+  return require('./services/update-policy').configured(app, process.resourcesPath, require('./package.json'));
+}
 
-    if (!publish) return false;
-
-    const configs = Array.isArray(publish) ? publish : [publish];
-
-    return configs.some(cfg => {
-      if (!cfg || typeof cfg !== 'object') return false;
-      return cfg.provider && cfg.owner && !String(cfg.owner).includes('YOUR_');
-    });
-  } catch {
-    return false;
-  }
+async function installReadyUpdate() {
+  if (!updateReady) throw Error('No downloaded update is ready.');
+  await require('./services/update-policy').prepareInstall(require('./database'), cartItemCount);
+  autoUpdater.quitAndInstall(false, true);
 }
 
 function setupAutoUpdater() {
@@ -60,10 +54,10 @@ function setupAutoUpdater() {
       title: 'Update Available',
       message: `Sal POS v${info.version} is available.\nWould you like to download and install it now?`,
       buttons: ['Download Now', 'Later'],
-      defaultId: 0
+      defaultId: 1, cancelId: 1
     }).then((result) => {
       if (result.response === 0) {
-        autoUpdater.downloadUpdate();
+        autoUpdater.downloadUpdate().catch(error => sendStatus('Download failed: ' + error.message));
         sendStatus('Downloading update...');
       }
     });
@@ -81,6 +75,7 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('update-downloaded', (info) => {
+    updateReady = true;
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.setProgressBar(-1);
     }
@@ -89,11 +84,12 @@ function setupAutoUpdater() {
       type: 'info',
       title: 'Update Ready to Install',
       message: `Sal POS v${info.version} downloaded.\nThe app will restart to install.`,
-      buttons: ['Restart & Install Now', 'Install on Next Restart'],
-      defaultId: 0
-    }).then((result) => {
+      buttons: ['Install after closing shift', 'Later'],
+      defaultId: 1, cancelId: 1
+    }).then(async (result) => {
       if (result.response === 0) {
-        autoUpdater.quitAndInstall(false, true);
+        try { await installReadyUpdate(); }
+        catch (error) { sendStatus(error.message); dialog.showMessageBox(mainWindow, { type: 'info', message: error.message, detail: 'When ready, use Settings → Check for Updates to retry.' }); }
       }
     });
   });
@@ -103,14 +99,7 @@ function setupAutoUpdater() {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.setProgressBar(-1);
     }
-    if (!err.message.includes('net::') && !err.message.includes('ENOTFOUND')) {
-      dialog.showMessageBox(mainWindow, {
-        type: 'warning',
-        title: 'Update Error',
-        message: `Update check failed: ${err.message}`,
-        buttons: ['OK']
-      });
-    }
+    sendStatus('Update unavailable. You can continue using the register offline.');
   });
 
   // Check on startup
@@ -128,7 +117,8 @@ function setupAutoUpdater() {
 
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-gpu');
-if (!app.requestSingleInstanceLock()) app.quit();
+const hasInstanceLock = app.requestSingleInstanceLock();
+if (!hasInstanceLock) app.quit();
 
 function setupPaths() {
   const userData = app.getPath('userData');
@@ -274,7 +264,7 @@ function createCustomerDisplay() {
   });
 }
 
-app.whenReady().then(async () => {
+if (hasInstanceLock) app.whenReady().then(async () => {
   setupPaths();
 
   try {
@@ -283,6 +273,8 @@ app.whenReady().then(async () => {
     console.log('Server started successfully');
   } catch (err) {
     console.error('Failed to start server:', err);
+    dialog.showErrorBox('Sal POS could not start', err.code === 'EADDRINUSE' ? 'Port 5000 is already in use. Close the other application and restart Sal POS.' : 'The local database could not be opened. Keep the database file and contact support. Details: ' + err.message);
+    app.quit(); return;
   }
 
   const serverReady = await waitForServer('http://127.0.0.1:5000/api/products');
@@ -305,8 +297,8 @@ app.whenReady().then(async () => {
       if (screen.getAllDisplays().length > 1) createCustomerDisplay();
     }, 1000);
   } else {
-    console.error('Server failed to respond after multiple attempts');
-    createWindow();
+    dialog.showErrorBox('Sal POS could not start', 'The local register service did not respond. Restart Sal POS.');
+    app.quit(); return;
   }
 
   setTimeout(() => {
@@ -384,7 +376,7 @@ ipcMain.handle = (channel, handler) => registerHandle(channel, async (event, ...
     const response = await fetch(source.origin + '/api/auth/me', { headers: { Cookie: cookies.map(c => c.name + '=' + c.value).join('; ') } });
     const session = await response.json();
     if (!response.ok || session.mustChangePin) throw Error('Sign in first');
-    if (['set-printer', 'add-marketing', 'remove-marketing'].includes(channel) && !['owner', 'manager'].includes(session.user.role)) throw Error('Manager required');
+    if (['set-printer', 'add-marketing', 'remove-marketing', 'check-for-updates', 'export-diagnostics'].includes(channel) && !['owner', 'manager'].includes(session.user.role)) throw Error('Manager required');
   }
   return handler(event, ...args);
 });
@@ -482,6 +474,11 @@ ipcMain.handle('test-print', async () => {
 });
 
 ipcMain.handle('check-for-updates', async () => {
+  if (updateReady) {
+    const answer = await dialog.showMessageBox(mainWindow, { type: 'question', message: 'Install the downloaded update? Close the shift and clear the cart first.', buttons: ['Install', 'Later'], defaultId: 1, cancelId: 1 });
+    if (answer.response === 0) await installReadyUpdate();
+    return { ok: true };
+  }
   if (!app.isPackaged) {
     return { ok: false, error: 'Updates only available in packaged app' };
   }
@@ -502,6 +499,7 @@ ipcMain.handle('get-app-version', async () => {
 });
 
 ipcMain.handle('update-customer-cart', async (event, cartData) => {
+  if (event.sender === mainWindow?.webContents) cartItemCount = Array.isArray(cartData.items) ? cartData.items.length : 0;
   try {
     if (customerWindow && !customerWindow.isDestroyed()) {
       customerWindow.webContents.send('cart-update', cartData);
@@ -565,3 +563,15 @@ ipcMain.handle('remove-marketing', (_, name) => {
   fs.unlinkSync(path.join(process.env.SAL_MARKETING_DIR, name)); refreshMarketing(); return { ok: true };
 });
 ipcMain.handle('show-customer-screen', () => { createCustomerDisplay(); return { ok: true }; });
+
+ipcMain.handle('export-diagnostics', async () => {
+  const data = await require('./services/diagnostics').report({
+    displays: screen.getAllDisplays().map(d => ({ width: d.bounds.width, height: d.bounds.height, scaleFactor: d.scaleFactor })),
+    printer: { configured: require('./printer').getPrinterName() || 'Windows default' },
+    update: { configured: isAutoUpdateConfigured(), downloaded: updateReady }
+  });
+  const result = await dialog.showSaveDialog(mainWindow, { title: 'Save technical support report', defaultPath: 'sal-pos-diagnostics.json', filters: [{ name: 'JSON report', extensions: ['json'] }] });
+  if (result.canceled || !result.filePath) return { saved: false };
+  fs.writeFileSync(result.filePath, JSON.stringify(data, null, 2));
+  return { saved: true };
+});

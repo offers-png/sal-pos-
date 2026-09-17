@@ -66,6 +66,13 @@ test('CSRF and unexpected Host rejected', async () => {
   });
   assert.equal(hostStatus, 403);
 });
+
+test('startup rejects an occupied register port instead of connecting to another app', async () => {
+  const blocker = require('node:net').createServer();
+  await new Promise((resolve, reject) => { blocker.once('error', reject); blocker.listen(5000, '127.0.0.1', resolve); });
+  try { await assert.rejects(require('../server').start(), error => error.code === 'EADDRINUSE'); }
+  finally { await new Promise(resolve => blocker.close(resolve)); }
+});
 test('cashier cannot change settings or return funds; manager can', async () => {
   assert.equal((await request('/api/users', { username: 'cashier', pin: '234567', role: 'cashier' })).status, 200);
   const cashier = await request('/api/auth/login', { username: 'cashier', pin: '234567' }, null);

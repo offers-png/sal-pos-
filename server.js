@@ -737,8 +737,10 @@ app.get("/api/settings/backup-path", async (req, res) => {
 app.post("/api/settings/backup-path", async (req, res) => {
   try {
     const { path: backupPath } = req.body;
+    if (typeof backupPath !== "string" || !path.isAbsolute(backupPath) || !fs.existsSync(backupPath) || !fs.statSync(backupPath).isDirectory()) return res.status(400).json({ success: false, error: "Choose an existing absolute folder path." });
     const db = await getDb();
     db.run("INSERT OR REPLACE INTO settings (key, value) VALUES ('auto_backup_path', ?)", [backupPath]);
+    db.run("DELETE FROM settings WHERE key = 'last_auto_backup_day'");
     saveDb();
     res.json({ success: true });
   } catch (err) {
@@ -757,12 +759,8 @@ app.post("/api/backup/auto", async (req, res) => {
       return res.status(400).json({ success: false, error: "Backup folder not set or not found. Please set a backup folder in Settings." });
     }
 
-    const timestamp = new Date().toISOString().slice(0,10);
-    const backupName = `sal-pos-backup-${timestamp}.db`;
-    const backupPath = path.join(backupFolder, backupName);
-    fs.copyFileSync(dbPath, backupPath);
-
-    res.json({ success: true, path: backupPath, filename: backupName });
+    const backupResult = await require('./services/backups').createBackup(backupFolder, 'manual-external');
+    res.json({ success: true, ...backupResult });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -801,20 +799,8 @@ app.post("/api/backup", async (req, res) => {
       fs.mkdirSync(backupDir);
     }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const backupName = `sal-pos-backup-${timestamp}.db`;
-    const backupPath = path.join(backupDir, backupName);
-
-    fs.copyFileSync(dbPath, backupPath);
-
-    const stats = fs.statSync(backupPath);
-
-    const db = await getDb();
-    db.run('INSERT INTO backups (filename, file_path, size_bytes, backup_type) VALUES (?, ?, ?, ?)',
-      [backupName, backupPath, stats.size, "manual"]);
-    saveDb();
-
-    res.json({ success: true, filename: backupName, path: backupPath, size: stats.size });
+    const result = await require('./services/backups').createBackup(backupDir);
+    res.json({ success: true, ...result });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -932,16 +918,18 @@ app.get("/", (req, res) => {
 
 async function start() {
   await initDatabase();
-
-  const PORT = 5000;
-  return app.listen(PORT, "127.0.0.1", async () => {
-    const allProducts = await productRepo.getAll();
-    console.log(`Sal POS running on http://localhost:${PORT}`);
-    console.log(`Database: SQLite (${dbPath})`);
-    console.log(`Products loaded: ${allProducts.length}`);
-
-
+  const server = await new Promise((resolve, reject) => {
+    const listener = app.listen(5000, '127.0.0.1', () => { listener.removeListener('error', reject); resolve(listener); });
+    listener.once('error', reject);
   });
+  function scheduleBackup() {
+    apiQueue = apiQueue.then(() => require('./services/backups').scheduledBackup()).catch(error => console.warn('Scheduled backup failed:', error.message));
+  }
+  scheduleBackup();
+  const timer = setInterval(scheduleBackup, 60 * 60 * 1000); timer.unref();
+  server.once('close', () => clearInterval(timer));
+  console.log('Sal POS running on http://127.0.0.1:5000');
+  return server;
 }
 
 app.use((err, req, res, next) => res.status(err.status || 500).json({ success: false, error: err.status === 413 ? 'Upload too large (32 MB limit)' : 'Request failed' }));
@@ -949,5 +937,5 @@ app.use((err, req, res, next) => res.status(err.status || 500).json({ success: f
 module.exports = { start, app };
 
 if (require.main === module) {
-  start();
+  start().catch(error => { console.error(error); process.exitCode = 1; });
 }

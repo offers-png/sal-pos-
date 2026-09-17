@@ -1,16 +1,19 @@
 {
   "name": "sal-pos",
-  "version": "1.0.37",
-  "description": "Sal POS POS Desktop App",
+  "version": "1.0.38-rc.1",
+  "description": "Local Windows point-of-sale software for independent convenience stores",
   "author": "Sal POS",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win",
+    "dist": "node scripts/build.js --pilot",
     "dist-mac": "electron-builder --mac",
     "dist-linux": "electron-builder --linux",
     "test": "node --test tests/*.test.js",
-    "check": "node scripts/check.js"
+    "check": "node scripts/check.js",
+    "dist:release": "node scripts/build.js --release",
+    "verify:package": "node scripts/verify-package.js",
+    "release:check": "node scripts/release-check.js"
   },
   "build": {
     "appId": "com.sal.pos",
@@ -32,7 +35,8 @@
       "!**/*credentials*.json",
       "!**/*.db",
       "!tests/**",
-      "!scripts/**"
+      "!scripts/**",
+      "docs/**"
     ],
     "extraResources": [
       {

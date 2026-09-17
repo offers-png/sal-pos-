@@ -18,7 +18,7 @@ function desktop(displays, role = 'cashier', selectedFiles = []) {
   const context = vm.createContext({ console, URL, Buffer, __dirname: path.join(__dirname, '..'), process: { env: {} }, require(name) {
     if (name === 'electron') return electron;
     if (name === 'electron-updater') return { autoUpdater: {} };
-    return require(name);
+    return require(name.startsWith('./') ? path.join(__dirname, '..', name) : name);
   }, fetch: async () => ({ ok: true, json: async () => ({ user: { role } }) }) });
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../main.js'), 'utf8'), context);
   vm.runInContext('mainWindow = { getBounds() { return {}; } };', context);
