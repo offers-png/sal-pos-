@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  exportDiagnostics: () => ipcRenderer.invoke('export-diagnostics'),
   listMarketing: () => ipcRenderer.invoke('list-marketing'),
   addMarketing: () => ipcRenderer.invoke('add-marketing'),
   removeMarketing: name => ipcRenderer.invoke('remove-marketing', name),

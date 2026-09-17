@@ -1,0 +1,72 @@
+name: Windows release candidate
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Pilot artifact or signed draft release
+        required: true
+        type: choice
+        options: [pilot, signed-draft]
+        default: pilot
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - run: npm test
+      - run: npm audit --audit-level=high
+      - if: inputs.mode != 'signed-draft'
+        run: npm run dist
+      - if: inputs.mode == 'signed-draft'
+        run: npm run release:check
+      - if: inputs.mode == 'signed-draft'
+        run: npm run dist:release
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+          SAL_SIGNING_PUBLISHER: ${{ vars.WINDOWS_SIGNING_PUBLISHER }}
+      - run: npm run verify:package
+      - name: Packaged application smoke test
+        run: node scripts/smoke-package.js
+      - name: Bundle customer guides
+        shell: pwsh
+        run: Compress-Archive -Path 'docs/*' -DestinationPath 'dist/Sal-POS-Guides.zip'
+      - if: inputs.mode == 'signed-draft'
+        run: ./scripts/verify-signatures.ps1
+        env:
+          SAL_SIGNING_PUBLISHER: ${{ vars.WINDOWS_SIGNING_PUBLISHER }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sal-pos-${{ inputs.mode || 'pilot' }}-${{ github.sha }}
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/*.yml
+            dist/SHA256SUMS.txt
+            dist/Sal-POS-Guides.zip
+            docs/
+          if-no-files-found: error
+      - name: Create signed draft release
+        if: inputs.mode == 'signed-draft'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tag = "v$version"
+          $assets = @(Get-ChildItem dist -File | Where-Object { $_.Name -match '\.(exe|blockmap|yml)$|^SHA256SUMS\.txt$|^Sal-POS-Guides\.zip$' } | ForEach-Object { $_.FullName })
+          $arguments = @('release', 'create', $tag, '--draft', '--target', '${{ github.sha }}', '--title', "Sal POS $version", '--notes-file', 'docs/RELEASE-NOTES.md')
+          if ($version.Contains('-')) { $arguments += '--prerelease' }
+          & gh @arguments @assets
+          if ($LASTEXITCODE -ne 0) { throw 'Draft release creation failed.' }

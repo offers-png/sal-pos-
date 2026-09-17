@@ -1,3 +1,10 @@
+# 1.0.38-rc.1 — Release readiness
+
+- Fix packaged updater discovery, disable automatic installation on exit, guard active carts/shifts and create pre-update backups.
+- Add durable daily backups, visible backup status, safe port-conflict startup, and privacy-conscious support reports.
+- Add recovery/scanner/receipt regression tests, package/signature checks, a draft-release workflow and customer/hardware/support documentation.
+- This is an unsigned candidate; physical hardware acceptance and seller/signing setup remain outstanding.
+
 # 1.0.37 — Local convenience-store setup
 
 - Remove Google Sheets integration, credential discovery, sync controls and the Google API dependency. Products and sales persist locally without an account or Internet connection.

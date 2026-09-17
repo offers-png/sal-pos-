@@ -20,6 +20,48 @@ function page(name, fetchHandler) {
 }
 const reply = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 
+test('keyboard scanner input keeps leading zeros and 100 scans do not trigger checkout', async () => {
+  let sales = 0;
+  const { dom, w, run } = page('index.html', async url => {
+    if (url === '/api/sales') sales++;
+    if (url === '/api/products') return reply({ success: true, products: [{ barcode: '000123', name: 'Scan item', price: 1, taxable: false }] });
+    return reply({ success: true, settings: {}, reports: [] });
+  });
+  try {
+    await new Promise(r => setTimeout(r, 30));
+    const input = w.document.getElementById('barcodeInput');
+    for (let i = 0; i < 100; i++) {
+      input.value = '000123';
+      input.dispatchEvent(new w.KeyboardEvent('keypress', { key: 'Enter', bubbles: true, cancelable: true }));
+    }
+    assert.equal(run('cart[0].barcode'), '000123');
+    assert.equal(run('cart[0].qty'), 100);
+    assert.equal(sales, 0);
+  } finally { dom.window.close(); }
+});
+
+test('old receipt lookup reprints original amounts and date without creating a sale', async () => {
+  let sales = 0, printed;
+  const { dom, w, run } = page('reports.html', async (url, options) => {
+    if (url === '/api/sales' && options?.method === 'POST') sales++;
+    if (url === '/api/sales/OLD-RECEIPT') return reply({ success: true, sale: { saleId: 'OLD-RECEIPT', createdAt: '2025-01-02 12:00:00', items: [{ name: 'Old product', qty: 1, price: 5 }], subtotal: 5, total: 5.4, tax: 0.4 } });
+    if (url === '/api/settings') return reply({ success: true, settings: { store_name: 'Store A', store_phone: '555-0199' } });
+    return reply({ success: true, sales: [], reports: [], totals: {}, counts: {} });
+  });
+  try {
+    w.electronAPI = { printReceipt: async payload => { printed = payload; return { ok: true }; } };
+    await new Promise(r => setTimeout(r, 30));
+    w.document.getElementById('receiptLookupId').value = 'OLD-RECEIPT';
+    w.document.getElementById('receiptLookupPrint').click();
+    await new Promise(r => setTimeout(r, 30));
+    assert.equal(printed.saleId, 'OLD-RECEIPT');
+    assert.equal(printed.createdAt, '2025-01-02 12:00:00');
+    assert.equal(printed.total, 5.4);
+    assert.equal(printed.store.phone, '555-0199');
+    assert.equal(sales, 0);
+  } finally { dom.window.close(); }
+});
+
 test('daily print failure keeps retry available and uses configured store branding', async () => {
   const { dom, w, run } = page('index.html', async url => {
     if (url === '/api/eod-today') return reply({ success: true, store: { store_name: 'Corner <Market>', store_phone: '555-0100' }, totals: {}, counts: {} });

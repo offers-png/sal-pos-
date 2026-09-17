@@ -532,6 +532,7 @@
               <button id="saveBackupPathBtn" class="btn btn-primary">Save Path</button>
               <button id="backupNowBtn" class="btn btn-outline">Backup Now</button>
             </div>
+            <p id="backupHealth" style="font-size:0.85rem;"></p>
             <div id="backupPathStatus" style="margin-top:0.5rem;font-size:0.85rem;color:#666;"></div>
           </div>
 
@@ -575,6 +576,8 @@
           </div>
 
           <p>Products, inventory, employees and receipts are saved in this computer's database. No cloud account is required.</p>
+          <p>Need help? Save a technical report for your installer or support provider. It excludes employee details and receipt contents.</p>
+          <button id="exportDiagnosticsBtn" class="btn btn-outline">Save support report</button>
           <button id="refreshBtn" class="btn btn-outline">Refresh local data</button>
           <h3>Customer screen marketing</h3>
           <p>Connect a second monitor in Windows Extend mode. Choose your store's promotional images below. Images remain on this PC across app updates.</p>
@@ -820,6 +823,13 @@
       });
     });
 
+    document.getElementById('exportDiagnosticsBtn').addEventListener('click', async () => {
+      try {
+        if (!window.electronAPI?.exportDiagnostics) throw Error('Open the Windows desktop app to save a support report.');
+        const result = await window.electronAPI.exportDiagnostics();
+        if (result.saved) showToast('Support report saved. Review it before sharing.');
+      } catch (error) { showToast(error.message, true); }
+    });
     async function loadMarketing() {
       const list = document.getElementById('marketingList');
       if (!window.electronAPI?.listMarketing) { list.textContent = 'Manage marketing images in the Windows desktop app.'; return; }
@@ -851,6 +861,8 @@
 
         document.getElementById("storageStatus").textContent = data.success ? "Local database ready" : "Unavailable";
         document.getElementById("productsCount").textContent = data.productCount || 0;
+        const backup = document.getElementById("backupHealth");
+        if (backup) backup.textContent = data.settings?.last_backup_error ? "Backup needs attention: " + data.settings.last_backup_error : "Last successful backup: " + (data.settings?.last_backup_at || "No backup recorded yet");
 
         const eodRes = await fetch("/api/eod-today");
         const eodData = await eodRes.json();

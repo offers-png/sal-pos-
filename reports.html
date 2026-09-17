@@ -611,8 +611,7 @@
       }
     }
 
-    document.getElementById("refreshBtn").addEventListener("click", () => {
-      let reprinting = false;
+    let reprinting = false;
     async function reprintSale(id) {
       if (reprinting || !id) return;
       reprinting = true;
@@ -633,7 +632,8 @@
       if (button) void reprintSale(decodeURIComponent(button.dataset.reprintId));
     });
 
-    loadReports();
+    document.getElementById("refreshBtn").addEventListener("click", () => {
+      loadReports();
       loadSalesHistory();
     });
 
