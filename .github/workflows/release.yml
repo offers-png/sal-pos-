@@ -1,5 +1,6 @@
 name: Windows release candidate
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       mode:
@@ -25,7 +26,7 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm audit --audit-level=high
-      - if: inputs.mode == 'pilot'
+      - if: inputs.mode != 'signed-draft'
         run: npm run dist
       - if: inputs.mode == 'signed-draft'
         run: npm run release:check
@@ -47,7 +48,7 @@ jobs:
           SAL_SIGNING_PUBLISHER: ${{ vars.WINDOWS_SIGNING_PUBLISHER }}
       - uses: actions/upload-artifact@v4
         with:
-          name: sal-pos-${{ inputs.mode }}-${{ github.sha }}
+          name: sal-pos-${{ inputs.mode || 'pilot' }}-${{ github.sha }}
           path: |
             dist/*.exe
             dist/*.blockmap
